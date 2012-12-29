@@ -25,8 +25,8 @@ include:
 - Infinite undo
 
 If you are able to effectively use Soliloquy, you are probably able to work
-with C++. Therefore, _there is no external configuration_; all "configuration"
-is performed by editing the C++ source and recompiling. (See HACKING for
+with C. Therefore, _there is no external configuration_; all "configuration"
+is performed by editing the C source and recompiling. (See HACKING for
 details.)
 
 Buffers
