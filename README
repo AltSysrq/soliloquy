@@ -1,0 +1,50 @@
+SOL(1)
+======
+Jason Lingle <jasonlingle@yahoo.com>
+
+NAME
+----
+sol(iloquy) --- The programmers' editor of your nightmares
+
+SYNOPSIS
+--------
+sol [*OPTIONS*] [*file* [...]]
+
+DESCRIPTION
+-----------
+Introduction
+~~~~~~~~~~~~
+Soliloquy is a highly extensible, non-visual editor with modern features, which
+include:
+
+- Automatic indentation
+- Automatic word-wrap
+- Syntax highlighting
+- Fast line editing
+- Multiple buffers
+- Infinite undo
+
+If you are able to effectively use Soliloquy, you are probably able to work
+with C++. Therefore, _there is no external configuration_; all "configuration"
+is performed by editing the C++ source and recompiling. (See HACKING for
+details.)
+
+Buffers
+~~~~~~~
+At any given time, a Soliloquy session has one or more buffers. Each buffer is
+composed of some number of lines, and a cursor position, which refers to a
+location *between* two lines. Buffers can be referred to by number or by name.
+
+Each buffer is associated with a _major mode_ and zero or more _minor modes_;
+these are similar to, but also rather different from, the equinominal concepts
+in Emacs. The major mode defines the way the buffer is translated to/from its
+backing store, such as files, and may place limitations on the format of lines
+entered. Minor modes layer themselves between the user and the buffer and/or
+line editors to provide additional functionality to the user.
+
+Line Editors
+~~~~~~~~~~~~
+Operations which insert new lines or edit existing ones create line
+editors. Line editors allow stateful editing of the characters on a line,
+similar to programs using libreadline, and are separate entities from buffers,
+though they share the same name and number space.
