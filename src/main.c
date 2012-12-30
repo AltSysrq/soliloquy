@@ -19,8 +19,10 @@
 
 
 #include <stdio.h>
+#include <gc.h>
 
 int main(void) {
+  GC_INIT();
   printf("Hello, world!\n");
   return 0;
 }

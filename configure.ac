@@ -14,6 +14,7 @@ AC_PROG_CC
 
 # Checks for libraries.
 AC_SEARCH_LIBS([pcre_compile], [pcre])
+AC_SEARCH_LIBS([GC_init], [gc])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h])
