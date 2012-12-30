@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <gc.h>
 
+//$foo
+
 int main(void) {
   GC_INIT();
   printf("Hello, world!\n");

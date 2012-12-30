@@ -17,3 +17,5 @@ install-sh
 depcomp
 configure
 doc
+symbols.def
+*.slc

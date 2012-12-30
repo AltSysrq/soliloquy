@@ -1,0 +1,68 @@
+CUSTOMISING AND EXTENDING SOLILOQUY
+===================================
+Language Information
+--------------------
+Soliloquy is written in what is essentially C99, but is extended somewhat to
+give C some Lisp-like features. This is done by both the preprocessor and an
+external tool (run automatically).
+
+All implementation files *must* begin with
+----------------
+  #include "foo.slc"
+----------------
+where "foo" is the base name of the file. The .slc file contains auto-generated
+implementations of language extensions and declarations for
+symbols. Additionally, it includes the header for your implementation (if there
+is one), <config.h> if appropriate, as well as "common.h".
+
+The first extension of note are symbols. Symbols, which are only valid in
+implementation files (*.c), look like undeclared variables beginning with
+`$'. For example, $symbol. They are, in fact, pointers to global sytabs,
+such that any two symbols with the same name refer to the same sytab. The
+primary purpose of symbols is simply to indicate identity; the attached
+sytabs are intended for metadata.
+
+A sytab is a mapping of symbols to partially-typed data. Each entry in a sytab
+may refer to a string, sylist, sytab, integer, symbol, dynfun, or (untyped)
+pointer. A sylist contains an ordered sequence of partially-typed data of the
+same types as a sytab.
+
+The Y(x) macro wraps the given type in a syval so it can easily be placed into
+a sytab or sylist.
+
+There are macros and pseudo-macros for working with sytabs and sylists. TC(...)
+creates a new sytab with the given pairs, eg
+  sytab foo = TC($baz, Y(bar), $quux, Y(xyzzy));
+similarly, LC(...) builds a list containing only the listed elements
+  sylist fum = LC(Y(foo), Y(bar));
+
+The TP(init,...) and LP(init,...) macros work like TC and LC, but start with a
+non-empty sytab or sylist. Note that LP *prepends* the items given, though they
+will be in the order given.
+  sytab foo2 = TP(foo, $fum, Y(5));
+  sylist fum2 = LP(fum, Y(1), Y(2), Y(3));
+
+Destructuring is provided by the T$(...) and L$(...) pseudo-macros. The first
+argument of each is an expression evaluating to the sytab or sylist to
+destructure. In the case of T$, that is followed by a list of declarations of
+the following form, where brackets indicate optionality:
+  type $symbol [var] [?]
+Type is one of: bool, int, signed, unsigned, string, symbol, sylist, sytab,
+dynfun, or opaque(XXX), where XXX names a C pointer type. A variable named
+"var" (or "symbol" if var is omitted) is declared with the appropriate type. If
+$symbol exists in the sytab and is of the correct type, var is assigned the
+contained value. Otherwise, destructuring fails (without the question) or var
+is not altered (with the question). If the question-mark is given, a variable
+named var_p is declared as a bool, and is set to true or false to indicate
+whether var was extracted.
+
+The format of L$ is mostly the same as T$, except that the contents have the
+form
+  type var [?]
+Each variable given is bound to successive elements of the list if they are of
+the correct type. The final argument to L$ may be a single identifier, which
+will be set to the tail of the list after destructuring completed.
+
+In the cases of both T$ and L$, an if statement is implictly started (which can
+be paired with else). Note that both T$ and L$ consume multiple statements, and
+thus require braces around them when they are the only statement in a block.
