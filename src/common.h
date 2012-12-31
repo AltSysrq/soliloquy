@@ -29,9 +29,28 @@
 #include <string.h>
 #include <gc.h>
 
+#define SYMBOL_CONSTRUCTION_PRIORITY 8
+#define DOMAIN_CONSTRUCTION_PRIORITY 16
+#define STATIC_INITIALISATION_PRIORITY 32
+
+#define _GLUE(x,y) x##y
+
+/**
+ * Causes a global variable to be initialised before main() is run, but after
+ * symbols have been constructed.
+ *
+ * Usage:
+ *
+ * qualifiers type STATIC_INIT(name, expression)
+ */
+#define STATIC_INIT(name, value)                       \
+  name; static ATSTART(_GLUE(name##_init, __LINE__),   \
+                       STATIC_INITIALISATION_PRIORITY) \
+  { name = value; }
+
 /**
  * Defines a function with the provided name which is run when the program
- * starts, with the given priority, where heigher priority functions are
+ * starts, with the given priority, where lower priority functions are
  * exectued first.
  */
 #define ATSTART(name,priority) \
@@ -46,8 +65,9 @@
  *
  * If allocation fails, the program aborts.
  */
-static inline void* gcalloc(size_t size) __attribute__((malloc)) {
-  void* ret = GC_ALLOC(size);
+static inline void* gcalloc(size_t) __attribute__((malloc));
+static inline void* gcalloc(size_t size) {
+  void* ret = GC_MALLOC(size);
   if (!ret) {
     fprintf(stderr, "Out of memory");
     exit(255);
@@ -93,5 +113,50 @@ typedef const char* string;
 typedef void (*hook_function)(void);
 struct object_t;
 typedef struct object_t* object;
+struct undefined_struct;
+typedef struct undefined_struct* identity;
+
+/// OBJECTS/CONTEXTS
+/**
+ * Executes _body_ within the context of _obj_, restoring context when _body_
+ * completes. This is not an expression; any return value of _body_ is
+ * discarded.
+ */
+#define within_context(obj,body) \
+  do { object_eviscerate(obj); body; object_reembowel(); } while(0)
+/**
+ * Implants the given symbol, or domain of symbols, into the current context.
+ *
+ * The effect of using this macro to implant something which is not a symbol is
+ * undefined.
+ */
+#define implant(sym) object_implant(object_current(), &sym, sizeof(sym), \
+                                    sym##_implantation_type)
+
+/**
+ * Returns the value of _sym_ within the context of _obj_ without needing to go
+ * through the trouble of eviscerating _obj_. If _sym_ is not implanted in
+ * _obj_, its value is taken from the nearest context above _obj_ in the
+ * activation stack if _obj_ is activated, by searching _obj_'s parents if it
+ * is not, and falling back to the current context if that fails as well.
+ */
+#define $(obj,sym) ({                                                   \
+  typeof(sym) _GLUE(_ret_, __LINE__);                                   \
+  object_get_implanted_value(_GLUE(_ret_, __LINE__), obj, &sym, sizeof(sym)); \
+  _GLUE(_ret_, __LINE__);})
+
+///////////////////////////////////////////////////////////////////////////////
+/// Mostly internal details below. You need not concern yourself with these.///
+///////////////////////////////////////////////////////////////////////////////
+
+enum implantation_type { ImplantSingle, ImplantDomain };
+
+void object_eviscerate(object);
+void object_reembowel(void);
+object object_new(object parent);
+object object_clone(object);
+void object_implant(object, void*, size_t, enum implantation_type);
+void object_get_implanted_value(void* dst, object, void* sym, size_t);
+object object_current(void);
 
 #endif /* COMMON_H_ */
