@@ -119,7 +119,7 @@ typedef struct undefined_struct* identity;
 /// OBJECTS/CONTEXTS
 /**
  * Creates a new object with no implants. If a parent is specified, any
- * activations of the object will implicitly evicerate the parent first.
+ * activations of the object will implicitly eviscerate the parent first.
  */
 object object_new(object parent);
 /**
@@ -145,8 +145,7 @@ object object_current(void);
  * The effect of using this macro to implant something which is not a symbol is
  * undefined.
  */
-#define implant(sym) object_implant(object_current(), &sym, sizeof(sym), \
-                                    sym##_implantation_type)
+#define implant(sym) object_implant(&sym, sizeof(sym), sym##_implantation_type)
 
 /**
  * Returns the value of _sym_ within the context of _obj_ without needing to go
@@ -164,6 +163,17 @@ object object_current(void);
 /// Mostly internal details below. You need not concern yourself with these.///
 ///////////////////////////////////////////////////////////////////////////////
 
+struct symbol_owner_stack {
+  object owner;
+  struct symbol_owner_stack* next;
+};
+
+/// All physical first-class symbols MUST begin with this structure.
+/// Silc uses preprocessor macros to hide this detail.
+struct symbol_header {
+  struct symbol_owner_stack* owner_stack;
+};
+
 struct hook_point_entry {
   hook_function fun;
   struct hook_point_entry* next;
@@ -177,7 +187,7 @@ enum implantation_type { ImplantSingle, ImplantDomain };
 
 void object_eviscerate(object);
 void object_reembowel(void);
-void object_implant(object, void*, size_t, enum implantation_type);
+void object_implant(void*, size_t, enum implantation_type);
 void object_get_implanted_value(void* dst, object, void* sym, size_t);
 
 #endif /* COMMON_H_ */
