@@ -118,6 +118,21 @@ typedef struct undefined_struct* identity;
 
 /// OBJECTS/CONTEXTS
 /**
+ * Creates a new object with no implants. If a parent is specified, any
+ * activations of the object will implicitly evicerate the parent first.
+ */
+object object_new(object parent);
+/**
+ * Clones the given object, yielding an identical one with the same implants
+ * and parent. This is a shallow copy.
+ */
+object object_clone(object);
+/**
+ * Returns the object which represents the current context.
+ */
+object object_current(void);
+
+/**
  * Executes _body_ within the context of _obj_, restoring context when _body_
  * completes. This is not an expression; any return value of _body_ is
  * discarded.
@@ -153,10 +168,7 @@ enum implantation_type { ImplantSingle, ImplantDomain };
 
 void object_eviscerate(object);
 void object_reembowel(void);
-object object_new(object parent);
-object object_clone(object);
 void object_implant(object, void*, size_t, enum implantation_type);
 void object_get_implanted_value(void* dst, object, void* sym, size_t);
-object object_current(void);
 
 #endif /* COMMON_H_ */
