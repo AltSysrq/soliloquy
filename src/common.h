@@ -164,6 +164,15 @@ object object_current(void);
 /// Mostly internal details below. You need not concern yourself with these.///
 ///////////////////////////////////////////////////////////////////////////////
 
+struct hook_point_entry {
+  hook_function fun;
+  struct hook_point_entry* next;
+};
+
+struct hook_point {
+  struct hook_point_entry* entries[16];
+};
+
 enum implantation_type { ImplantSingle, ImplantDomain };
 
 void object_eviscerate(object);
