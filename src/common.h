@@ -29,18 +29,24 @@
 #include <string.h>
 #include <gc.h>
 
-/// MACRO UTILS
-/// (substitution and gluing together)
-#define _GLUE(a,b)  __GLUE(a,b)
-#define __GLUE(a,b) ___GLUE(a##b)
-#define ___GLUE(a)  ____GLUE(a)
-#define ____GLUE(a) a
-
-#define ATSTART __attribute__((constructor))
+/**
+ * Defines a function with the provided name which is run when the program
+ * starts, with the given priority, where heigher priority functions are
+ * exectued first.
+ */
+#define ATSTART(name,priority) \
+  static void name(void) __attribute__((constructor(priority)))
 
 /// MEMORY
-
-static inline void* gcalloc(size_t size) {
+/**
+ * Allocates memory of the given size, which will be automatically
+ * garbage-collected when it is no longer needed.
+ *
+ * The memory returned is zero-initialised.
+ *
+ * If allocation fails, the program aborts.
+ */
+static inline void* gcalloc(size_t size) __attribute__((malloc)) {
   void* ret = GC_ALLOC(size);
   if (!ret) {
     fprintf(stderr, "Out of memory");
@@ -49,103 +55,43 @@ static inline void* gcalloc(size_t size) {
   return ret;
 }
 
+/**
+ * Reällocates the given pointer to be of the requested new size, returning the
+ * result. The behaviour is the same as realloc(), except that the memory will
+ * be reclaimed automatically. The given pointer must have been retrieved from
+ * gcalloc() or gcrealloc().
+ *
+ * If allocation fails, the program aborts.
+ */
+static inline void* gcrealloc(void* ptr, size_t size) {
+  void* ret = GC_REALLOC(ptr, size);
+  if (!ret) {
+    fprintf(stderr, "Out of memory");
+    exit(255);
+  }
+  return ret;
+}
+
+/**
+ * Allocates a new instance of the given type.
+ */
 #define new(type) gcalloc(sizeof(type))
+/**
+ * Clones the given pointer, assuming its size is fixed and derivable from
+ * sizeof(*pointer).
+ */
 #define newdup(pointer) \
   (memcpy(new(sizeof(*pointer)), pointer, sizeof(*pointer)))
 
-/// GENERIC TYPES
+/**
+ * Like strdup(), but uses gcalloc().
+ */
+const char* gcstrdup(const char*) __attribute__((malloc));
 
-typedef enum {
-  Syval_String = 0,
-  Syval_Sylist = 1,
-  Syval_Sytab  = 2,
-  Syval_Int    = 3,
-  Syval_Symbol = 4,
-  Syval_Dynfun = 5,
-  Syval_Opaque = 6
-} syval_type;
-
+/// STANDARD TYPES
 typedef const char* string;
-typedef char* mstring;
-struct sytab;
-typedef struct sytab* sytab;
-typedef sytab* symbol;
-typedef sytab (*dynfun)(sytab);
-struct cons_cell;
-typedef struct cons_cell* sylist;
-typedef void* opaque;
-
-typedef struct {
-  syval_type type;
-  union {
-    string as_str;
-    sylist as_list;
-    sytab as_table;
-    int as_int;
-    symbol as_symbol;
-    dynfun as_dynfun;
-    opaque as_opaque;
-  } value;
-} syval;
-
-/// LISTS
-
-struct cons_cell {
-  syval car;
-  sylist cdr;
-};
-
-inline sylist cons(syval car, sylist cdr) {
-  struct cons_cell cell = { car, cdr };
-  return newdup(&cell);
-}
-
-sylist sylist_create(sylist, ...);
-
-#define LC(...) (sylist_create(NULL, __VA_ARGS__, NULL))
-#define LP(head,...) (sylist_create((head), __VA_ARGS__, NULL))
-//Usage: L$(sylist, type var, ...)
-//type is one of: bool int signed unsigned string sylist sytab dynfun
-//opaque(XXX); in the last case, XXX denotes the actual type of the variable.
-//If var ends with a question mark, a bool named var_p will also be declared,
-//which will indicate whether var has any meaningful value.
-//
-//Optionally, the last element may be a simple varible name, which will hold
-//the tail of the sylist, if destructuring got that far.
-#define L$(...) _GLUE(LIST_DESTRUCTURING, __LINE__)
-
-/// TABLES
-
-sytab sytab_new(void);
-sytab sytab_create(symbol, syval, ...);
-const syval* sytab_get(sytab, symbol);
-const syval* sytab_iget(unsigned long, symbol);
-void sytab_put(sytab, symbol, syval);
-void sytab_iput(unsigned long, symbol, syval);
-void sytab_putl(sytab, ...);
-void sytab_rem(sytab, symbol);
-void sytab_rem(sytab, unsigned long);
-void sytab_merge(sytab, sytab);
-sytab sytab_clone(sytab);
-
-#define TC(...) (sytab_create(__VA_ARGS__, NULL))
-#define TP(init,...) (sytab_putl(init, __VA_ARGS__, NULL))
-//Usage: T$(sytab, type $symbol var, ...)
-//type is one of: bool int signed unsigned string sylist sytab dynfun
-//opaque(XXX); in the last case, XXX denotes the actual type of the variable.
-//If var ends with a question mark, a bool named var_p will also be declared,
-//which will indicate whether var has any meaningful value. var may also be
-//omitted, in which case the name of the symbol is used for the variable, sans
-//the dollar. The question syntax can still be used in this case.
-#define T$(...) _GLUE(TABLE_DESTRUCTURING, __LINE__)
-
-/// DYNAMIC FUNCTIONS
-
-#define hfun(name) TODO
-//Usage: defun(name, (destructuring)) { body }
-//destructuring is the same as for T$. Additionally, a lone variable name will
-//hold the raw arguments sytab.
-#define defun(...) _GLUE(DEFINE_DYNAMIC_FUNCTION, __LINE__)
-#define defadvice(...) _GLUE(DEFINE_ADVICE, __LINE__)
+typedef void (*hook_function)(void);
+struct object_t;
+typedef struct object_t* object;
 
 #endif /* COMMON_H_ */
