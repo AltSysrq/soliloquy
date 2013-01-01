@@ -19,3 +19,4 @@ configure
 doc
 symbols.def
 *.slc
+src/Makefile.am

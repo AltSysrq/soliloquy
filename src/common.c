@@ -17,11 +17,7 @@
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include "common.h"
+#include "common.slc"
 
 const char* gcstrdup(const char* str) {
   size_t len = strlen(str)+1;
@@ -134,15 +130,7 @@ object object_clone(object that) {
   return this;
 }
 
-//DELETE LATER, once symbol generation and dynars are implemented
-#define $ao_evisceration_stack _$ao_evisceration_stack
-static struct {
-  unsigned len;
-  object v[1024];
-} $ao_evisceration_stack;
-#define dynar_push_o(arr,obj) ((arr).v[(arr).len++]=obj)
-#define dynar_pop_o(arr) ((arr).v[--(arr).len])
-#define dynar_top_o(arr) ((arr).v[(arr).len-1])
+STATIC_INIT_TO($ao_evisceration_stack, dynar_new_o())
 
 /**
  * Evisceration of an object is performed as follows:

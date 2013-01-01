@@ -29,11 +29,12 @@
 #include <string.h>
 #include <gc.h>
 
-#define SYMBOL_CONSTRUCTION_PRIORITY 8
-#define DOMAIN_CONSTRUCTION_PRIORITY 16
-#define STATIC_INITIALISATION_PRIORITY 32
+#define SYMBOL_CONSTRUCTION_PRIORITY 108
+#define DOMAIN_CONSTRUCTION_PRIORITY 116
+#define STATIC_INITIALISATION_PRIORITY 132
 
-#define _GLUE(x,y) x##y
+#define __GLUE(x,y) x##y
+#define _GLUE(x,y) __GLUE(x,y)
 
 /**
  * Causes a global variable to be initialised before main() is run, but after
@@ -43,9 +44,11 @@
  *
  * qualifiers type STATIC_INIT(name, expression)
  */
-#define STATIC_INIT(name, value)                       \
-  name; static ATSTART(_GLUE(name##_init, __LINE__),   \
-                       STATIC_INITIALISATION_PRIORITY) \
+#define STATIC_INIT(name, value)                \
+  name; STATIC_INIT_TO(name, value)
+#define STATIC_INIT_TO(name, value)                    \
+  ATSTART(_GLUE(name##_init, __LINE__),                \
+          STATIC_INITIALISATION_PRIORITY)              \
   { name = value; }
 
 /**
@@ -54,7 +57,15 @@
  * exectued first.
  */
 #define ATSTART(name,priority) \
-  static void name(void) __attribute__((constructor(priority)))
+  static void name(void) __attribute__((constructor(priority))); \
+  static void name(void)
+
+/**
+ * Results in a symbol unique to the given line of the given compilation
+ * unit. This is not guaranteed to be unique across compilation units, so it
+ * must be used only with local or static scope.
+ */
+#define ANONYMOUS _GLUE(_anon_,__LINE__)
 
 /// MEMORY
 /**
@@ -146,7 +157,7 @@ object object_current(void);
  * undefined.
  */
 #define implant(sym) \
-  object_implant(&sym##_base, sym##_implantation_type)
+  object_implant(&_GLUE(sym,_base), _GLUE(sym, _implantation_type))
 
 /**
  * Returns the value of _sym_ within the context of _obj_ without needing to go
@@ -157,7 +168,8 @@ object object_current(void);
  */
 #define $(obj,sym) ({                                                   \
   typeof(sym) _GLUE(_ret_, __LINE__);                                   \
-  object_get_implanted_value(_GLUE(_ret_, __LINE__), obj, &sym##_base); \
+  object_get_implanted_value(_GLUE(_ret_, __LINE__), obj,               \
+                             &_GLUE(sym,_base));                        \
   _GLUE(_ret_, __LINE__);})
 
 ///////////////////////////////////////////////////////////////////////////////
