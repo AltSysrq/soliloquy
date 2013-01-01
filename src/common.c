@@ -436,6 +436,8 @@ void add_hook(struct hook_point* point, unsigned priority,
               identity id, identity class,
               void (*fun)(void),
               hook_constraint_function constraints) {
+  // Remove any existing
+  del_hook(point, priority, id);
   struct hook_point_entry hpe = {
     .fun = fun,
     .constraints = constraints,
