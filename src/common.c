@@ -379,4 +379,94 @@ void object_get_implanted_value(void* dst, object this,
   memcpy(dst, sym->payload, sym->size);
 }
 
+static void sort_hook_functions(struct hook_point_entry** base) {
+  /* This is a rather naïve algorithm (O(n^3) worst-case), but it shouldn't be
+   * an issue generally, since most hooks do not have interdependencies, and
+   * even when they do, there are not THAT many of them.
+   *
+   * In cases of circular constraints, it may end up in an infinite loop.
+   */
+  restart_sort:
+  while (*base) {
+    // Ensure *base is not constrained to come after anything currently after
+    // it
+    for (struct hook_point_entry** other = &(*base)->next;
+         *other; other = &(*other)->next) {
+      hook_constraint base_to_other;
+      base_to_other = HookConstraintNone;
+
+      if ((*base)->constraints)
+        base_to_other = (*base)->constraints((*base)->id, (*base)->class,
+                                             (*other)->id, (*other)->class);
+      // If the base constraints did not require anything, check the other point
+      if (!base_to_other && (*other)->constraints) {
+        switch ((*other)->constraints((*other)->id, (*other)->class,
+                                      (*base)->id, (*base)->class)) {
+        case HookConstraintNone: break;
+        case HookConstraintBefore:
+          base_to_other = HookConstraintAfter;
+          break;
+        case HookConstraintAfter:
+          base_to_other = HookConstraintBefore;
+          break;
+        }
+      }
+
+      if (base_to_other == HookConstraintAfter) {
+        // The head of the list needs to run after this item, so swap the two
+        // and restart the sort from base.
+        struct hook_point_entry* tmp = *base;
+        *base = *other;
+        *other = tmp;
+        goto restart_sort;
+      }
+    }
+
+    /* The head of this sublist can run before everything after it, so continue
+     * the sort with the next item.
+     */
+    base = &(*base)->next;
+  }
+}
+
+void add_hook(struct hook_point* point, unsigned priority,
+              identity id, identity class,
+              void (*fun)(void),
+              hook_constraint_function constraints) {
+  struct hook_point_entry hpe = {
+    .fun = fun,
+    .constraints = constraints,
+    .id = id,
+    .class = class,
+    .next = point->entries[priority],
+  };
+  point->entries[priority] = newdup(&hpe);
+
+  sort_hook_functions(&point->entries[priority]);
+}
+
+void del_hook(struct hook_point* point, unsigned priority, identity id) {
+  struct hook_point_entry** base = &point->entries[priority];
+  while (*base) {
+    if ((*base)->id == id) {
+      // Delete
+      *base = (*base)->next;
+      //No re-sorting is needed, since the current order remains valid even
+      //with a link removed
+      return;
+    }
+
+    base = &(*base)->next;
+  }
+}
+
+void invoke_hook(struct hook_point* point) {
+  for (unsigned priority = 0;
+       priority < sizeof(point->entries)/sizeof(point->entries[0]);
+       ++priority)
+    for (struct hook_point_entry* curr = point->entries[priority];
+         curr; curr = curr->next)
+      curr->fun();
+}
+
 #include "symbols.def"

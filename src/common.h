@@ -126,6 +126,7 @@ struct object_t;
 typedef struct object_t* object;
 struct undefined_struct;
 typedef struct undefined_struct* identity;
+struct hook_point;
 
 /// OBJECTS/CONTEXTS
 /**
@@ -162,15 +163,66 @@ object object_current(void);
 /**
  * Returns the value of _sym_ within the context of _obj_ without needing to go
  * through the trouble of eviscerating _obj_. If _sym_ is not implanted in
- * _obj_, its value is taken from the nearest context above _obj_ in the
- * activation stack if _obj_ is activated, by searching _obj_'s parents if it
- * is not, and falling back to the current context if that fails as well.
+ * _obj_, its parents are searched; failing that, the value in the current
+ * context is used.
  */
 #define $(obj,sym) ({                                                   \
   typeof(sym) _GLUE(_ret_, __LINE__);                                   \
   object_get_implanted_value(_GLUE(_ret_, __LINE__), obj,               \
                              &_GLUE(sym,_base));                        \
   _GLUE(_ret_, __LINE__);})
+
+typedef enum hook_constraint {
+  HookConstraintNone = 0,
+  HookConstraintBefore,
+  HookConstraintAfter
+} hook_constraint;
+
+/**
+ * Function pointer type to examine a pair of hook IDs and their classes and
+ * indicate whether there is any ordering relationship between them, from the
+ * perspective of this (ie, returning HookConstraintBefore indicates to run the
+ * function identified by this_id before that identified by that_id).
+ *
+ * Given two hook constraint functions F and G, the following must hold:
+ *   F(a,b,c,d) == None || G(c,d,a,b) == None ||
+ *     F(a,b,c,d) != G(c,d,a,b)
+ * That is, either must return that they don't care about ordering, or they
+ * must indicate a consistent order with respect to each other.
+ *
+ * A NULL pointer of this type is considered equivalent to always returning
+ * HookConstraintNone.
+ */
+typedef hook_constraint (*hook_constraint_function)(
+  identity this_id, identity this_class,
+  identity that_id, identity that_class
+);
+
+/**
+ * Adds the given function to the given hook if it is not already present.
+ *
+ * Priority must be one of HOOK_BEFORE, HOOK_MAIN, and HOOK_AFTER, and
+ * indicates which phase of the hook this function belongs to.
+ *
+ * id is used to identify this hook, and should be a global identity
+ * symbol (eg, $$u_foo). class is used to classify the purpose of this
+ * function, and should also be a global identity symbol.
+ *
+ * fun is the function to call when the hook is invoked.
+ *
+ * If constraints is non-NULL, it is consulted for each other function at the
+ * same priority level to determine the order in which the hooked functions
+ * must be run. This function may be consulted later when more functions are
+ * hooked. The effects of circular constraints are undefined.
+ */
+void add_hook(struct hook_point*, unsigned priority,
+              identity id, identity class,
+              void (*fun)(void), hook_constraint_function);
+/**
+ * Deletes the given hook of the given priority from the given hook point, if
+ * such a hook exists. Does nothing otherwise.
+ */
+void del_hook(struct hook_point*, unsigned priority, identity);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Mostly internal details below. You need not concern yourself with these.///
@@ -197,11 +249,17 @@ struct symbol_header {
 
 struct hook_point_entry {
   hook_function fun;
+  hook_constraint_function constraints;
+  identity id, class;
+
   struct hook_point_entry* next;
 };
 
+#define HOOK_BEFORE 0
+#define HOOk_MAIN 1
+#define HOOK_AFTER 2
 struct hook_point {
-  struct hook_point_entry* entries[16];
+  struct hook_point_entry* entries[3];
 };
 
 enum implantation_type { ImplantSingle, ImplantDomain };
@@ -218,5 +276,7 @@ void object_implant(struct symbol_header*, \
                     enum implantation_type);
 void object_get_implanted_value(void* dst, object,
                                 struct symbol_header* sym);
+
+void invoke_hook(struct hook_point*);
 
 #endif /* COMMON_H_ */
