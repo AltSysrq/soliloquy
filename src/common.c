@@ -496,4 +496,8 @@ ATSTART(eviscerate_root_object, ROOT_OBJECT_EVISCERATION_PRIORITY) {
   object_eviscerate($$o_root);
 }
 
+//Since both our common.slc and symbols.def use ANONYMOUS, redefine it here so
+//there won't be any name collisions
+#undef ANONYMOUS
+#define ANONYMOUS _GLUE(_anon_sd_,__LINE__)
 #include "symbols.def"
