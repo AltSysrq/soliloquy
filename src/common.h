@@ -145,7 +145,8 @@ object object_current(void);
  * The effect of using this macro to implant something which is not a symbol is
  * undefined.
  */
-#define implant(sym) object_implant(&sym, sizeof(sym), sym##_implantation_type)
+#define implant(sym) \
+  object_implant(&sym##_base, sym##_implantation_type)
 
 /**
  * Returns the value of _sym_ within the context of _obj_ without needing to go
@@ -156,7 +157,7 @@ object object_current(void);
  */
 #define $(obj,sym) ({                                                   \
   typeof(sym) _GLUE(_ret_, __LINE__);                                   \
-  object_get_implanted_value(_GLUE(_ret_, __LINE__), obj, &sym, sizeof(sym)); \
+  object_get_implanted_value(_GLUE(_ret_, __LINE__), obj, &sym##_base); \
   _GLUE(_ret_, __LINE__);})
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -165,13 +166,21 @@ object object_current(void);
 
 struct symbol_owner_stack {
   object owner;
+  unsigned offset;
   struct symbol_owner_stack* next;
 };
 
 /// All physical first-class symbols MUST begin with this structure.
 /// Silc uses preprocessor macros to hide this detail.
 struct symbol_header {
+  unsigned size;
   struct symbol_owner_stack* owner_stack;
+  // This is a pointer to the real contents of the symbol. This will actually
+  // point to the first byte after this header and any following alignment
+  // padding. (It is due to the padding that we need to use an extra pointer,
+  // since there is no portable way to determine where the data would be, since
+  // different symbol payload types may have differing alignment.)
+  void* payload;
 };
 
 struct hook_point_entry {
@@ -185,9 +194,17 @@ struct hook_point {
 
 enum implantation_type { ImplantSingle, ImplantDomain };
 
+struct symbol_domain {
+  struct symbol_header* member;
+  enum implantation_type implant_type;
+  struct symbol_domain* next;
+};
+
 void object_eviscerate(object);
 void object_reembowel(void);
-void object_implant(void*, size_t, enum implantation_type);
-void object_get_implanted_value(void* dst, object, void* sym, size_t);
+void object_implant(struct symbol_header*, \
+                    enum implantation_type);
+void object_get_implanted_value(void* dst, object,
+                                struct symbol_header* sym);
 
 #endif /* COMMON_H_ */
