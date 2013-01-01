@@ -97,5 +97,6 @@ int main(void) {
   within_context(en, do_math());
   within_context(de, do_math());
 
-  return 0;
+  $li_test = cons_i(4, cons_i(2, cons_i(0, cons_i(1, NULL))));
+  return find_i($li_test, 0)->car;
 }
