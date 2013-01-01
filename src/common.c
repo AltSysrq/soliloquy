@@ -183,9 +183,10 @@ static void symbol_push_ownership(object this,
 
   // Write back into current owner and write new value unless the current
   // object is already the owner
-  if (sym->owner_stack && this != sym->owner_stack->owner) {
-    memcpy(sym->owner_stack->owner->data + sym->owner_stack->offset,
-           sym->payload, sym->size);
+  if (!sym->owner_stack || this != sym->owner_stack->owner) {
+    if (sym->owner_stack)
+      memcpy(sym->owner_stack->owner->data + sym->owner_stack->offset,
+             sym->payload, sym->size);
     memcpy(sym->payload, this->data + hte->offset, sym->size);
   }
 
@@ -219,11 +220,12 @@ static void symbol_pop_ownership(object this,
 
   // If the new owner is not this object, write back into this and restore new
   // owner's value
-  if (sym->owner_stack && this != sym->owner_stack->owner) {
+  if (!sym->owner_stack || this != sym->owner_stack->owner) {
     memcpy(this->data + hte->offset, sym->payload, sym->size);
-    memcpy(sym->payload,
-           sym->owner_stack->owner->data + sym->owner_stack->offset,
-           sym->size);
+    if (sym->owner_stack)
+      memcpy(sym->payload,
+             sym->owner_stack->owner->data + sym->owner_stack->offset,
+             sym->size);
   }
 }
 
