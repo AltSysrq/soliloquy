@@ -19,6 +19,8 @@
 
 #include "common.slc"
 
+#include <assert.h>
+
 const char* gcstrdup(const char* str) {
   size_t len = strlen(str)+1;
   char* dst = gcalloc(len);
@@ -167,6 +169,8 @@ static void symbol_pop_ownership(object this,
 void object_eviscerate(object this) {
   if (this->parent) object_eviscerate(this->parent);
 
+  ++this->evisceration_count;
+
   dynar_push_o($ao_evisceration_stack, this);
   for (unsigned i = 0; i < this->implants->table_size; ++i)
     if (this->implants->entries[i].sym)
@@ -201,6 +205,8 @@ void object_reembowel(void) {
     for (unsigned i = 0; i < this->implants->table_size; ++i)
       if (this->implants->entries[i].sym)
         symbol_pop_ownership(this, &this->implants->entries[i]);
+
+    --this->evisceration_count;
   } while (this->parent);
 }
 
@@ -267,6 +273,41 @@ void object_implant(struct symbol_header* sym,
 
     // Push ownership to the object
     symbol_push_ownership(this, &this->implants->entries[ix]);
+
+    if (this->evisceration_count > 1) {
+      /* In the case of multiple evisceration, we must also retroactively give
+       * this object ownership within the multiple frames.
+       *
+       * In a consistent state of the world, the following properties hold:
+       * - The ownership stack is a subsequence of the evisceration stack.
+       * - If any instance of an object in the evisceration stack occurs in the
+       *   ownership stack, all of them do.
+       */
+      unsigned estack = $ao_evisceration_stack->len-2;
+      struct symbol_owner_stack* ostack = sym->owner_stack;
+      /* To make the state consistent, examine pairs from the two stacks with
+       * the following rules:
+       * - If the next owner is the current evisceration context, move to the
+       *   next owner.
+       * - If the current evisceration context is this object, insert an
+       *   ownership frame into the ownership stack after the current and move
+       *   to it.
+       */
+      while (estack < $ao_evisceration_stack->len /* will wrap around */) {
+        object that = $ao_evisceration_stack->v[estack--];
+        if (ostack->next && that == ostack->next->owner) {
+          assert(that != this);
+          ostack = ostack->next;
+        } else if (that == this) {
+          struct symbol_owner_stack sos = {
+            .owner = this,
+            .next = ostack->next,
+            .offset = this->implants->entries[ix].offset,
+          };
+          ostack = ostack->next = newdup(&sos);
+        }
+      }
+    }
   } break;
   }
 }
