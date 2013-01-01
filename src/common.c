@@ -247,6 +247,11 @@ void object_implant(struct symbol_header* sym,
   } break;
 
   case ImplantSingle: {
+    // If the load factor is greater than 75%, double the hashtable size
+    if (this->implants->num_entries * 4 >
+        this->implants->table_size * 3)
+      object_expand_hashtable(this);
+
     unsigned ix = object_find_hashtable_entry(this, sym);
     if (this->implants->entries[ix].sym)
       // Already implanted, nothing to do
@@ -258,10 +263,6 @@ void object_implant(struct symbol_header* sym,
     this->implants->entries[ix].sym = sym;
     this->implants->entries[ix].offset = offset;
     ++this->implants->num_entries;
-    // If the load factor is greater than 75%, double the hashtable size
-    if (this->implants->num_entries * 4 >
-        this->implants->table_size * 3)
-      object_expand_hashtable(this);
     // Expand data section if needed
     if (offset + sym->size > this->data_size) {
       this->data_size *= 2;
