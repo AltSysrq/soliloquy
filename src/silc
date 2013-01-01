@@ -91,6 +91,7 @@ declare_symbols() {
                 ;;
             d)
                 echo "extern struct symbol_domain* _$symbol;"
+                echo "extern struct symbol_header _${symbol}_base;"
                 echo "static const enum implantation_type _${symbol}_implantation_type = ImplantDomain;"
                 ;;
             *)
@@ -180,11 +181,11 @@ if test -z "$1"; then
     rm -f $OUTFILE
     # Symbol sorting must be reversed, since $f depends on $h (and there are no
     # other interdependencies).
-    find . -name '*.c' -exec grep -E -o '\$\$?[a-zA-Z0-9_]+' '{}' \; \
+    find . -name '*.c' -exec grep -E -o '\$\$[a-zA-Z0-9_]+' '{}' \; \
         | add_implicit_symbols | sort -ru >symbols.list
-    <symbols.list grep -F '$$' | extract_templates_from_symbols | sort -u | \
+    <symbols.list extract_templates_from_symbols | sort -u | \
         instantiate_templates >$OUTFILE
-    <symbols.list grep -F '$$' | define_symbols no >>$OUTFILE
+    <symbols.list define_symbols no >>$OUTFILE
     <symbols.list grep -F '$$d' | sort -r | domain_membership symbols.list >>$OUTFILE
     rm symbols.list
 else

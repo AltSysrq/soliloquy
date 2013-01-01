@@ -76,8 +76,8 @@ Symbol domains are non-first-class symbols whose purpose is to group symbols
 which are typically implanted in groups. Any symbol whose base name (ie, in
 "$i_foo", "foo" is the base name) begins with the base name of a symbol domain
 followed by an underscore is implicitly part of that domain. Public symbol
-domains capture both public and private symbols, but private symbol domains
-only capture private symbols.
+domains capture only public symbols, and private symbol domains only capture
+private symbols.
 
 When a domain is to be implanted into an object, all symbols which are members
 thereof are implanted into that object. Domains may be subdomains of other
