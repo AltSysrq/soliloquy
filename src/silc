@@ -36,6 +36,16 @@ instantiate_templates() {
     done
 }
 
+add_implicit_symbols() {
+    while read sym; do
+        # $f needs implicit $h
+        if echo $sym | grep -q -E '\$f'; then
+            echo $sym | sed 's/$f/$h/'
+        fi
+        echo $sym
+    done
+}
+
 get_ctype_of_hung() {
     subtype=`echo $1 | sed 's/^.//'`
     case $1 in
@@ -95,8 +105,9 @@ declare_symbols() {
 }
 
 define_symbols() {
+    define_implantation_types="$1"
     while read symbol; do
-        if echo "$symbol" | grep -F '$$'; then
+        if echo "$symbol" | grep -qF '$$'; then
             linkage=''
         else
             linkage='static'
@@ -104,20 +115,19 @@ define_symbols() {
         type=`echo $symbol | extract_types`
         case $type in
             f)
+                hook_name=`echo $symbol | sed 's/$f/$h/'`
                 echo "$linkage void _$symbol(void) {"
-                # TODO
-                echo "#error function symbols not yet implemented"
+                echo "invoke_hook(&$hook_name);"
                 echo "}"
                 ;;
             u)
-                echo "$linkage const identity _$symbol;"
-                echo "ATSTART(ANONYMOUS, SYMBOL_CONSTRUCTION_PRIORITY) {"
-                echo "_$symbol = (identity)&_$symbol;"
-                echo "}"
+                echo "$linkage const identity _$symbol = (identity)&_$symbol;"
                 ;;
             d)
                 echo "$linkage struct symbol_domain* _$symbol = NULL;"
-                echo "static const enum implantation_type _${symbol}_implantation_type = ImplantDomain;"
+                if test "x$define_implantation_types" = "xyes"; then
+                    echo "static const enum implantation_type _${symbol}_implantation_type = ImplantDomain;"
+                fi
                 ;;
             *)
                 ctype=`get_ctype_of_hung $type`
@@ -127,7 +137,12 @@ define_symbols() {
                 echo "_${symbol}_base.size = sizeof($ctype);"
                 echo "_${symbol}_base.payload = &_$symbol;"
                 echo "}"
-                echo "static const enum implantation_type _${symbol}_implantation_type = ImplantSingle;"
+                if test "x$define_implantation_types" = "xyes"; then
+                    echo "static const enum implantation_type _${symbol}_implantation_type = ImplantSingle;"
+                fi
+                echo "ATSTART(ANONYMOUS, SYMBOL_ROOT_IMPLANTATION_PRIORITY) {"
+                echo "object_implant(&_${symbol}_base, ImplantSingle);"
+                echo "}"
         esac
 
         echo "#define $symbol _$symbol"
@@ -138,11 +153,13 @@ if test -z "$1"; then
     # Global symbols
     OUTFILE=symbols.def
     rm -f $OUTFILE
+    # Symbol sorting must be reversed, since $f depends on $h (and there are no
+    # other interdependencies).
     find . -name '*.c' -exec grep -E -o '\$\$[a-zA-Z0-9_]+' '{}' \; \
-        | sort -u >symbols.list
+        | add_implicit_symbols | sort -ru >symbols.list
     <symbols.list extract_templates_from_symbols | sort -u | \
         instantiate_templates >$OUTFILE
-    <symbols.list define_symbols >>$OUTFILE
+    <symbols.list define_symbols no >>$OUTFILE
     rm symbols.list
 else
     # Symbols local to a compilation unit
@@ -154,10 +171,11 @@ else
 #include <common.h>
 EOF
     test -f $1.h && echo "#include \"$1.h\"" >>$OUTFILE
-    grep -E -o '\$\$?[a-zA-Z0-9_]+' $1.c | sort -u >$1.list
+    grep -E -o '\$\$?[a-zA-Z0-9_]+' $1.c \
+        | add_implicit_symbols | sort -ru >$1.list
     <$1.list extract_templates_from_symbols | sort -u | \
         instantiate_templates >>$OUTFILE
     <$1.list grep -F '$$' | declare_symbols >>$OUTFILE
-    <$1.list grep -F -v '$$' | define_symbols >>$OUTFILE
+    <$1.list grep -F -v '$$' | define_symbols yes >>$OUTFILE
     rm $1.list
 fi

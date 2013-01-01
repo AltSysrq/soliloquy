@@ -132,8 +132,6 @@ object object_clone(object that) {
   return this;
 }
 
-STATIC_INIT_TO($ao_evisceration_stack, dynar_new_o())
-
 /**
  * Evisceration of an object is performed as follows:
  * - Eviscerate its parent, if present
@@ -418,6 +416,11 @@ static void sort_hook_functions(struct hook_point_entry** base) {
         struct hook_point_entry* tmp = *base;
         *base = *other;
         *other = tmp;
+
+        tmp = (*base)->next;
+        (*base)->next = (*other)->next;
+        (*other)->next = tmp;
+
         goto restart_sort;
       }
     }
@@ -467,6 +470,12 @@ void invoke_hook(struct hook_point* point) {
     for (struct hook_point_entry* curr = point->entries[priority];
          curr; curr = curr->next)
       curr->fun();
+}
+
+ATSTART(eviscerate_root_object, ROOT_OBJECT_EVISCERATION_PRIORITY) {
+  $ao_evisceration_stack = dynar_new_o();
+  $$o_root = object_new(NULL);
+  object_eviscerate($$o_root);
 }
 
 #include "symbols.def"

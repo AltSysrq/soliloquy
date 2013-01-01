@@ -31,7 +31,9 @@
 
 #define SYMBOL_CONSTRUCTION_PRIORITY 108
 #define DOMAIN_CONSTRUCTION_PRIORITY 116
-#define STATIC_INITIALISATION_PRIORITY 132
+#define ROOT_OBJECT_EVISCERATION_PRIORITY 132
+#define SYMBOL_ROOT_IMPLANTATION_PRIORITY 133
+#define STATIC_INITIALISATION_PRIORITY 164
 
 #define __GLUE(x,y) x##y
 #define _GLUE(x,y) __GLUE(x,y)
@@ -112,7 +114,7 @@ static inline void* gcrealloc(void* ptr, size_t size) {
  * sizeof(*pointer).
  */
 #define newdup(pointer) \
-  (memcpy(new(sizeof(*pointer)), pointer, sizeof(*pointer)))
+  (memcpy(new(typeof(*pointer)), pointer, sizeof(typeof(*pointer))))
 
 /**
  * Like strdup(), but uses gcalloc().
@@ -256,7 +258,7 @@ struct hook_point_entry {
 };
 
 #define HOOK_BEFORE 0
-#define HOOk_MAIN 1
+#define HOOK_MAIN 1
 #define HOOK_AFTER 2
 struct hook_point {
   struct hook_point_entry* entries[3];
