@@ -17,12 +17,20 @@
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "main.slc"
 
-#include <stdio.h>
-#include <gc.h>
+static void doit(void) {
+  printf("%s\n", $s_greeting);
+}
 
 int main(void) {
-  GC_INIT();
-  printf("Hello, world!\n");
+  object en = object_new(NULL), de = object_new(NULL);
+  within_context(en, implant($s_greeting));
+  within_context(de, implant($s_greeting));
+  within_context(en, $s_greeting = "Hello, world!");
+  within_context(de, $s_greeting = "Hallo, Welt!");
+
+  within_context(en, doit());
+  within_context(de, doit());
   return 0;
 }
