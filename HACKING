@@ -45,3 +45,21 @@ activated ("eviscerated"), the symbols value is changed to that stored in the
 object; correspondingly, when the object is deactivated ("re-emboweled"), the
 old value of the symbol is restored.
 
+Hook points are implicit collections of functions to run, usable as both
+methods and proper hooks (akin to in Emacs). Each hook point has a collection
+of functions to run, divided into three priorities: BEFORE, MAIN, and
+AFTER. Functions in the BEFORE priority are intended to examine, intercept
+and/or modify the input parameters to the hook; those in MAIN should perform
+the intended work of the hook; and those in AFTER are intended to do things
+with the return value. Since hook functions neither take arguments nor have
+return values, parameters and result data are instead passed via symbols.
+
+Within each hook point priority, each hook may define before or after
+constraints against other hook identities; such constraints guarantee relative
+execution order between the hooks. (Do NOT create a hook that defines itself to
+be "before (or after) everything" --- it will break the program if two hooks do
+this. Instead, take advantages of hook classes to accomplish this.)
+
+If a $f symbol is ever referenced, its corresponding $h exists implictly; by
+simply calling $f symbols at logical points in code, you can easily add
+extension points.
