@@ -335,3 +335,5 @@ void object_get_implanted_value(void* dst, object this,
    */
   memcpy(dst, sym->payload, sym->size);
 }
+
+#include "symbols.def"
