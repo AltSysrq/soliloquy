@@ -226,6 +226,16 @@ void add_hook(struct hook_point*, unsigned priority,
  */
 void del_hook(struct hook_point*, unsigned priority, identity);
 
+/**
+ * Adds  the given symbol to the given symbol domain during static
+ * initialisation.
+ */
+#define member_of_domain(sym,dom)                               \
+  ATSTART(ANONYMOUS, DOMAIN_CONSTRUCTION_PRIORITY) {            \
+    add_symbol_to_domain(&_GLUE(sym,_base),&dom,                \
+                         _GLUE(sym,_implantation_type));        \
+  }
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Mostly internal details below. You need not concern yourself with these.///
 ///////////////////////////////////////////////////////////////////////////////
@@ -274,11 +284,13 @@ struct symbol_domain {
 
 void object_eviscerate(object);
 void object_reembowel(void);
-void object_implant(struct symbol_header*, \
-                    enum implantation_type);
+void object_implant(struct symbol_header*, enum implantation_type);
 void object_get_implanted_value(void* dst, object,
                                 struct symbol_header* sym);
 
 void invoke_hook(struct hook_point*);
+
+void add_symbol_to_domain(struct symbol_header*, struct symbol_domain**,
+                          enum implantation_type);
 
 #endif /* COMMON_H_ */

@@ -2,6 +2,8 @@ CUSTOMISING AND EXTENDING SOLILOQUY
 ===================================
 Language Information
 --------------------
+Introduction
+~~~~~~~~~~~~
 Soliloquy is written in what is essentially C99, but is extended somewhat to
 give C some Lisp-like features. This is done by both the preprocessor and an
 external tool (run automatically). Due to the complex and dynamic nature of the
@@ -17,6 +19,8 @@ implementations of language extensions and declarations for
 symbols. Additionally, it includes the header for your implementation (if there
 is one), <config.h> if appropriate, as well as "common.h".
 
+Symbols (General)
+~~~~~~~~~~~~~~~~~
 The first extension of note are symbols. Symbols, which are only valid in
 implementation files (*.c), look like undeclared variables beginning with
 one or two `$'s, followed by a name using Hungarian notation.
@@ -45,6 +49,8 @@ activated ("eviscerated"), the symbols value is changed to that stored in the
 object; correspondingly, when the object is deactivated ("re-emboweled"), the
 old value of the symbol is restored.
 
+Symbols: Hook Points
+~~~~~~~~~~~~~~~~~~~~
 Hook points are implicit collections of functions to run, usable as both
 methods and proper hooks (akin to in Emacs). Each hook point has a collection
 of functions to run, divided into three priorities: BEFORE, MAIN, and
@@ -63,3 +69,22 @@ this. Instead, take advantages of hook classes to accomplish this.)
 If a $f symbol is ever referenced, its corresponding $h exists implictly; by
 simply calling $f symbols at logical points in code, you can easily add
 extension points.
+
+Symbols: Symbol Domains
+~~~~~~~~~~~~~~~~~~~~~~~
+Symbol domains are non-first-class symbols whose purpose is to group symbols
+which are typically implanted in groups. Any symbol whose base name (ie, in
+"$i_foo", "foo" is the base name) begins with the base name of a symbol domain
+followed by an underscore is implicitly part of that domain. Public symbol
+domains capture both public and private symbols, but private symbol domains
+only capture private symbols.
+
+When a domain is to be implanted into an object, all symbols which are members
+thereof are implanted into that object. Domains may be subdomains of other
+domains, which has the expected effect.
+
+It is also possible to manually add members to domains (see member_of_domain in
+common.h); using this facility to make a cycle of subdomains has undefined
+effects. Due to the implicit behaviour of symbol domains (especially public),
+recommended convention is to capitalise the first letter of each word in the
+domain (eg, $d_This_Is_A_Domain).

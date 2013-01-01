@@ -124,7 +124,12 @@ define_symbols() {
                 echo "$linkage const identity _$symbol = (identity)&_$symbol;"
                 ;;
             d)
+                echo "$linkage struct symbol_header _${symbol}_base;"
                 echo "$linkage struct symbol_domain* _$symbol = NULL;"
+                echo "ATSTART(ANONYMOUS, SYMBOL_CONSTRUCTION_PRIORITY) {"
+                echo "_${symbol}_base.size = sizeof(struct symbol_domain*);"
+                echo "_${symbol}_base.payload = &_$symbol;"
+                echo "}"
                 if test "x$define_implantation_types" = "xyes"; then
                     echo "static const enum implantation_type _${symbol}_implantation_type = ImplantDomain;"
                 fi
@@ -149,17 +154,38 @@ define_symbols() {
     done
 }
 
+domain_membership() {
+    INFILE=$1.1
+    TMPFILE=$1.2
+    cp $1 $INFILE
+
+    while read domain; do
+        # Get the base name out of the domain
+        basename=`echo $domain | sed 's/$*[a-zA-Z]*_//'`
+        # Add direct members of this domain
+        <$INFILE grep -E "^\\$+[a-zA-Z]+_${basename}_" | (while read sym; do
+            echo "member_of_domain($sym, $domain)"
+        done)
+        # Remove direct members from symbols list
+        <$INFILE grep -vE "^\$$+[a-zA-Z]+_${basename}_" >$TMPFILE
+        mv $TMPFILE $INFILE
+    done
+        
+    rm -f $INFILE $TMPFILE
+}
+
 if test -z "$1"; then
     # Global symbols
     OUTFILE=symbols.def
     rm -f $OUTFILE
     # Symbol sorting must be reversed, since $f depends on $h (and there are no
     # other interdependencies).
-    find . -name '*.c' -exec grep -E -o '\$\$[a-zA-Z0-9_]+' '{}' \; \
+    find . -name '*.c' -exec grep -E -o '\$\$?[a-zA-Z0-9_]+' '{}' \; \
         | add_implicit_symbols | sort -ru >symbols.list
-    <symbols.list extract_templates_from_symbols | sort -u | \
+    <symbols.list grep -F '$$' | extract_templates_from_symbols | sort -u | \
         instantiate_templates >$OUTFILE
-    <symbols.list define_symbols no >>$OUTFILE
+    <symbols.list grep -F '$$' | define_symbols no >>$OUTFILE
+    <symbols.list grep -F '$$d' | sort -r | domain_membership symbols.list >>$OUTFILE
     rm symbols.list
 else
     # Symbols local to a compilation unit
@@ -177,5 +203,6 @@ EOF
         instantiate_templates >>$OUTFILE
     <$1.list grep -F '$$' | declare_symbols >>$OUTFILE
     <$1.list grep -F -v '$$' | define_symbols yes >>$OUTFILE
+    <$1.list grep -E '^\$d' | sort -r | domain_membership $1.list >>$OUTFILE
     rm $1.list
 fi

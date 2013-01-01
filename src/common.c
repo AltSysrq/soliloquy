@@ -474,6 +474,22 @@ void invoke_hook(struct hook_point* point) {
       curr->fun();
 }
 
+void add_symbol_to_domain(struct symbol_header* sym,
+                          struct symbol_domain** dom,
+                          enum implantation_type implant_type) {
+  // Do nothing if already added
+  for (struct symbol_domain* d = *dom; d; d = d->next)
+    if (d->member == sym)
+      return;
+
+  struct symbol_domain entry = {
+    .member = sym,
+    .implant_type = implant_type,
+    .next = *dom,
+  };
+  *dom = newdup(&entry);
+}
+
 ATSTART(eviscerate_root_object, ROOT_OBJECT_EVISCERATION_PRIORITY) {
   $ao_evisceration_stack = dynar_new_o();
   $$o_root = object_new(NULL);

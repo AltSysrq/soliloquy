@@ -23,6 +23,10 @@ static void doit(void) {
   printf("%s\n", $s_greeting);
 }
 
+static void do_math(void) {
+  printf("%d + %d = %d\n", $i_Math_a, $i_Math_b, $i_Math_a + $i_Math_b);
+}
+
 static void print_foo(void) {
   printf("foo\n");
 }
@@ -79,6 +83,19 @@ int main(void) {
   within_context(en, $f_test());
   printf("\n");
   within_context(de, $f_test());
-  
+
+  within_context(en, {
+      implant($d_Math);
+      $i_Math_a = 5;
+      $i_Math_b = 6;
+    });
+  within_context(de, {
+      implant($d_Math);
+      $i_Math_a = 0;
+      $i_Math_b = -1;
+    });
+  within_context(en, do_math());
+  within_context(de, do_math());
+
   return 0;
 }
