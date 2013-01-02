@@ -42,6 +42,7 @@ add_implicit_symbols() {
         if echo $sym | grep -q -E '\$f'; then
             echo $sym | sed 's/$f/$h/'
         elif echo $sym | grep -q -E '\$c'; then
+            echo $sym | sed 's/$c/$d/'
             echo $sym | sed 's/$c/$f/'
             echo $sym | sed 's/$c/$h/'
             echo $sym | sed 's/$c/$u/'
@@ -115,7 +116,9 @@ declare_symbols() {
                 echo "static const enum implantation_type _${symbol}_implantation_type = ImplantSingle;"
         esac
 
-        echo "#define $symbol _$symbol"
+        if test "$type" != c && test "$type" != F; then
+            echo "#define $symbol _$symbol"
+        fi
     done
 }
 
@@ -171,12 +174,14 @@ define_symbols() {
                 echo "}"
         esac
 
-        echo "#define $symbol _$symbol"
+        if test "$type" != c && test "$type" != F; then
+            echo "#define $symbol _$symbol"
+        fi
     done
 }
 
-define_a_symbol() {
-    asym=$1
+define_c_symbol() {
+    csym=$1
     fsym=`echo $csym | sed 's/$c/$f/'`
     osym=`echo $csym | sed 's/$c/$o/'`
     usym=`echo $csym | sed 's/$c/$u/'`
@@ -212,7 +217,7 @@ define_F_symbol() {
 domain_membership() {
     INFILE=$1.1
     TMPFILE=$1.2
-    <$1 grep -v -E '$[cFfu]' >$INFILE
+    <$1 grep -v -E '\$[cFfu]' >$INFILE
 
     while read domain; do
         # Get the base name out of the domain

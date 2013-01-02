@@ -56,6 +56,14 @@ static hook_constraint after_bar(identity a, identity b, identity id, identity c
   return HookConstraintNone;
 }
 
+advise($h_Test) {
+  $i_Test_doubled = $i_Test_value * 2;
+}
+
+advise($h_Test_doit) {
+  printf("%d * 2 = %d\n", $i_Test_value, $i_Test_doubled);
+}
+
 int main(void) {
   object en = object_new(NULL), de = object_new(NULL);
   within_context(en, implant($s_greeting));
@@ -96,6 +104,12 @@ int main(void) {
     });
   within_context(en, do_math());
   within_context(de, do_math());
+
+  object obj5 = $c_Test($i_Test_value = 5);
+  object obj12 = $c_Test($i_Test_value = 12);
+  $F_Test_doit(0, obj5);
+  printf("We expect this to be wrong (13*2=24):\n");
+  $F_Test_doit(0, obj12, $i_Test_value = 13);
 
   $li_test = cons_i(4, cons_i(2, cons_i(0, cons_i(1, NULL))));
   return find_i($li_test, 0)->car;
