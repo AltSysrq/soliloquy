@@ -212,7 +212,7 @@ define_F_symbol() {
 domain_membership() {
     INFILE=$1.1
     TMPFILE=$1.2
-    cp $1 $INFILE
+    <$1 grep -v -E '$[cFfu]' >$INFILE
 
     while read domain; do
         # Get the base name out of the domain
