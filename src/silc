@@ -32,7 +32,13 @@ instantiate_templates() {
             TEMPLATE=dynar.m4
         fi
         subtype=`echo $type | sed 's/^.//'`
-        m4 -DHUNG=$subtype -DCTYPE=`get_ctype_of_hung $subtype` $TEMPLATE
+        if ctype=`get_ctype_of_hung $subtype`; then
+            m4 -DHUNG=$subtype -DCTYPE=$ctype $TEMPLATE
+        else
+            echo "While instantiating template for type: $type" >&2
+            echo "  (Look for a symbol beginning with \$${type}_ or \$\$${type}_)" >&2
+            exit 1
+        fi
     done
 }
 
@@ -110,10 +116,14 @@ declare_symbols() {
                 define_F_symbol "$symbol"
                 ;;
             *)
-                ctype=`get_ctype_of_hung $type`
-                echo "extern struct symbol_header _${symbol}_base;"
-                echo "extern typeof($ctype) _$symbol;"
-                echo "static const enum implantation_type _${symbol}_implantation_type = ImplantSingle;"
+                if ctype=`get_ctype_of_hung $type`; then
+                    echo "extern struct symbol_header _${symbol}_base;"
+                    echo "extern typeof($ctype) _$symbol;"
+                    echo "static const enum implantation_type _${symbol}_implantation_type = ImplantSingle;"
+                else
+                    echo "While processing symbol: $symbol" >&2
+                    exit 1
+                fi
         esac
 
         if test "$type" != c && test "$type" != F; then
@@ -159,19 +169,23 @@ define_symbols() {
                 define_F_symbol "$symbol"
                 ;;
             *)
-                ctype=`get_ctype_of_hung $type`
-                echo "$linkage struct symbol_header _${symbol}_base;"
-                echo "$linkage typeof($ctype) _$symbol;"
-                echo "ATSTART(ANONYMOUS, SYMBOL_CONSTRUCTION_PRIORITY) {"
-                echo "_${symbol}_base.size = sizeof($ctype);"
-                echo "_${symbol}_base.payload = &_$symbol;"
-                echo "}"
-                if test "x$define_implantation_types" = "xyes"; then
-                    echo "static const enum implantation_type _${symbol}_implantation_type = ImplantSingle;"
+                if ctype=`get_ctype_of_hung $type`; then
+                    echo "$linkage struct symbol_header _${symbol}_base;"
+                    echo "$linkage typeof($ctype) _$symbol;"
+                    echo "ATSTART(ANONYMOUS, SYMBOL_CONSTRUCTION_PRIORITY) {"
+                    echo "_${symbol}_base.size = sizeof($ctype);"
+                    echo "_${symbol}_base.payload = &_$symbol;"
+                    echo "}"
+                    if test "x$define_implantation_types" = "xyes"; then
+                        echo "static const enum implantation_type _${symbol}_implantation_type = ImplantSingle;"
+                    fi
+                    echo "ATSTART(ANONYMOUS, SYMBOL_ROOT_IMPLANTATION_PRIORITY) {"
+                    echo "object_implant(&_${symbol}_base, ImplantSingle);"
+                    echo "}"
+                else
+                    echo "While processing symbol: $symbol" >&2
+                    exit 1
                 fi
-                echo "ATSTART(ANONYMOUS, SYMBOL_ROOT_IMPLANTATION_PRIORITY) {"
-                echo "object_implant(&_${symbol}_base, ImplantSingle);"
-                echo "}"
         esac
 
         if test "$type" != c && test "$type" != F; then
@@ -243,9 +257,9 @@ if test -z "$1"; then
     find . -name '*.c' -exec grep -E -o '\$\$[a-zA-Z0-9_]+' '{}' \; \
         | add_implicit_symbols | sort -ru >symbols.list
     <symbols.list extract_templates_from_symbols | sort -u | \
-        instantiate_templates >$OUTFILE
-    <symbols.list define_symbols no >>$OUTFILE
-    <symbols.list grep -F '$$d' | sort -r | domain_membership symbols.list >>$OUTFILE
+        instantiate_templates >$OUTFILE || exit $?
+    <symbols.list define_symbols no >>$OUTFILE || exit $?
+    <symbols.list grep -F '$$d' | sort -r | domain_membership symbols.list >>$OUTFILE || exit $?
     rm symbols.list
 else
     # Symbols local to a compilation unit
@@ -261,9 +275,9 @@ EOF
         | add_implicit_symbols | sort -ru >$1.list
     cat implicit_symbols >>$1.list
     <$1.list extract_templates_from_symbols | sort -u | \
-        instantiate_templates >>$OUTFILE
-    <$1.list grep -F '$$' | declare_symbols >>$OUTFILE
-    <$1.list grep -F -v '$$' | define_symbols yes >>$OUTFILE
-    <$1.list grep -E '^\$d' | sort -r | domain_membership $1.list >>$OUTFILE
+        instantiate_templates >>$OUTFILE || exit $?
+    <$1.list grep -F '$$' | declare_symbols >>$OUTFILE || exit $?
+    <$1.list grep -F -v '$$' | define_symbols yes >>$OUTFILE || exit $?
+    <$1.list grep -E '^\$d' | sort -r | domain_membership $1.list >>$OUTFILE || exit $?
     rm $1.list
 fi
