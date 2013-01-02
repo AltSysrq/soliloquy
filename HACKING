@@ -29,17 +29,19 @@ A symbol may be either private (one $) or public (two $s). Private symbols are
 unique to each compilation unit, whereas public symbols are shared across all.
 The letters of a symbol's name between the dollars and the first underscore
 identify its type. Supported types are (* = non-first-class):
-  i     integer (type signed or unsigned)
-  s     string (type const char*)
-  h     hook point (undefined type)
-  f*    function to call the corresponding hook (type void (void))
-  lT    list of type T (may be multidimenional) (type list_T)
+  F*    method call (macro)
   aT    dynamic array of type T (type dynar_T)
+  c*    class (macro)
+  d*    symbol domain (discussed below) (typeless)
+  f*    function to call the corresponding hook (type void (void))
+  h     hook point (undefined type)
+  i     integer (type signed or unsigned)
+  lT    list of type T (may be multidimenional) (type list_T)
+  o     object (type object)
+  p     untyped pointer (type void*)
+  s     string (type const char*)
   u*    unique identifier (a pointer to itself, simply to indicate identity)
   v     reference to unique identifier (type identity)
-  p     untyped pointer (type void*)
-  d*    symbol domain (discussed below) (typeless)
-  o     object (type object)
 
 Besides simply being implicit global variables, symbols form the basis of
 Soliloquy's "eviscerated object" system. Any first-class symbol may be
@@ -70,6 +72,10 @@ If a $f symbol is ever referenced, its corresponding $h exists implictly; by
 simply calling $f symbols at logical points in code, you can easily add
 extension points.
 
+The advise, advise_before, and advise_after macros allow defining a function
+inline to bind to a hook in the root context, assuming you need no special
+ordering.
+
 Symbols: Symbol Domains
 ~~~~~~~~~~~~~~~~~~~~~~~
 Symbol domains are non-first-class symbols whose purpose is to group symbols
@@ -88,3 +94,34 @@ common.h); using this facility to make a cycle of subdomains has undefined
 effects. Due to the implicit behaviour of symbol domains (especially public),
 recommended convention is to capitalise the first letter of each word in the
 domain (eg, $d_This_Is_A_Domain).
+
+Symbols: Classes and Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A class ($c) symbol is a convenience for ad-hoc object-orientation. It implies
+$f (and, correspondingly, $h), $d, $u, and $o symbols of the same name.
+Furthermore, it itself is a macro for constructing that class. Given a call of
+  $c_Foo(...)
+the following happens:
+- A new object is allocated.
+- Within the context of that object:
+  - $d_Foo, $h_Foo, and $o_Foo are implanted
+  - $o_Foo is set to the new object
+  - The contents of ... are executed
+  - $f_Foo() is invoked
+- The new object is returned (ie, the macro functions as an expression).
+
+The subclass() macro can be used to create subclass-like relations between
+classes. (Note that the concept of a "class" is not just the $c symbol itself,
+but rather the symbols it implies, including the members of its domain.)
+
+A method ($F) symbol, like a class symbol, is a convenience for a common
+object-oriented pattern. It implies $f and $h symbols of the same name. Given a
+call of
+  $F_Foo_do_something(ret, object, ...)
+the following happens:
+- Within the context of object:
+  - ... is evaluated
+  - $f_Foo_do_something() is invoked
+  - ret is evaluated, and its result stored
+- The result is that of ret, copied outside of the context of object
+

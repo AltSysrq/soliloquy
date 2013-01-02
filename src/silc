@@ -41,6 +41,14 @@ add_implicit_symbols() {
         # $f needs implicit $h
         if echo $sym | grep -q -E '\$f'; then
             echo $sym | sed 's/$f/$h/'
+        elif echo $sym | grep -q -E '\$c'; then
+            echo $sym | sed 's/$c/$f/'
+            echo $sym | sed 's/$c/$h/'
+            echo $sym | sed 's/$c/$u/'
+            echo $sym | sed 's/$c/$o/'
+        elif echo $sym | grep -q -E '\$F'; then
+            echo $sym | sed 's/$F/$f/'
+            echo $sym | sed 's/$F/$h/'
         fi
         echo $sym
     done
@@ -94,6 +102,12 @@ declare_symbols() {
                 echo "extern struct symbol_header _${symbol}_base;"
                 echo "static const enum implantation_type _${symbol}_implantation_type = ImplantDomain;"
                 ;;
+            c)
+                define_c_symbol "$symbol"
+                ;;
+            F)
+                define_F_symbol "$symbol"
+                ;;
             *)
                 ctype=`get_ctype_of_hung $type`
                 echo "extern struct symbol_header _${symbol}_base;"
@@ -135,6 +149,12 @@ define_symbols() {
                     echo "static const enum implantation_type _${symbol}_implantation_type = ImplantDomain;"
                 fi
                 ;;
+            c)
+                define_c_symbol "$symbol"
+                ;;
+            F)
+                define_F_symbol "$symbol"
+                ;;
             *)
                 ctype=`get_ctype_of_hung $type`
                 echo "$linkage struct symbol_header _${symbol}_base;"
@@ -153,6 +173,40 @@ define_symbols() {
 
         echo "#define $symbol _$symbol"
     done
+}
+
+define_a_symbol() {
+    asym=$1
+    fsym=`echo $csym | sed 's/$c/$f/'`
+    osym=`echo $csym | sed 's/$c/$o/'`
+    usym=`echo $csym | sed 's/$c/$u/'`
+    dsym=`echo $csym | sed 's/$c/$d/'`
+    hsym=`echo $csym | sed 's/$c/$h/'`
+    echo "#define ${csym}(...) ({\\"
+    echo "  object _csym_this = object_new(NULL); \\"
+    echo "  within_context(_csym_this, {\\"
+    echo "    implant($osym); implant($dsym); implant($hsym); \\"
+    echo "    $osym = _csym_this; \\"
+    echo "    __VA_ARGS__; \\"
+    echo "    ${fsym}(); \\"
+    echo "  }); \\"
+    echo "  _csym_this; })"
+    echo "#define ${csym}_domain $dsym"
+    echo "#define ${csym}_function $fsym"
+    echo "#define ${csym}_identity $usym"
+}
+
+define_F_symbol() {
+    Fsym=$1
+    fsym=`echo $Fsym | sed 's/$F/$f/'`
+    echo "#define ${Fsym}(ret, this, ...) ({\\"
+    echo "  typeof(ret) _Fsym_ret;\\"
+    echo "  within_context((this), {\\"
+    echo "    __VA_ARGS__; \\"
+    echo "    ${fsym}();\\"
+    echo "    _Fsym_ret = (ret);\\"
+    echo "  }); \\"
+    echo "  _Fsym_ret; })"
 }
 
 domain_membership() {
@@ -200,6 +254,7 @@ EOF
     test -f $1.h && echo "#include \"$1.h\"" >>$OUTFILE
     grep -E -o '\$\$?[a-zA-Z0-9_]+' $1.c \
         | add_implicit_symbols | sort -ru >$1.list
+    cat implicit_symbols >>$1.list
     <$1.list extract_templates_from_symbols | sort -u | \
         instantiate_templates >>$OUTFILE
     <$1.list grep -F '$$' | declare_symbols >>$OUTFILE

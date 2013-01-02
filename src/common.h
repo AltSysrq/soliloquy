@@ -33,7 +33,8 @@
 #define DOMAIN_CONSTRUCTION_PRIORITY 116
 #define ROOT_OBJECT_EVISCERATION_PRIORITY 132
 #define SYMBOL_ROOT_IMPLANTATION_PRIORITY 133
-#define STATIC_INITIALISATION_PRIORITY 164
+#define ADVICE_INSTALLATION_PRIORITY 164
+#define STATIC_INITIALISATION_PRIORITY 228
 
 #define __GLUE(x,y) x##y
 #define _GLUE(x,y) __GLUE(x,y)
@@ -226,6 +227,31 @@ void add_hook(struct hook_point*, unsigned priority,
  */
 void del_hook(struct hook_point*, unsigned priority, identity);
 
+#define _ADVISE(hook,priority)                       \
+  static void _GLUE(advice,__LINE__)(void);          \
+  ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) { \
+    add_hook(&hook, priority,                        \
+             (identity)_GLUE(advice,__LINE__),       \
+             NULL, _GLUE(advice,__LINE__), NULL);    \
+  }                                                  \
+  static void _GLUE(advice,__LINE__)(void)
+
+/**
+ * Usage:
+ *   advise($h_some_hook) { (* body *) }
+ *
+ * Binds an anonymous function to the named hook point. The ID of the hook is
+ * the address of the function, and its class is NULL. When you use this,
+ * ensure that your hook is self-contained so that noone would need to care
+ * about ordering relationships with your hook, since it is impossible to refer
+ * to it by id.
+ */
+#define advise(hook) _ADVISE(hook, HOOK_MAIN)
+/** Like advise, but runs at BEFORE priority. */
+#define advise_before(hook) _ADVISE(hook, HOOK_BEFORE)
+/** Like advise, but runs at AFTER priority. */
+#define advise_after(hook) _ADVISE(hook, HOOK_AFTER)
+
 /**
  * Adds  the given symbol to the given symbol domain during static
  * initialisation.
@@ -234,6 +260,15 @@ void del_hook(struct hook_point*, unsigned priority, identity);
   ATSTART(ANONYMOUS, DOMAIN_CONSTRUCTION_PRIORITY) {            \
     add_symbol_to_domain(&_GLUE(sym,_base),&dom,                \
                          _GLUE(sym,_implantation_type));        \
+  }
+
+#define subclass(parent,child)                                 \
+  member_of_domain(_GLUE(parent,_domain),_GLUE(child,_domain)) \
+  ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {           \
+    add_hook(&_GLUE(child,_hook),                              \
+             HOOK_BEFORE, _GLUE(parent,_identity),             \
+             $$u_superconstructor, _GLUE(parent,_function),    \
+             NULL);                                            \
   }
 
 ///////////////////////////////////////////////////////////////////////////////
