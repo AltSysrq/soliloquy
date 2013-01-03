@@ -378,6 +378,13 @@ void object_get_implanted_value(void* dst, object this,
   memcpy(dst, sym->payload, sym->size);
 }
 
+static void clone_hook_chain(struct hook_point_entry** base) {
+  if (!*base) return;
+
+  *base = newdup(*base);
+  clone_hook_chain(&(*base)->next);
+}
+
 static void sort_hook_functions(struct hook_point_entry** base) {
   /* This is a rather naïve algorithm (O(n^3) worst-case), but it shouldn't be
    * an issue generally, since most hooks do not have interdependencies, and
@@ -433,12 +440,16 @@ static void sort_hook_functions(struct hook_point_entry** base) {
   }
 }
 
+static void del_hook_impl(struct hook_point*,
+                          unsigned, identity);
 void add_hook(struct hook_point* point, unsigned priority,
               identity id, identity class,
               void (*fun)(void),
               hook_constraint_function constraints) {
+  // Copy the current chain in case we are currently sharing it
+  clone_hook_chain(&point->entries[priority]);
   // Remove any existing
-  del_hook(point, priority, id);
+  del_hook_impl(point, priority, id);
   struct hook_point_entry hpe = {
     .fun = fun,
     .constraints = constraints,
@@ -451,7 +462,8 @@ void add_hook(struct hook_point* point, unsigned priority,
   sort_hook_functions(&point->entries[priority]);
 }
 
-void del_hook(struct hook_point* point, unsigned priority, identity id) {
+static void del_hook_impl(struct hook_point* point,
+                          unsigned priority, identity id) {
   struct hook_point_entry** base = &point->entries[priority];
   while (*base) {
     if ((*base)->id == id) {
@@ -464,6 +476,14 @@ void del_hook(struct hook_point* point, unsigned priority, identity id) {
 
     base = &(*base)->next;
   }
+}
+
+void del_hook(struct hook_point* point,
+              unsigned priority, identity id) {
+  // Copy the current chain in case we are currently sharing it
+  clone_hook_chain(&point->entries[priority]);
+
+  del_hook_impl(point, priority, id);
 }
 
 void invoke_hook(struct hook_point* point) {
