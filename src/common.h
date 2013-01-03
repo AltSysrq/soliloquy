@@ -255,8 +255,13 @@ void del_hook(struct hook_point*, unsigned priority, identity);
 /** Like advise, but runs at AFTER priority. */
 #define advise_after(hook) _ADVISE(hook, HOOK_AFTER)
 
+/* While the below macro will cause add_symbol_to_domain to be run multiple
+ * times for the same symbol if multiple compilation units use it (which will
+ * happen, for example, with implicit domain membership of public symbols), it
+ * won't be a problem since the extraa calls have no effect.
+ */
 /**
- * Adds  the given symbol to the given symbol domain during static
+ * Adds the given symbol to the given symbol domain during static
  * initialisation.
  */
 #define member_of_domain(sym,dom)                               \
@@ -265,6 +270,15 @@ void del_hook(struct hook_point*, unsigned priority, identity);
                          _GLUE(sym,_implantation_type));        \
   }
 
+/**
+ * Declares that _child_ is a subclass of _parent_. This both makes _child_'s
+ * domain a subdomain of _parent_'s, and also arranges to run the parent's
+ * constructor BEFORE the child's. Multiple inheritance is supported, though
+ * odd things could occur if there are symbol conflicts.
+ *
+ * Invoking this multiple times with the same pair of classes, in the same
+ * compilation unit or different ones, has no additional effect.
+ */
 #define subclass(parent,child)                                 \
   member_of_domain(_GLUE(parent,_domain),_GLUE(child,_domain)) \
   ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {           \
