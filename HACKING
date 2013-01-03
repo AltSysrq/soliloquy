@@ -45,6 +45,7 @@ identify its type. Supported types are (* = non-first-class):
   s     string (type const char*)
   u*    unique identifier (a pointer to itself, simply to indicate identity)
   v     reference to unique identifier (type identity)
+  y     boolean (type bool)
 
 Besides simply being implicit global variables, symbols form the basis of
 Soliloquy's "eviscerated object" system. Any first-class symbol may be

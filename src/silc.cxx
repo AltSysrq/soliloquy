@@ -222,6 +222,7 @@ static const pair<char, void (*)(const string&)> symbol_processors_[] = {
   p('s', process_first_class),
   p('u', process_unique_identity),
   p('v', process_first_class),
+  p('y', process_first_class),
 };
 const map<char, void (*)(const string&)> symbol_processors(
   symbol_processors_,
@@ -404,6 +405,10 @@ static bool get_ctype_of_type(string& ctype,
 
   case 'o':
     ctype = "object";
+    break;
+
+  case 'y':
+    ctype = "bool";
     break;
 
   default:
