@@ -16,9 +16,10 @@ AC_PROG_CXX
 # Checks for libraries.
 AC_SEARCH_LIBS([pcre_compile], [pcre])
 AC_SEARCH_LIBS([GC_init], [gc])
+AC_SEARCH_LIBS([wgetch], [curses ncurses pcurses])
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h])
+AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h curses.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
@@ -42,6 +43,8 @@ AC_CHECK_FUNCS([glob])
 AC_CHECK_FUNCS([getopt_long],
   [AC_DEFINE([USE_GETOPT_LONG], [1], [Use getopt_long instead of getopt])],
   [])
+
+AC_CHECK_FUNCS([use_default_colors])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
