@@ -30,13 +30,16 @@ unique to each compilation unit, whereas public symbols are shared across all.
 The letters of a symbol's name between the dollars and the first underscore
 identify its type. Supported types are (* = non-first-class):
   F*    method call (macro)
+  H     abstract hook point (type struct hook_point*)
+  M*    abstract method call (macro)
   aT    dynamic array of type T (type dynar_T)
   c*    class (macro)
   d*    symbol domain (discussed below) (typeless)
   f*    function to call the corresponding hook (type void (void))
-  h     hook point (undefined type)
+  h     hook point (type struct hook_point)
   i     integer (type signed or unsigned)
   lT    list of type T (may be multidimenional) (type list_T)
+  m*    abstract method (type void (void))
   o     object (type object)
   p     untyped pointer (type void*)
   s     string (type const char*)
@@ -125,3 +128,18 @@ the following happens:
   - ret is evaluated, and its result stored
 - The result is that of ret, copied outside of the context of object
 
+Abstract methods ($m) and their invocations ($M) provide further abstraction
+over normal methods by adding another level of indirection to the hook
+points. An $H symbol is merely a pointer to another $h. $m and $M work like $f
+and $F, but instead affect the what the corresponding $H points to.
+
+Abstract methods should be named only based on what they do and should
+generally be global, eg
+  $$M_print(0, printer, $$s_Printer_line = "Hello, world!");
+The existence of a method is inferred by the existence of a hook point of the
+name format
+  $f_CLASS_NAME
+where CLASS names a $c symbol of the same public/private status, and NAME names
+a public method. In such cases, a BEFORE hook will be added to $f_CLASS which
+runs after $$u_superconstructor and assigns $$H_NAME to $h_CLASS_NAME (after
+implanting it).
