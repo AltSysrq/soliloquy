@@ -1,5 +1,5 @@
 /*
-  Copyright ⓒ 2012 Jason Lingle
+  Copyright ⓒ 2012, 2013 Jason Lingle
 
   This file is part of Soliloquy.
 
@@ -76,8 +76,8 @@ int main(int argc, const char*const* argv) {
   // Some implicit symbols
   current_file="<<IMPLICIT>>";
   line_number=0;
-  process_symbol("$$u_superconstructor");
-  process_symbol("$$u_method_setup");
+  process_symbol("$u_superconstructor");
+  process_symbol("$u_method_setup");
 
   //Post-processing tasks dealing with inter-symbol relations
   method_membership();
@@ -152,11 +152,11 @@ static void process_symbol_starting_at(unsigned& ix, const string& line) {
 }
 
 static bool symbol_is_global(const string& sym) {
-  return sym[1] == '$';
+  return sym[1] != '$';
 }
 
 static string symbol_get_type(const string& sym) {
-  unsigned start = symbol_is_global(sym)? 2 : 1;
+  unsigned start = symbol_is_global(sym)? 1 : 2;
   return sym.substr(start, sym.find('_')-start);
 }
 
@@ -318,7 +318,8 @@ static void process_function(const string& sym) {
   process_symbol(hsym);
   const char* ext, * attr;
   linkage_of(ext, attr, sym);
-  format("`EXTERN void _`SYM(void) `ATTR {           \n"
+  format("`EXTERN void _`SYM(void) `ATTR;            \n"
+         "`EXTERN void _`SYM(void) {                 \n"
          "  invoke_hook(`REF`HOOK);                  \n"
          "}                                          \n"
          "#define `SYM _`SYM                         \n",
@@ -461,7 +462,7 @@ static bool instantiate_templates(const string& symbol, const string& type) {
 
 static string change_symbol_type_char(const string& symbol, char type) {
   string ret(symbol);
-  ret[symbol_is_global(ret)? 2 : 1] = type;
+  ret[symbol_is_global(ret)? 1 : 2] = type;
   return ret;
 }
 
@@ -534,7 +535,7 @@ static void method_membership(void) {
        it != symbols_processed.rend(); ++it) {
     if (symbol_get_type(*it) == "c") {
       string prefix(string("$h_") + symbol_base_name(*it) + "_");
-      if (symbol_is_global(*it))
+      if (!symbol_is_global(*it))
         prefix = string("$") + prefix;
 
       list<string> to_erase;
@@ -542,7 +543,7 @@ static void method_membership(void) {
            sit != orphans.end(); ++sit) {
         if (0 == sit->find(prefix)) {
           string method(sit->substr(prefix.size()));
-          string hook(string("$$H_") + method);
+          string hook(string("$H_") + method);
           string identity(change_symbol_type_char(*sit, 'u'));
           string constr(change_symbol_type_char(*it, 'h'));
           process_symbol(hook);
@@ -554,7 +555,7 @@ static void method_membership(void) {
                  "  `HOOK = &`SYM;                                          \n"
                  "}                                                         \n"
                  "ATSTARTA(_ia_`SYM,ADVICE_INSTALLATION_PRIORITY,`EXTERN,`ATTR) {\n"
-                 "  add_hook(&`CONSTR, HOOK_BEFORE, `ID, $$u_method_setup,  \n"
+                 "  add_hook(&`CONSTR, HOOK_BEFORE, `ID, $u_method_setup,   \n"
                  "           _setup_`SYM,                                   \n"
                  "           constraint_after_superconstructor);            \n"
                  "} \n",

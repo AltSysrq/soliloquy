@@ -1,5 +1,5 @@
 /*
-  Copyright ⓒ 2012 Jason Lingle
+  Copyright ⓒ 2012, 2013 Jason Lingle
 
   This file is part of Soliloquy.
 

@@ -169,7 +169,7 @@ void object_eviscerate(object this) {
 
   ++this->evisceration_count;
 
-  dynar_push_o($ao_evisceration_stack, this);
+  dynar_push_o($$ao_evisceration_stack, this);
   for (unsigned i = 0; i < this->implants->table_size; ++i)
     if (this->implants->entries[i].sym)
       symbol_push_ownership(this, &this->implants->entries[i]);
@@ -200,7 +200,7 @@ static void symbol_push_ownership(object this,
 void object_reembowel(void) {
   object this;
   do {
-    this = dynar_pop_o($ao_evisceration_stack);
+    this = dynar_pop_o($$ao_evisceration_stack);
     for (unsigned i = 0; i < this->implants->table_size; ++i)
       if (this->implants->entries[i].sym)
         symbol_pop_ownership(this, &this->implants->entries[i]);
@@ -228,7 +228,7 @@ static void symbol_pop_ownership(object this,
 }
 
 object object_current(void) {
-  return dynar_top_o($ao_evisceration_stack);
+  return dynar_top_o($$ao_evisceration_stack);
 }
 
 static unsigned object_find_hashtable_entry(object,
@@ -284,7 +284,7 @@ void object_implant(struct symbol_header* sym,
        * - If any instance of an object in the evisceration stack occurs in the
        *   ownership stack, all of them do.
        */
-      unsigned estack = $ao_evisceration_stack->len-2;
+      unsigned estack = $$ao_evisceration_stack->len-2;
       struct symbol_owner_stack* ostack = sym->owner_stack;
       /* To make the state consistent, examine pairs from the two stacks with
        * the following rules:
@@ -294,8 +294,8 @@ void object_implant(struct symbol_header* sym,
        *   ownership frame into the ownership stack after the current and move
        *   to it.
        */
-      while (estack < $ao_evisceration_stack->len /* will wrap around */) {
-        object that = $ao_evisceration_stack->v[estack--];
+      while (estack < $$ao_evisceration_stack->len /* will wrap around */) {
+        object that = $$ao_evisceration_stack->v[estack--];
         if (ostack->next && that == ostack->next->owner) {
           assert(that != this);
           ostack = ostack->next;
@@ -320,7 +320,7 @@ static unsigned object_find_hashtable_entry(object this,
 
   // Use (nonlinear) probing to find a free entry
   while (this->implants->entries[ix].sym) {
-    ix += incr;
+    ix += incr + 1;
     ix &= (this->implants->table_size - 1);
     incr = collision_increment(incr);
   }
@@ -498,7 +498,7 @@ void invoke_hook(struct hook_point* point) {
 hook_constraint constraint_after_superconstructor(
   identity a, identity b, identity c, identity that_class
 ) {
-  if (that_class == $$u_superconstructor)
+  if (that_class == $u_superconstructor)
     return HookConstraintAfter;
   return HookConstraintNone;
 }
@@ -520,8 +520,8 @@ void add_symbol_to_domain(struct symbol_header* sym,
 }
 
 ATSTART(eviscerate_root_object, ROOT_OBJECT_EVISCERATION_PRIORITY) {
-  $ao_evisceration_stack = dynar_new_o();
-  $$o_root = object_new(NULL);
-  object_eviscerate($$o_root);
+  $$ao_evisceration_stack = dynar_new_o();
+  $o_root = object_new(NULL);
+  object_eviscerate($o_root);
 }
 

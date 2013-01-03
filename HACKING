@@ -25,7 +25,7 @@ The first extension of note are symbols. Symbols, which are only valid in
 implementation files (*.c), look like undeclared variables beginning with
 one or two `$'s, followed by a name using Hungarian notation.
 
-A symbol may be either private (one $) or public (two $s). Private symbols are
+A symbol may be either public (one $) or private (two $s). Private symbols are
 unique to each compilation unit, whereas public symbols are shared across all.
 The letters of a symbol's name between the dollars and the first underscore
 identify its type. Supported types are (* = non-first-class):
@@ -135,11 +135,11 @@ and $F, but instead affect the what the corresponding $H points to.
 
 Abstract methods should be named only based on what they do and should
 generally be global, eg
-  $$M_print(0, printer, $$s_Printer_line = "Hello, world!");
+  $M_print(0, printer, $s_Printer_line = "Hello, world!");
 The existence of a method is inferred by the existence of a hook point of the
 name format
   $h_CLASS_NAME
 where CLASS names a $c symbol of the same public/private status, and NAME names
 a public method. In such cases, a BEFORE hook will be added to $f_CLASS which
-runs after $$u_superconstructor and assigns $$H_NAME to $h_CLASS_NAME (after
+runs after $u_superconstructor and assigns $H_NAME to $h_CLASS_NAME (after
 implanting it).
