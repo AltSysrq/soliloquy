@@ -263,6 +263,23 @@ void del_hook(struct hook_point*, unsigned priority, identity);
 /** Like advise, but runs at AFTER priority. */
 #define advise_after(hook) _ADVISE(hook, HOOK_AFTER)
 
+/**
+ * Usage:
+ *   defun($h_some_hook) { (* body *) }
+ *
+ * Binds an anonymous function to the given MAIN part of the given hook point,
+ * with the id and class $u_main. Ie, it defines the primary implementation of
+ * the given function.
+ */
+#define defun(hook)                                  \
+  static void _GLUE(hook,_main)(void);               \
+  ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) { \
+    add_hook(&hook, priority,                        \
+             $u_main, $u_main, _GLUE(hook,_main),    \
+             NULL);                                  \
+  }                                                  \
+  static void _GLUE(hook,_main)(void)
+
 /* While the below macro will cause add_symbol_to_domain to be run multiple
  * times for the same symbol if multiple compilation units use it (which will
  * happen, for example, with implicit domain membership of public symbols), it

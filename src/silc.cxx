@@ -78,6 +78,7 @@ int main(int argc, const char*const* argv) {
   line_number=0;
   process_symbol("$u_superconstructor");
   process_symbol("$u_method_setup");
+  process_symbol("$u_main");
 
   //Post-processing tasks dealing with inter-symbol relations
   method_membership();
