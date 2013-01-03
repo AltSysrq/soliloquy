@@ -475,6 +475,14 @@ void invoke_hook(struct hook_point* point) {
       curr->fun();
 }
 
+hook_constraint constraint_after_superconstructor(
+  identity a, identity b, identity c, identity that_class
+) {
+  if (that_class == $$u_superconstructor)
+    return HookConstraintAfter;
+  return HookConstraintNone;
+}
+
 void add_symbol_to_domain(struct symbol_header* sym,
                           struct symbol_domain** dom,
                           enum implantation_type implant_type) {

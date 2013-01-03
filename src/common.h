@@ -328,5 +328,8 @@ void invoke_hook(struct hook_point*);
 void add_symbol_to_domain(struct symbol_header*, struct symbol_domain**,
                           enum implantation_type);
 
+hook_constraint constraint_after_superconstructor(
+  identity, identity, identity, identity);
+
 #define ANONYMOUS_SLC _GLUE(_anon_slc_,__LINE__)
 #endif /* COMMON_H_ */

@@ -138,7 +138,7 @@ generally be global, eg
   $$M_print(0, printer, $$s_Printer_line = "Hello, world!");
 The existence of a method is inferred by the existence of a hook point of the
 name format
-  $f_CLASS_NAME
+  $h_CLASS_NAME
 where CLASS names a $c symbol of the same public/private status, and NAME names
 a public method. In such cases, a BEFORE hook will be added to $f_CLASS which
 runs after $$u_superconstructor and assigns $$H_NAME to $h_CLASS_NAME (after

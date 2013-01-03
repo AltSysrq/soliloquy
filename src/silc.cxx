@@ -57,6 +57,7 @@ static int exit_status = 0;
 static void process_file(const string&);
 static void process_symbol(const string&);
 static void domain_membership(void);
+static void method_membership(void);
 int main(int argc, const char*const* argv) {
   global_mode = (argc != 2);
 
@@ -91,8 +92,10 @@ int main(int argc, const char*const* argv) {
   current_file="<<IMPLICIT>>";
   line_number=0;
   process_symbol("$$u_superconstructor");
+  process_symbol("$$u_method_setup");
 
   //Post-processing tasks dealing with inter-symbol relations
+  method_membership();
   domain_membership();
 
   return exit_status;
@@ -425,6 +428,10 @@ static bool get_ctype_of_type(string& ctype,
   }
 
   switch (type[0]) {
+  case 'H':
+    ctype = "struct hook_point*";
+    break;
+
   case 'a':
     ctype = string("dynar_") + type.substr(1);
     break;
@@ -538,14 +545,14 @@ static void format(const string& templait, ...) {
   out << output;
 }
 
-static void domain_membership() {
+static void domain_membership(void) {
   set<string> orphans(symbols_processed);
   // Iterate through the processed symbols in reverse order (longer, more
   // specific domains will come first).
   for (set<string>::reverse_iterator it = symbols_processed.rbegin();
        it != symbols_processed.rend(); ++it) {
     if (symbol_is_global(*it) == global_mode && symbol_get_type(*it) == "d") {
-      string dom(string("_") + symbol_base_name(*it));
+      string dom(string("_") + symbol_base_name(*it) + "_");
       // Since for some reason the C++03 API doesn't have set::erase() return a
       // new iterator, we must instead track the items we want to erase, and
       // erase tham *after* the fact.
@@ -558,6 +565,48 @@ static void domain_membership() {
           format("member_of_domain(`SYM, `DOM);\n",
                  "`SYM", sit->c_str(), "`DOM", it->c_str(), NULL);
           to_erase.push_back(*sit);
+        }
+      }
+
+      for (list<string>::const_iterator it = to_erase.begin();
+           it != to_erase.end(); ++it)
+        orphans.erase(*it);
+    }
+  }
+}
+
+static void method_membership(void) {
+  set<string> orphans(symbols_processed);
+  // As with domain_membership, run in reverse order to get nested classes
+  // first
+  for (set<string>::reverse_iterator it = symbols_processed.rbegin();
+       it != symbols_processed.rend(); ++it) {
+    if (symbol_is_global(*it) == global_mode && symbol_get_type(*it) == "c") {
+      string prefix(string("$h_") + symbol_base_name(*it) + "_");
+      if (symbol_is_global(*it))
+        prefix = string("$") + prefix;
+
+      list<string> to_erase;
+      for (set<string>::const_iterator sit = orphans.begin();
+           sit != orphans.end(); ++sit) {
+        if (0 == sit->find(prefix)) {
+          string method(sit->substr(prefix.size()));
+          string hook(string("$$H_") + method);
+          string identity(change_symbol_type_char(*sit, 'u'));
+          string constr(change_symbol_type_char(*it, 'h'));
+          process_symbol(hook);
+          process_symbol(identity);
+          format("static void _setup_`SYM(void) {                           \n"
+                 "  implant(`HOOK);                                         \n"
+                 "  `HOOK = &`SYM;                                          \n"
+                 "}                                                         \n"
+                 "ATSTART(ANONYMOUS_SLC,ADVICE_INSTALLATION_PRIORITY) {     \n"
+                 "  add_hook(&`CONSTR, HOOK_BEFORE, `ID, $$u_method_setup,  \n"
+                 "           _setup_`SYM,                                   \n"
+                 "           constraint_after_superconstructor);            \n"
+                 "} \n",
+                 "`HOOK", hook.c_str(), "`ID", identity.c_str(),
+                 "`SYM", (*sit).c_str(), "`CONSTR", constr.c_str(), NULL);
         }
       }
 
