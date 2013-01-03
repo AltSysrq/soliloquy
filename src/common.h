@@ -156,7 +156,15 @@ object object_current(void);
  * discarded.
  */
 #define within_context(obj,body) \
-  do { object_eviscerate(obj); body; object_reembowel(); } while(0)
+  do {                                                                  \
+    object _wc_object = obj;                                            \
+    if (_wc_object)                                                     \
+      object_eviscerate(obj);                                           \
+    body;                                                               \
+    if (_wc_object)                                                     \
+      object_reembowel();                                               \
+  } while(0)
+
 /**
  * Implants the given symbol, or domain of symbols, into the current context.
  *
