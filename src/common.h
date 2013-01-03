@@ -328,4 +328,5 @@ void invoke_hook(struct hook_point*);
 void add_symbol_to_domain(struct symbol_header*, struct symbol_domain**,
                           enum implantation_type);
 
+#define ANONYMOUS_SLC _GLUE(_anon_slc_,__LINE__)
 #endif /* COMMON_H_ */

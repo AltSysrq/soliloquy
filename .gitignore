@@ -20,3 +20,4 @@ doc
 symbols.def
 *.slc
 src/Makefile.am
+src/silc

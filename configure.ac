@@ -11,6 +11,7 @@ AM_MAINTAINER_MODE
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 
 # Checks for libraries.
 AC_SEARCH_LIBS([pcre_compile], [pcre])
