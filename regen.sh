@@ -16,10 +16,4 @@ find src -name '*.c' -printf '%P\n' | (while read name; do
     echo "$name.o: $name.slc"
 done) >>src/Makefile.am
 
-# Global symbols
-echo "common.o: symbols.def" >>src/Makefile.am
-echo "symbols.def: silc dynar.plt list.plt implicit_symbols \$(sol_SOURCES)" >>src/Makefile.am
-echo "\\t@echo '  SILC   GLOBALS'" >>src/Makefile.am
-echo "\\t@./silc \$(sol_SOURCES)" >>src/Makefile.am
-
 autoreconf -i

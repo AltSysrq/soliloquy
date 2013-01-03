@@ -62,6 +62,9 @@
 #define ATSTART(name,priority) \
   static void name(void) __attribute__((constructor(priority))); \
   static void name(void)
+#define ATSTARTA(name,priority,linkage,attr)                            \
+  linkage void name(void) __attribute__((constructor(priority))) attr;  \
+  linkage void name(void)
 
 /**
  * Results in a symbol unique to the given line of the given compilation
