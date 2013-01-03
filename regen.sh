@@ -10,7 +10,7 @@ echo >>src/Makefile.am
 # Compile silc files as needed
 find src -name '*.c' -printf '%P\n' | (while read name; do
     name=`echo $name | sed 's/.c$//'`
-    echo "$name.slc: $name.c silc dynar.plt list.plt implicit_symbols"
+    echo "$name.slc: $name.c silc dynar.plt list.plt"
     echo "\\t@echo '  SILC   $name.slc'"
     echo "\\t@./silc $name"
     echo "$name.o: $name.slc"
