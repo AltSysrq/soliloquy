@@ -24,16 +24,18 @@
 #endif
 #include <ncursesw/curses.h>
 
-// class $c_Terminal
-
+subclass($c_Consumer,$c_Terminal)
 member_of_domain($$d_Terminal, $d_Terminal)
 
 defun($h_Terminal) {
   $$p_Terminal_screen = newterm($s_Terminal_type,
                                 $p_Terminal_output, $p_Terminal_input);
+  $i_Consumer_fd = fileno($p_Terminal_input);
 
   if (!$$p_Terminal_screen) {
     $y_Terminal_ok = false;
+    // Remove from consumers since we're in an invalid state
+    $f_Consumer_destroy();
     return;
   }
 
@@ -65,9 +67,12 @@ defun($h_Terminal_destroy) {
   set_term($$p_Terminal_screen);
   endwin();
   delscreen($$p_Terminal_screen);
+
+  $f_Consumer_destroy();
 }
 
-defun($h_Terminal_getch) {
+defun($h_Terminal_read) {
   set_term($$p_Terminal_screen);
   $i_Terminal_input_type = get_wch(&$i_Terminal_input_value);
+  //TODO: EOF
 }

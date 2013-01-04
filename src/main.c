@@ -30,38 +30,22 @@ ATSTART(wait_for_debugging, 101) {
 }
 #endif
 
-advise_after($h_Terminal) {
-  fprintf(stderr, "Terminal status: %d\r\n",
-          $y_Terminal_ok);
-}
-
 int main(void) {
   setlocale(LC_ALL, "");
-  $o_term = $c_Terminal($p_Terminal_input = stdin,
-                        $p_Terminal_output = stdout,
-                        $s_Terminal_type = getenv("TERM"));
 
-  if (!$($o_term, $y_Terminal_ok)) {
-    $F_Terminal_destroy(0, $o_term);
-    fprintf(stderr, "Failed to initialise the terminal.\r\n");
+  if (!($o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
+                              $p_Terminal_input = stdin,
+                              $p_Terminal_output = stdout))) {
+    perror("initialising terminal");
     return 1;
   }
 
-  within_context($o_term, {
-      fprintf(stderr, "Colours: %d, Colour pairs: %d, %d rows x %d cols\r\n",
-              $i_Terminal_num_colours, $i_Terminal_num_colour_pairs,
-              $i_Terminal_rows, $i_Terminal_cols);
-    });
+  $f_kernel_main();
+  return 0;
+}
 
-  while (true) {
-    within_context($o_term, {
-        $f_Terminal_getch();
-        if ($i_Terminal_input_type != -1)
-          fprintf(stderr, "Input type = %d, input value = %d\r\n",
-                  $i_Terminal_input_type, $i_Terminal_input_value);
-        else {
-          perror("getch");
-        }
-      });
-  }
+advise_after($h_Terminal_read) {
+  fprintf(stderr, "Input: %d, %d\r\n",
+          $i_Terminal_input_type,
+          $i_Terminal_input_value);
 }

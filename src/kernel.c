@@ -33,10 +33,6 @@ static void handle_quit(int);
 static void handle_fatal(int);
 
 ATSTART(initialise_kernel, STATIC_INITIALISATION_PRIORITY) {
-  $$lo_tasks = NULL;
-  $$lo_consumers = NULL;
-  $$lo_producers = NULL;
-
   /* The following signals are interesting to us and need to be handled
    * synchronously. Block them except when polling for input (ie, so we'll
    * always be in a consistent state).
