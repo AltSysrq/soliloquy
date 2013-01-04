@@ -307,10 +307,14 @@ void del_hook(struct hook_point*, unsigned priority, identity);
  */
 #define subclass(parent,child)                                  \
   member_of_domain(_GLUE(parent,_domain),_GLUE(child,_domain))  \
+  static void _GLUE(ANONYMOUS,_supercon)(void) {                \
+    _GLUE(parent,_this) = _GLUE(child,_this);                   \
+    _GLUE(parent,_function)();                                  \
+  }                                                             \
   ATSTART(_GLUE(ANONYMOUS,_sc), ADVICE_INSTALLATION_PRIORITY) { \
     add_hook(&_GLUE(child,_hook),                               \
              HOOK_BEFORE, _GLUE(parent,_identity),              \
-             $u_superconstructor, _GLUE(parent,_function),      \
+             $u_superconstructor, _GLUE(ANONYMOUS,_supercon),   \
              NULL);                                             \
   }
 

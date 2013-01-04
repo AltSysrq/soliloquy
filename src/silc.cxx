@@ -308,7 +308,8 @@ static void process_class(const string& csym) {
          "#define `CSYM_domain `DSYM                                       \n"
          "#define `CSYM_function `FSYM                                     \n"
          "#define `CSYM_identity `USYM                                     \n"
-         "#define `CSYM_hook `HSYM                                         \n",
+         "#define `CSYM_hook `HSYM                                         \n"
+         "#define `CSYM_this `OSYM                                         \n",
          "`CSYM", csym.c_str(), "`OSYM", osym.c_str(),
          "`USYM", usym.c_str(), "`DSYM", dsym.c_str(),
          "`HSYM", hsym.c_str(), "`FSYM", fsym.c_str(), NULL);
