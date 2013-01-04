@@ -83,6 +83,8 @@ defun($h_Terminal_read) {
 }
 
 advise_after($h_graceful_exit) {
+  if ($y_is_handling_signal && !$y_signal_is_synchronous)
+    return;
   void f(object o) {
     $M_destroy(0, o);
   }
@@ -90,6 +92,8 @@ advise_after($h_graceful_exit) {
 }
 
 advise_after($h_die_gracelessly) {
+  if ($y_is_handling_signal && !$y_signal_is_synchronous)
+    return;
   void f(object o) {
     $M_destroy(0, o);
   }
