@@ -319,7 +319,8 @@ static unsigned object_find_hashtable_entry(object this,
   unsigned ix = hash & (this->implants->table_size-1);
 
   // Use (nonlinear) probing to find a free entry
-  while (this->implants->entries[ix].sym) {
+  while (this->implants->entries[ix].sym &&
+         this->implants->entries[ix].sym != sym) {
     ix += incr + 1;
     ix &= (this->implants->table_size - 1);
     incr = collision_increment(incr);
@@ -344,7 +345,7 @@ static void object_expand_hashtable(object this) {
     if (old->entries[i].sym) {
       unsigned ix = object_find_hashtable_entry(this,
                                                 old->entries[i].sym);
-      new->entries[ix] = old->entries[ix];
+      new->entries[ix] = old->entries[i];
     }
   }
 }

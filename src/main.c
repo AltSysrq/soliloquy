@@ -19,98 +19,49 @@
 
 #include "main.slc"
 
-static void doit(void) {
-  printf("%s\n", $s_greeting);
-}
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
 
-static void do_math(void) {
-  printf("%d + %d = %d\n", $i_Math_a, $i_Math_b, $i_Math_a + $i_Math_b);
+#ifdef DEBUG
+ATSTART(wait_for_debugging, 101) {
+  fprintf(stderr, "Press ENTER to continue...\n");
+  getc(stdin);
 }
+#endif
 
-static void print_foo(void) {
-  printf("foo\n");
-}
-
-static void print_bar(void) {
-  printf("bar\n");
-}
-
-static void print_baz(void) {
-  printf("baz\n");
-}
-
-static hook_constraint before_baz(identity a, identity b, identity id, identity c) {
-  if (id == $$u_baz)
-    return HookConstraintBefore;
-  return HookConstraintNone;
-}
-
-static hook_constraint after_foo(identity a, identity b, identity id, identity c) {
-  if (id == $$u_foo)
-    return HookConstraintAfter;
-  return HookConstraintNone;
-}
-static hook_constraint after_bar(identity a, identity b, identity id, identity c) {
-  if (id == $$u_bar)
-    return HookConstraintAfter;
-  return HookConstraintNone;
-}
-
-advise($h_Test) {
-  $i_Test_doubled = $i_Test_value * 2;
-}
-
-advise($h_Test_doit) {
-  printf("%d * 2 = %d\n", $i_Test_value, $i_Test_doubled);
+advise_after($h_Terminal) {
+  fprintf(stderr, "Terminal status: %d\r\n",
+          $y_Terminal_ok);
 }
 
 int main(void) {
-  object en = object_new(NULL), de = object_new(NULL);
-  within_context(en, implant($s_greeting));
-  within_context(de, implant($s_greeting));
-  within_context(en, $s_greeting = "Hello, world!");
-  within_context(de, $s_greeting = "Hallo, Welt!");
+  setlocale(LC_ALL, "");
+  $o_term = $c_Terminal($p_Terminal_input = stdin,
+                        $p_Terminal_output = stdout,
+                        $s_Terminal_type = getenv("TERM"));
 
-  within_context(en, doit());
-  within_context(de, doit());
+  if (!$($o_term, $y_Terminal_ok)) {
+    $F_Terminal_destroy(0, $o_term, 0);
+    fprintf(stderr, "Failed to initialise the terminal.\r\n");
+    return 1;
+  }
 
-  within_context(en, {
-      implant($h_test);
-      add_hook(&$h_test, HOOK_MAIN, $$u_baz, $$u_generic, print_baz, NULL);
-      add_hook(&$h_test, HOOK_MAIN, $$u_bar, $$u_generic, print_bar, after_foo);
-      add_hook(&$h_test, HOOK_MAIN, $$u_foo, $$u_generic, print_foo, before_baz);
-    });
-  within_context(de, {
-      implant($h_test);
-      add_hook(&$h_test, HOOK_MAIN, $$u_foo, $$u_generic, print_foo, after_bar);
-      add_hook(&$h_test, HOOK_MAIN, $$u_bar, $$u_generic, print_bar, NULL);
-      add_hook(&$h_test, HOOK_MAIN, $$u_baz, $$u_generic, print_baz, after_foo);
+  within_context($o_term, {
+      fprintf(stderr, "Colours: %d, Colour pairs: %d, %d rows x %d cols\r\n",
+              $i_Terminal_num_colours, $i_Terminal_num_colour_pairs,
+              $i_Terminal_rows, $i_Terminal_cols);
     });
 
-  printf("\n");
-  within_context(en, $f_test());
-  printf("\n");
-  within_context(de, $f_test());
-
-  within_context(en, {
-      implant($d_Math);
-      $i_Math_a = 5;
-      $i_Math_b = 6;
-    });
-  within_context(de, {
-      implant($d_Math);
-      $i_Math_a = 0;
-      $i_Math_b = -1;
-    });
-  within_context(en, do_math());
-  within_context(de, do_math());
-
-  object obj5 = $c_Test($i_Test_value = 5);
-  object obj12 = $c_Test($i_Test_value = 12);
-  $F_Test_doit(0, obj5);
-  printf("We expect this to be wrong (13*2=24):\n");
-  $F_Test_doit(0, obj12, $i_Test_value = 13);
-
-  $li_test = cons_i(4, cons_i(2, cons_i(0, cons_i(1, NULL))));
-  return find_i($li_test, 0)->car;
+  while (true) {
+    within_context($o_term, {
+        $f_Terminal_getch();
+        if ($i_Terminal_input_type != -1)
+          fprintf(stderr, "Input type = %d, input value = %d\r\n",
+                  $i_Terminal_input_type, $i_Terminal_input_value);
+        else {
+          perror("getch");
+        }
+      });
+  }
 }

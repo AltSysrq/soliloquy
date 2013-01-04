@@ -182,8 +182,9 @@ object object_current(void);
  */
 #define $(obj,sym) ({                                                   \
   typeof(sym) _GLUE(_ret_, __LINE__);                                   \
-  object_get_implanted_value(_GLUE(_ret_, __LINE__), obj,               \
+  object_get_implanted_value(&_GLUE(_ret_, __LINE__), obj,              \
                              &_GLUE(sym,_base));                        \
+  fprintf(stderr, "%d\r\n", _GLUE(_ret_,__LINE__));                     \
   _GLUE(_ret_, __LINE__);})
 
 typedef enum hook_constraint {
@@ -274,7 +275,7 @@ void del_hook(struct hook_point*, unsigned priority, identity);
 #define defun(hook)                                  \
   static void _GLUE(hook,_main)(void);               \
   ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) { \
-    add_hook(&hook, priority,                        \
+    add_hook(&hook, HOOK_MAIN,                       \
              $u_main, $u_main, _GLUE(hook,_main),    \
              NULL);                                  \
   }                                                  \

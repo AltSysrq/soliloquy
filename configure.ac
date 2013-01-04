@@ -16,7 +16,7 @@ AC_PROG_CXX
 # Checks for libraries.
 AC_SEARCH_LIBS([pcre_compile], [pcre])
 AC_SEARCH_LIBS([GC_init], [gc])
-AC_SEARCH_LIBS([wgetch], [curses ncurses pcurses])
+AC_SEARCH_LIBS([wget_wch], [ncursesw curses cursesw ncurses pcurses])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h curses.h])
