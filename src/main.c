@@ -44,7 +44,7 @@ int main(void) {
   return 0;
 }
 
-advise_after($h_Terminal_read) {
+advise_after($h_Terminal_getch) {
   fprintf(stderr, "Input: %d, %d\r\n",
           $i_Terminal_input_type,
           $i_Terminal_input_value);

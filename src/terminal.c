@@ -58,6 +58,7 @@ defun($h_Terminal_enter_raw_mode) {
   raw();
   noecho();
   nonl();
+  nodelay(stdscr, true);
   scrollok(stdscr, false);
   keypad(stdscr, true);
   meta(stdscr, true);
@@ -73,6 +74,8 @@ defun($h_Terminal_destroy) {
 
 defun($h_Terminal_read) {
   set_term($$p_Terminal_screen);
-  $i_Terminal_input_type = get_wch(&$i_Terminal_input_value);
+  while (-1 != ($i_Terminal_input_type = get_wch(&$i_Terminal_input_value))) {
+    $f_Terminal_getch();
+  }
   //TODO: EOF
 }
