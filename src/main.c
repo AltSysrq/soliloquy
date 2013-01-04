@@ -42,7 +42,7 @@ int main(void) {
                         $s_Terminal_type = getenv("TERM"));
 
   if (!$($o_term, $y_Terminal_ok)) {
-    $F_Terminal_destroy(0, $o_term, 0);
+    $F_Terminal_destroy(0, $o_term);
     fprintf(stderr, "Failed to initialise the terminal.\r\n");
     return 1;
   }
