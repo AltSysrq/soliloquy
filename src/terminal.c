@@ -51,6 +51,8 @@ defun($h_Terminal) {
 
   $y_Terminal_ok = true;
   $f_Terminal_enter_raw_mode();
+
+  $lo_terminals = cons_o($o_Terminal, $lo_terminals);
 }
 
 defun($h_Terminal_enter_raw_mode) {
@@ -79,3 +81,18 @@ defun($h_Terminal_read) {
   }
   //TODO: EOF
 }
+
+advise_after($h_graceful_exit) {
+  void f(object o) {
+    $M_destroy(0, o);
+  }
+  each_o($lo_terminals, f);
+}
+
+advise_after($h_die_gracelessly) {
+  void f(object o) {
+    $M_destroy(0, o);
+  }
+  each_o($lo_terminals, f);
+}
+
