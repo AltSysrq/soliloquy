@@ -19,7 +19,8 @@ AC_SEARCH_LIBS([GC_init], [gc])
 AC_SEARCH_LIBS([wget_wch], [ncursesw curses cursesw ncurses pcurses])
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h curses.h])
+AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h curses.h locale.h])
+AC_CHECK_HEADER_STDBOOL
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
