@@ -305,13 +305,13 @@ void del_hook(struct hook_point*, unsigned priority, identity);
  * Invoking this multiple times with the same pair of classes, in the same
  * compilation unit or different ones, has no additional effect.
  */
-#define subclass(parent,child)                                 \
-  member_of_domain(_GLUE(parent,_domain),_GLUE(child,_domain)) \
-  ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {           \
-    add_hook(&_GLUE(child,_hook),                              \
-             HOOK_BEFORE, _GLUE(parent,_identity),             \
-             $$u_superconstructor, _GLUE(parent,_function),    \
-             NULL);                                            \
+#define subclass(parent,child)                                  \
+  member_of_domain(_GLUE(parent,_domain),_GLUE(child,_domain))  \
+  ATSTART(_GLUE(ANONYMOUS,_sc), ADVICE_INSTALLATION_PRIORITY) { \
+    add_hook(&_GLUE(child,_hook),                               \
+             HOOK_BEFORE, _GLUE(parent,_identity),              \
+             $u_superconstructor, _GLUE(parent,_function),      \
+             NULL);                                             \
   }
 
 ///////////////////////////////////////////////////////////////////////////////
