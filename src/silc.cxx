@@ -247,17 +247,17 @@ static void process_first_class(const string& symbol) {
   const char* ext, * attr;
   linkage_of(ext, attr, symbol);
 
-  format("`EXTERN struct symbol_header `ATTR _`SYM_base;                \n"
+  format("`EXTERN struct symbol_header `ATTR _`SYM$base;                \n"
          "`EXTERN typeof(`CTYPE) `ATTR _`SYM;                           \n"
          "ATSTARTA(_init_`SYM, SYMBOL_CONSTRUCTION_PRIORITY,`EXTERN,`ATTR) {\n"
-         "  _`SYM_base.size = sizeof(`CTYPE);                           \n"
-         "  _`SYM_base.payload = &_`SYM;                                \n"
+         "  _`SYM$base.size = sizeof(`CTYPE);                           \n"
+         "  _`SYM$base.payload = &_`SYM;                                \n"
          "}                                                             \n"
          "ATSTARTA(_ri_`SYM, SYMBOL_ROOT_IMPLANTATION_PRIORITY,`EXTERN,`ATTR){\n"
-         "  object_implant(&_`SYM_base, ImplantSingle);                 \n"
+         "  object_implant(&_`SYM$base, ImplantSingle);                 \n"
          "}                                                             \n"
          "static const enum implantation_type                           \n"
-         "    _`SYM_implantation_type = ImplantSingle;                  \n"
+         "    _`SYM$implantation_type = ImplantSingle;                  \n"
          "#define `SYM _`SYM                                            \n",
          "`EXTERN", ext, "`ATTR", attr, "`SYM", symbol.c_str(),
          "`CTYPE", ctype.c_str(), NULL);
@@ -274,13 +274,13 @@ static void process_function_macro(const string& symF) {
   process_symbol(symf);
 
   format("#define `SYMF(ret, this, ...) ({\\\n"
-         "  typeof(ret) _Fsym_ret;        \\\n"
+         "  typeof(ret) _`SYMF$local_ret; \\\n"
          "  within_context((this), {      \\\n"
          "    (void)({__VA_ARGS__; 0;});  \\\n"
          "    `SYMf();                    \\\n"
-         "    _Fsym_ret = (ret);          \\\n"
+         "    _`SYMF$local_ret = (ret);   \\\n"
          "  });                           \\\n"
-         "  _Fsym_ret; })                   \n",
+         "  _`SYMF$local_ret; })            \n",
          "`SYMF", symF.c_str(), "`SYMf", symf.c_str(), NULL);
 }
 
@@ -297,19 +297,19 @@ static void process_class(const string& csym) {
   process_symbol(dsym);
   process_symbol(hsym);
   format("#define `CSYM(...) ({                                          \\\n"
-         "  object _csym_this = object_new(NULL);                        \\\n"
-         "  within_context(_csym_this, {                                 \\\n"
+         "  object _`CSYM$local_this = object_new(NULL);                 \\\n"
+         "  within_context(_`CSYM$local_this, {                          \\\n"
          "    implant(`OSYM); implant(`DSYM); implant(`HSYM);            \\\n"
-         "    `OSYM = _csym_this;                                        \\\n"
+         "    `OSYM = _`CSYM$local_this;                                 \\\n"
          "    (void)({__VA_ARGS__; 0;});                                 \\\n"
          "    `FSYM();                                                   \\\n"
          "  });                                                          \\\n"
-         "  _csym_this; })                                                 \n"
-         "#define `CSYM_domain `DSYM                                       \n"
-         "#define `CSYM_function `FSYM                                     \n"
-         "#define `CSYM_identity `USYM                                     \n"
-         "#define `CSYM_hook `HSYM                                         \n"
-         "#define `CSYM_this `OSYM                                         \n",
+         "  _`CSYM$local_this; })                                          \n"
+         "#define `CSYM$domain `DSYM                                       \n"
+         "#define `CSYM$function `FSYM                                     \n"
+         "#define `CSYM$identity `USYM                                     \n"
+         "#define `CSYM$hook `HSYM                                         \n"
+         "#define `CSYM$this `OSYM                                         \n",
          "`CSYM", csym.c_str(), "`OSYM", osym.c_str(),
          "`USYM", usym.c_str(), "`DSYM", dsym.c_str(),
          "`HSYM", hsym.c_str(), "`FSYM", fsym.c_str(), NULL);
@@ -346,13 +346,13 @@ static void process_unique_identity(const string& sym) {
 static void process_symbol_domain(const string& sym) {
   const char* ext, * attr;
   linkage_of(ext, attr, sym);
-  format("`EXTERN struct symbol_header `ATTR _`SYM_base;                \n"
+  format("`EXTERN struct symbol_header `ATTR _`SYM$base;                \n"
          "`EXTERN struct symbol_domain* `ATTR _`SYM = NULL;             \n"
          "ATSTARTA(_init_`SYM, SYMBOL_CONSTRUCTION_PRIORITY,`EXTERN,`ATTR) {    \n"
-         "  _`SYM_base.size = sizeof(struct symbol_domain*);            \n"
-         "  _`SYM_base.payload = &_`SYM;                                \n"
+         "  _`SYM$base.size = sizeof(struct symbol_domain*);            \n"
+         "  _`SYM$base.payload = &_`SYM;                                \n"
          "}                                                             \n"
-         "static const enum implantation_type _`SYM_implantation_type = \n"
+         "static const enum implantation_type _`SYM$implantation_type = \n"
          "    ImplantDomain;                                            \n"
          "#define `SYM _`SYM                                            \n",
          "`EXTERN", ext, "`ATTR", attr, "`SYM", sym.c_str(), NULL);

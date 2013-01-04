@@ -50,7 +50,7 @@
 #define STATIC_INIT(name, value)                \
   name; STATIC_INIT_TO(name, value)
 #define STATIC_INIT_TO(name, value)                    \
-  ATSTART(_GLUE(name##_init, __LINE__),                \
+  ATSTART(_GLUE(name##$static_init, __LINE__),         \
           STATIC_INITIALISATION_PRIORITY)              \
   { name = value; }
 
@@ -172,7 +172,7 @@ object object_current(void);
  * undefined.
  */
 #define implant(sym) \
-  object_implant(&_GLUE(sym,_base), _GLUE(sym, _implantation_type))
+  object_implant(&_GLUE(sym,$base), _GLUE(sym, $implantation_type))
 
 /**
  * Returns the value of _sym_ within the context of _obj_ without needing to go
@@ -183,7 +183,7 @@ object object_current(void);
 #define $(obj,sym) ({                                                   \
   typeof(sym) _GLUE(_ret_, __LINE__);                                   \
   object_get_implanted_value(&_GLUE(_ret_, __LINE__), obj,              \
-                             &_GLUE(sym,_base));                        \
+                             &_GLUE(sym,$base));                        \
   fprintf(stderr, "%d\r\n", _GLUE(_ret_,__LINE__));                     \
   _GLUE(_ret_, __LINE__);})
 
@@ -273,13 +273,13 @@ void del_hook(struct hook_point*, unsigned priority, identity);
  * the given function.
  */
 #define defun(hook)                                  \
-  static void _GLUE(hook,_main)(void);               \
+  static void _GLUE(hook,$main)(void);               \
   ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) { \
     add_hook(&hook, HOOK_MAIN,                       \
-             $u_main, $u_main, _GLUE(hook,_main),    \
+             $u_main, $u_main, _GLUE(hook,$main),    \
              NULL);                                  \
   }                                                  \
-  static void _GLUE(hook,_main)(void)
+  static void _GLUE(hook,$main)(void)
 
 /* While the below macro will cause add_symbol_to_domain to be run multiple
  * times for the same symbol if multiple compilation units use it (which will
@@ -292,8 +292,8 @@ void del_hook(struct hook_point*, unsigned priority, identity);
  */
 #define member_of_domain(sym,dom)                               \
   ATSTART(ANONYMOUS, DOMAIN_CONSTRUCTION_PRIORITY) {            \
-    add_symbol_to_domain(&_GLUE(sym,_base),&dom,                \
-                         _GLUE(sym,_implantation_type));        \
+    add_symbol_to_domain(&_GLUE(sym,$base),&dom,                \
+                         _GLUE(sym,$implantation_type));        \
   }
 
 /**
@@ -306,14 +306,14 @@ void del_hook(struct hook_point*, unsigned priority, identity);
  * compilation unit or different ones, has no additional effect.
  */
 #define subclass(parent,child)                                  \
-  member_of_domain(_GLUE(parent,_domain),_GLUE(child,_domain))  \
+  member_of_domain(_GLUE(parent,$domain),_GLUE(child,$domain))  \
   static void _GLUE(ANONYMOUS,_supercon)(void) {                \
-    _GLUE(parent,_this) = _GLUE(child,_this);                   \
-    _GLUE(parent,_function)();                                  \
+    _GLUE(parent,$this) = _GLUE(child,$this);                   \
+    _GLUE(parent,$function)();                                  \
   }                                                             \
   ATSTART(_GLUE(ANONYMOUS,_sc), ADVICE_INSTALLATION_PRIORITY) { \
-    add_hook(&_GLUE(child,_hook),                               \
-             HOOK_BEFORE, _GLUE(parent,_identity),              \
+    add_hook(&_GLUE(child,$hook),                               \
+             HOOK_BEFORE, _GLUE(parent,$identity),              \
              $u_superconstructor, _GLUE(ANONYMOUS,_supercon),   \
              NULL);                                             \
   }
