@@ -46,4 +46,29 @@ static inline void* fold_HUNG
   return ret;
 }
 
+static inline void each_HUNG
+(list_HUNG this, void (*f)(CTYPE)) {
+  while (this) {
+    f(this->car);
+    this = this->cdr;
+  }
+}
+
+static inline list_HUNG lrm_HUNG(list_HUNG this, CTYPE needle) {
+  if (this == NULL) return NULL;
+  if (this->car == needle)
+    return this->cdr;
+
+  return cons_HUNG(this->car, lrm_HUNG(this->cdr, needle));
+}
+
+static inline unsigned llen_HUNG(list_HUNG this) {
+  unsigned len = 0;
+  while (this) {
+    ++len;
+    this = this->cdr;
+  }
+  return len;
+}
+
 #endif /* HAVE_DEFINED_LIST_HUNG */

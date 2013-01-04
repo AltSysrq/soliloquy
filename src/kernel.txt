@@ -1,0 +1,6 @@
+kernel --- Input/Output Multiplexing and Task Control
+=====================================================
+Overview
+--------
+The kernel module dispatches input, output, and timer events to interested
+parties, in order to facilitate cooperative multi-tasking.
