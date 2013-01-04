@@ -184,7 +184,6 @@ object object_current(void);
   typeof(sym) _GLUE(_ret_, __LINE__);                                   \
   object_get_implanted_value(&_GLUE(_ret_, __LINE__), obj,              \
                              &_GLUE(sym,$base));                        \
-  fprintf(stderr, "%d\r\n", _GLUE(_ret_,__LINE__));                     \
   _GLUE(_ret_, __LINE__);})
 
 typedef enum hook_constraint {
