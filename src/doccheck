@@ -1,0 +1,43 @@
+#! /bin/sh
+# Copyright ⓒ 2013 Jason Lingle
+#
+# This file is part of Soliloquy.
+#
+# Soliloquy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Soliloquy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
+
+if test "x$*" != "x"; then
+    echo "Usage: $0" >&2
+    echo "Ensures that all public symbols in all source files have been documented."
+    echo "Lists undocumented public symbols, if any, exiting with 0 iff there were none."
+    exit 255
+fi
+
+# Find all documented symbols. We only care about the base name.
+find `dirname $0` -name '*.c' -exec \
+    grep -F 'SYMBOL: ' '{}' \; | grep -Eo '\$[a-zA-Z0-9_]+' | \
+    sed 's/$[a-zA-Z]*_//' | sort -u >symbols.documented
+
+exit_status=0
+find `dirname $0` -name '*.c' | (while read cfile; do
+    if grep -Eo '\$\$?[a-zA-Z0-9_]+' $cfile | grep -Ev '\$[\$mM]' | \
+       sort -u | sed 's/$[a-zA-Z]*_//' | grep -vxFf symbols.documented; then
+        echo "File $cfile references the above undocumented public symbols." >&2
+        echo "" >&2
+        exit_status=1
+    fi
+done)
+
+rm -f symbols.documented
+
+exit $exit_status
