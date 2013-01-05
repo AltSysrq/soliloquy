@@ -17,6 +17,11 @@
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+  TITLE: Program Entry-Point
+  DESCRIPTION: Performs basic initialisation.
+*/
+
 #include "main.slc"
 
 #include <stdio.h>
@@ -33,9 +38,9 @@ ATSTART(wait_for_debugging, 101) {
 int main(void) {
   setlocale(LC_ALL, "");
 
-  if (!($o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
-                              $p_Terminal_input = stdin,
-                              $p_Terminal_output = stdout))) {
+  if (!($$o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
+                               $p_Terminal_input = stdin,
+                               $p_Terminal_output = stdout))) {
     perror("initialising terminal");
     return 1;
   }
