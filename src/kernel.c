@@ -107,7 +107,7 @@ ATSTART(initialise_kernel, STATIC_INITIALISATION_PRIORITY) {
 */
 
 static void handle_sigchld(int sigchld, siginfo_t* info, void* unknown) {
-  $i_async_sygnal = sigchld;
+  $i_async_signal = sigchld;
   $y_signal_is_synchronous = true;
   $i_sigchld_code = info->si_code;
   $i_sigchld_pid = info->si_pid;
@@ -144,7 +144,7 @@ static void handle_sigchld(int sigchld, siginfo_t* info, void* unknown) {
 */
 
 static void handle_quit(int which) {
-  $i_async_sygnal = which;
+  $i_async_signal = which;
   $y_signal_is_synchronous = (which != SIGQUIT);
   $y_is_handling_signal = true;
 
@@ -157,7 +157,7 @@ static void handle_quit(int which) {
 }
 
 static void handle_fatal(int which) {
-  $i_async_sygnal = which;
+  $i_async_signal = which;
   $y_signal_is_synchronous = true;
   $y_is_handling_signal = true;
 
