@@ -27,7 +27,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <wchar.h>
 #include <gc.h>
+
+#include "qstring.h"
 
 #define SYMBOL_CONSTRUCTION_PRIORITY 108
 #define DOMAIN_CONSTRUCTION_PRIORITY 116
@@ -126,7 +129,12 @@ static inline void* gcrealloc(void* ptr, size_t size) {
 const char* gcstrdup(const char*) __attribute__((malloc));
 
 /// STANDARD TYPES
+typedef char* mstring;
 typedef const char* string;
+typedef wchar_t* mwstring;
+typedef const wchar_t* wstring;
+typedef qchar* mqstring;
+typedef const qchar* qstring;
 typedef void (*hook_function)(void);
 struct object_t;
 typedef struct object_t* object;

@@ -209,6 +209,9 @@ static const pair<char, void (*)(const string&)> symbol_processors_[] = {
   p('F', process_function_macro),
   p('H', process_first_class),
   p('M', process_function_macro),
+  p('Q', process_first_class),
+  p('S', process_first_class),
+  p('W', process_first_class),
   p('a', process_first_class),
   p('c', process_class),
   p('d', process_symbol_domain),
@@ -219,9 +222,11 @@ static const pair<char, void (*)(const string&)> symbol_processors_[] = {
   p('m', process_function),
   p('o', process_first_class),
   p('p', process_first_class),
+  p('q', process_first_class),
   p('s', process_first_class),
   p('u', process_unique_identity),
   p('v', process_first_class),
+  p('w', process_first_class),
   p('y', process_first_class),
 };
 const map<char, void (*)(const string&)> symbol_processors(
@@ -377,36 +382,56 @@ static bool get_ctype_of_type(string& ctype,
     ctype = "struct hook_point*";
     break;
 
+  case 'Q':
+    ctype = "mqstring";
+    break;
+
+  case 'S':
+    ctype = "mstring";
+    break;
+
+  case 'W':
+    ctype = "mwstring";
+    break;
+
   case 'a':
     ctype = string("dynar_") + type.substr(1);
-    break;
-
-  case 'l':
-    ctype = string("list_") + type.substr(1);
-    break;
-
-  case 'i':
-    ctype = "int";
-    break;
-
-  case 's':
-    ctype = "string";
     break;
 
   case 'h':
     ctype = "struct hook_point";
     break;
 
-  case 'v':
-    ctype = "identity";
+  case 'i':
+    ctype = "int";
+    break;
+
+  case 'l':
+    ctype = string("list_") + type.substr(1);
+    break;
+
+  case 'o':
+    ctype = "object";
     break;
 
   case 'p':
     ctype = "void*";
     break;
 
-  case 'o':
-    ctype = "object";
+  case 'q':
+    ctype = "qstring";
+    break;
+
+  case 's':
+    ctype = "string";
+    break;
+
+  case 'v':
+    ctype = "identity";
+    break;
+
+  case 'w':
+    ctype = "wstring";
     break;
 
   case 'y':
