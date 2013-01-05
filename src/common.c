@@ -103,10 +103,7 @@ static inline unsigned ptrhash(void* v) {
 static inline unsigned collision_increment(unsigned previnc) {
   // The developers of Python found this to be a good way of doing things, to
   // my recollection.
-  if (previnc == 1)
-    return previnc;
-  else
-    return previnc >> 5;
+  return (previnc >> 5) + 1;
 }
 
 #define INIT_HASHTABLE_SIZE 8
@@ -334,7 +331,7 @@ static unsigned object_find_hashtable_entry(object this,
   // Use (nonlinear) probing to find a free entry
   while (this->implants->entries[ix].sym &&
          this->implants->entries[ix].sym != sym) {
-    ix += incr + 1;
+    ix += incr;
     ix &= (this->implants->table_size - 1);
     incr = collision_increment(incr);
   }
