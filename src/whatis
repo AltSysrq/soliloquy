@@ -33,6 +33,13 @@ while test "x$1" != "x"; do
         grep -Fv SYMBOL: | (while read line; do
             found=yes
             echo "$sym: $line"
-        done; test "$found" = "yes") || \
-            echo "$sym: nothing appropriate"
+        done; test "$found" = "yes") && \
+            found=yes
+
+    if test "$found" = "no"; then
+        exit_status=1
+        echo "$sym: nothing appropriate"
+    fi
 done
+
+exit $exit_status
