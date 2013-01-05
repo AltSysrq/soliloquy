@@ -19,7 +19,7 @@
 
 /*
   TITLE: Terminal Input/Output Control
-  DESCRIPTION: Manages the connect terminals, including the ncurses interface.
+  OVERVIEW: Manages the connect terminals, including the ncurses interface.
 */
 
 #include "terminal.slc"

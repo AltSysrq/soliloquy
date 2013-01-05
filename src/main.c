@@ -19,7 +19,7 @@
 
 /*
   TITLE: Program Entry-Point
-  DESCRIPTION: Performs basic initialisation.
+  OVERVIEW: Performs basic initialisation.
 */
 
 #include "main.slc"

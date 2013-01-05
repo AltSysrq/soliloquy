@@ -19,7 +19,7 @@
 
 /*
   TITLE: Common functions and Silc support
-  DESCRIPTION: This is mostly implemantation details. You probably just want to
+  OVERVIEW: This is mostly implemantation details. You probably just want to
     read the header instead.
 
   SYMBOL: $o_root
