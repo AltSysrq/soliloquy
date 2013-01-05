@@ -17,6 +17,19 @@
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+  TITLE: Common functions and Silc support
+  DESCRIPTION: This is mostly implemantation details. You probably just want to
+    read the header instead.
+
+  SYMBOL: $o_root
+    The root object into which all symbols are implanted. Its main purpose is
+    to hold the values objects get when there is no current object.
+
+  SYMBOL: $u_superconstructor
+    Identifies hooks which call a class's superclass's constructor.
+*/
+
 #include "common.slc"
 
 #include <assert.h>
