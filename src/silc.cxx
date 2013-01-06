@@ -84,6 +84,9 @@ int main(int argc, const char*const* argv) {
   method_membership();
   domain_membership();
 
+  out << "#undef ANONYMOUS" << endl
+      << "#define ANONYMOUS _GLUE(_anon2_,__LINE__)" << endl;
+
   return exit_status;
 }
 
