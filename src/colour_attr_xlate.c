@@ -177,14 +177,14 @@ advise_after($h_Terminal) {
     // since colour-on-black is far more important than anything-on-colour.
     //
     // The colour pair schema here is
-    //   PAIR = 1 + (FG + (BG<<3) - 1)%(COLOR_PAIRS-1)
+    //   PAIR = 1 + (FG + (BG<<3))%(COLOR_PAIRS-1)
     // where FG and BG are both 3-bit integers indicating red, green, and blue
     // from most to least significant bits (and foreground being additive as
     // normal, instead of inverted as qchars use).
     unsigned pair = 1;
     for (unsigned bg = 0; bg < 8 && pair < $i_Terminal_num_colour_pairs; ++bg)
       for (unsigned fg = 0; fg < 8 && pair < $i_Terminal_num_colour_pairs; ++fg)
-        init_pair(pair++, ncurses_colours[bg], ncurses_colours[fg]);
+        init_pair(pair++, ncurses_colours[fg], ncurses_colours[bg]);
   }
 }
 
@@ -391,7 +391,7 @@ defun($h_translate_qchar_to_ncurses) {
   }
 
   unsigned colour_pair =
-    1 + ((fg << 3) + bg - 1) % ($i_Terminal_num_colour_pairs-1);
+    1 + ((bg << 3) + fg) % ($i_Terminal_num_colour_pairs-1);
 
   // NUL is handled specially
   if (!character) {
