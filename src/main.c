@@ -50,7 +50,6 @@ int main(void) {
 }
 
 advise_after($h_Terminal_getch) {
-  fprintf(stderr, "Input: %d, %d\r\n",
-          $i_Terminal_input_type,
-          $i_Terminal_input_value);
+  qchar qc = $i_Terminal_input_value;
+  $F_Terminal_putch(0,0, $q_qch = &qc, ++$i_x);
 }
