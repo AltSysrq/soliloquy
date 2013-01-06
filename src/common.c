@@ -452,17 +452,18 @@ static void sort_hook_functions(struct hook_point_entry** base) {
 }
 
 static void del_hook_impl(struct hook_point*,
-                          unsigned, identity);
-void add_hook(struct hook_point* point, unsigned priority,
-              identity id, identity class,
-              void (*fun)(void),
-              hook_constraint_function constraints) {
+                          unsigned, identity, object);
+void add_hook_obj(struct hook_point* point, unsigned priority,
+                  identity id, identity class,
+                  void (*fun)(void), object context,
+                  hook_constraint_function constraints) {
   // Copy the current chain in case we are currently sharing it
   clone_hook_chain(&point->entries[priority]);
   // Remove any existing
-  del_hook_impl(point, priority, id);
+  del_hook_impl(point, priority, id, context);
   struct hook_point_entry hpe = {
     .fun = fun,
+    .context = context,
     .constraints = constraints,
     .id = id,
     .class = class,
@@ -473,11 +474,19 @@ void add_hook(struct hook_point* point, unsigned priority,
   sort_hook_functions(&point->entries[priority]);
 }
 
+void add_hook(struct hook_point* point, unsigned priority,
+              identity id, identity class,
+              void (*fun)(void),
+              hook_constraint_function constraints) {
+  add_hook_obj(point, priority, id, class, fun, NULL, constraints);
+}
+
 static void del_hook_impl(struct hook_point* point,
-                          unsigned priority, identity id) {
+                          unsigned priority, identity id,
+                          object context) {
   struct hook_point_entry** base = &point->entries[priority];
   while (*base) {
-    if ((*base)->id == id) {
+    if ((*base)->id == id && (*base)->context == context) {
       // Delete
       *base = (*base)->next;
       //No re-sorting is needed, since the current order remains valid even
@@ -490,11 +499,11 @@ static void del_hook_impl(struct hook_point* point,
 }
 
 void del_hook(struct hook_point* point,
-              unsigned priority, identity id) {
+              unsigned priority, identity id, object context) {
   // Copy the current chain in case we are currently sharing it
   clone_hook_chain(&point->entries[priority]);
 
-  del_hook_impl(point, priority, id);
+  del_hook_impl(point, priority, id, context);
 }
 
 void invoke_hook(struct hook_point* point) {
@@ -503,7 +512,7 @@ void invoke_hook(struct hook_point* point) {
        ++priority)
     for (struct hook_point_entry* curr = point->entries[priority];
          curr; curr = curr->next)
-      curr->fun();
+      within_context(curr->context, curr->fun());
 }
 
 hook_constraint constraint_after_superconstructor(

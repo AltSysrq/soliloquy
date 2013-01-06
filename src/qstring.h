@@ -74,6 +74,38 @@ typedef unsigned int qchar;
 #define QC_FORM ((qchar)(0xFFF00000))
 #define QC_CHAR ((qchar)(0x000FFFFF))
 
+#define QC_FG_SHIFT 28
+#define QC_BG_SHIFT 24
+#define QC_COLOUR_SHIFT 24
+#define QC_ATTR_SHIFT 20
+
+/* A "colour byte" is simply the colour part of a qchar, right shifted by
+ * QC_COLOUR_SHIFT.
+ *
+ * This macro allows for easily defining colour bytes as such:
+ *   CB(BRIGHT_WHITE,DARK_BLUE) //bright white foreground, dark blue background
+ */
+#define CB(fg,bg) ((((fg)<<4)^0xE0) | (bg))
+
+// Colour definitions (note that they need to be XORed with 0xE for the
+// foreground
+#define DARK_BLACK     0x0
+#define BRIGHT_BLACK   0x1
+#define DARK_BLUE      0x2
+#define BRIGHT_BLUE    0x3
+#define DARK_GREEN     0x4
+#define BRIGHT_GREEN   0x5
+#define DARK_CYAN      0x6
+#define BRIGHT_CYAN    0x7
+#define DARK_RED       0x8
+#define BRIGHT_RED     0x9
+#define DARK_MAGENTA   0xA
+#define BRIGHT_MAGENTA 0xB
+#define DARK_YELLOW    0xC
+#define BRIGHT_YELLOW  0xD
+#define DARK_WHITE     0xE
+#define BRIGHT_WHITE   0xF
+
 /**
  * Converts the given qstring to an mwstring by stripping its formatting.
  */

@@ -58,13 +58,10 @@
     should be simply discarded (though the FILE* handles in $p_Terminal_input
     and $p_Terminal_output have not been closed).
 
-  SYMBOL: $i_Terminal_num_colours $i_Terminal_num_colour_pairs
-    These reflect the values of the curses variables COLORS and COLOR_PAIRS at
-    the time the terminal was created. See color(3ncurses).
-
   SYMBOL: $i_Terminal_rows $i_Terminal_cols
     The current number of rows (lines) or columns present on the Terminal.
-*/
+
+ */
 
 subclass($c_Consumer,$c_Terminal)
 member_of_domain($$d_Terminal, $d_Terminal)
@@ -81,18 +78,12 @@ defun($h_Terminal) {
     return;
   }
 
-  start_color();
-#ifdef HAVE_USE_DEFAULT_COLORS
-  use_default_colors();
-#endif
-
-  $i_Terminal_num_colours = COLORS;
-  $i_Terminal_num_colour_pairs = COLOR_PAIRS;
   $i_Terminal_rows = LINES;
   $i_Terminal_cols = COLS;
 
   $y_Terminal_ok = true;
   $f_Terminal_enter_raw_mode();
+  $$y_Terminal_needs_refresh = false;
 
   $lo_terminals = cons_o($o_Terminal, $lo_terminals);
 }
@@ -128,6 +119,8 @@ defun($h_Terminal_destroy) {
   $f_Consumer_destroy();
   fclose($p_Terminal_input);
   fclose($p_Terminal_output);
+
+  del_hook(&$h_kernel_cycle, HOOK_BEFORE, $u_Terminal_refresh, $o_Terminal);
 }
 
 /*
@@ -174,3 +167,49 @@ advise_after($h_die_gracelessly) {
   each_o($lo_terminals, f);
 }
 
+/*
+  SYMBOL: $f_Terminal_putch
+    Writes the value of *$q_qch to the terminal at coordinates ($i_x,$i_y),
+    where (0,0) is the top-left of the screen. The terminal will automatically
+    refresh before the next kernel cycle.
+
+  SYMBOL: $f_translate_qchar_to_ncurses
+    Used by $f_Terminal_putch to translate qchars to their most equivalent
+    representation in ncurses. It is called once per character that needs
+    updating. The function is to read from the first character of $q_qch and
+    write into the ncurses cchar_t pointed to by $p_wch.
+
+  SYMBOL: $q_qch $p_wch
+    Used as input and output arguments to $f_translate_qchar_to_ncurses,
+    respectively. Only the first character of $q_qch is relevant. $p_wch points
+    to a stack-allocated cchar_t, and has undefined value outside of a call to
+    $f_translate_qchar_to_ncurses.
+
+  SYMBOL: $i_x $i_y
+    Coordinates for $f_Terminal_putch.
+
+  SYMBOL: $u_Terminal_refresh
+    Identifies the hook used to refresh the terminal.
+ */
+defun($h_Terminal_putch) {
+  set_term($$p_Terminal_screen);
+
+  cchar_t wch;
+  $F_translate_qchar_to_ncurses(0,0, $p_wch = &wch);
+  mvadd_wch($i_y, $i_x, &wch);
+
+  // Schedule refresh if not already so scheduled
+  if (!$$y_Terminal_needs_refresh) {
+    $$y_Terminal_needs_refresh = true;
+    add_hook_obj(&$h_kernel_cycle, HOOK_BEFORE,
+                 $u_Terminal_refresh, $u_Terminal,
+                 $$f_Terminal_refresh, $o_Terminal, NULL);
+  }
+}
+
+defun($$h_Terminal_refresh) {
+  set_term($$p_Terminal_screen);
+  refresh();
+  $$y_Terminal_needs_refresh = false;
+  del_hook(&$h_kernel_cycle, HOOK_BEFORE, $u_Terminal_refresh, $o_Terminal);
+}

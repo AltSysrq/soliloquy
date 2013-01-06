@@ -165,9 +165,9 @@ object object_current(void);
  */
 #define within_context(obj,body) \
   do {                                                                  \
-    object _wc_object = obj;                                            \
+    object _wc_object = (obj);                                          \
     if (_wc_object)                                                     \
-      object_eviscerate(obj);                                           \
+      object_eviscerate(_wc_object);                                    \
     body;                                                               \
     if (_wc_object)                                                     \
       object_reembowel();                                               \
@@ -240,11 +240,26 @@ typedef hook_constraint (*hook_constraint_function)(
 void add_hook(struct hook_point*, unsigned priority,
               identity id, identity class,
               void (*fun)(void), hook_constraint_function);
+
+/**
+ * Like add_hook, but with an extra object argument. The hook function (but not
+ * the constraint function) will be evaluated within the context of that object.
+ */
+void add_hook_obj(struct hook_point*, unsigned priority,
+                  identity id, identity class,
+                  void (*fun)(void), object,
+                  hook_constraint_function);
+
 /**
  * Deletes the given hook of the given priority from the given hook point, if
  * such a hook exists. Does nothing otherwise.
+ *
+ * Two hooks are the same if they have the same priority, identity, and
+ * context.
+ *
+ * A hook added by add_hook has a NULL context.
  */
-void del_hook(struct hook_point*, unsigned priority, identity);
+void del_hook(struct hook_point*, unsigned priority, identity, object context);
 
 #define _ADVISE(hook,priority)                       \
   static void _GLUE(advice,__LINE__)(void);          \
@@ -350,6 +365,7 @@ struct symbol_header {
 
 struct hook_point_entry {
   hook_function fun;
+  object context;
   hook_constraint_function constraints;
   identity id, class;
 
