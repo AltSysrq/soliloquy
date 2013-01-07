@@ -14,13 +14,24 @@ AC_PROG_CC
 AC_PROG_CXX
 
 # Checks for libraries.
-AC_SEARCH_LIBS([pcre_compile], [pcre])
-AC_SEARCH_LIBS([GC_init], [gc])
-AC_SEARCH_LIBS([wget_wch], [ncursesw curses cursesw ncurses pcurses])
+AC_SEARCH_LIBS([pcre_compile], [pcre], [],
+               [AC_MSG_ERROR(
+[The PCRE library could not be found. Make sure libpcre[-dev] is installed.])])
+AC_SEARCH_LIBS([GC_init], [gc], [],
+               [AC_MSG_ERROR(
+[The gc library could not be found. Make sure libgc[-dev] is installed.])])
+AC_SEARCH_LIBS([wget_wch], [ncursesw curses cursesw ncurses pcurses], [],
+               [AC_MSG_ERROR(
+[No wide-character version of curses could be found. You probably want to
+install libncursesw5-dev.])])
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h curses.h locale.h])
-AC_CHECK_HEADER_STDBOOL
+AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h locale.h],
+                 [],
+                 [AC_MSG_ERROR([A required header could not be found.])])
+
+AC_CHECK_HEADERS([gc.h gc/gc.h])
+AC_CHECK_HEADERS([ncursesw/curses.h ncurses/cursesw.h cursesw.h curses.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
