@@ -143,10 +143,16 @@ defun($h_Terminal_destroy) {
 */
 defun($h_Terminal_read) {
   set_term($$p_Terminal_screen);
-  while (-1 != ($i_Terminal_input_type = get_wch(&$i_Terminal_input_value))) {
+  wint_t wchar;
+  while (ERR != ($i_Terminal_input_type = get_wch(&wchar))) {
+    if (wchar == EOF) {
+      $f_Terminal_destroy();
+      return;
+    }
+
+    $i_Terminal_input_value = wchar;
     $f_Terminal_getch();
   }
-  //TODO: EOF
 }
 
 advise_after($h_graceful_exit) {
