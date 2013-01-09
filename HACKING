@@ -149,3 +149,30 @@ where CLASS names a $c symbol of the same public/private status, and NAME names
 a public method. In such cases, a BEFORE hook will be added to $f_CLASS which
 runs after $u_superconstructor and assigns $H_NAME to $h_CLASS_NAME (after
 implanting it).
+
+Information Structure
+---------------------
+A Soliloquy instance has zero or more connected Terminals (see terminal.c);
+each Terminal determines grid size and how to translate logical formatting into
+what works on the terminal.
+
+There are one or more Workspaces; each workspace is bound to a
+WorkspaceBacking, and maintains a single EchoArea.
+
+A WorkspaceBacking maintains an array of RenderedLines; a RenderedLine is a
+line of text with calculated formatting and metadata, and which is not longer
+than the current column width ($i_column_width).
+
+One View exists for every Terminal/Workspace combination. A View maintains a
+cut-point, which represents the bottom of the area of the WorkspaceBacking to
+display, as well as the location of the cut-point on the Terminal. Each
+Terminal has a current View.
+
+A Clip refers to a WorkspaceBacking, Buffer, or other object, and displays it
+(or a portion thereof) into a fixed number of RenderedLines.
+
+Clips may be pinned to Workspaces or Terminals. A Clip pinned to a Workspace
+shows up only in that Workspace, but on all terminals whose current View refers
+to that Workspace; a Clip pinned to a Terminal shows up only on that Terminal,
+but across all Views on that Terminal.
+
