@@ -267,10 +267,10 @@ defun($h_translate_qchar_to_ncurses) {
    *
    * dim fg, dim bg, bold:
    * If not BOLD_IMPLIES_BRIGHT: set bold.
-   * If BRIGHT_BLACK_BG_IS_BLACK: Set bg to black, swap fg and bg colours, set
-   *   reverse video, set bold.
-   * If BRIGHT_MAGENTA_BG_IS_BLACK: Set bg to magenta, swap fg and bg colours,
-   *   set reverse video, set bold.
+   * If BRIGHT_BLACK_BG_IS_BLACK and bg is black: Set bg to black, swap fg and
+   *   bg colours, set reverse video, set bold.
+   * If BRIGHT_MAGENTA_BG_IS_BLACK and bg is black: Set bg to magenta, swap fg
+   *   and bg colours, set reverse video, set bold.
    * Otherwise, set bold; we get bright bg, dim bg, bold.
    *
    * bright fg, dim bg, bold:
@@ -337,12 +337,16 @@ defun($h_translate_qchar_to_ncurses) {
 #if !defined(BOLD_IMPLIES_BRIGHT)
     bold = true;
 #elif defined(BRIGHT_BLACK_BG_IS_BLACK)
-    bg = BRIGHT_BLACK >> 1;
-    SETRV;
+    if (bg == 0) {
+      bg = BRIGHT_BLACK >> 1;
+      SETRV;
+    }
     bold = true;
 #elif defined(BRIGHT_MAGENTA_BG_IS_BLACK)
-    bg = BRIGHT_MAGENTA >> 1;
-    SETRV;
+    if (bg == 0) {
+      bg = BRIGHT_MAGENTA >> 1;
+      SETRV;
+    }
     bold = true;
 #else
     bold = true;
