@@ -128,14 +128,11 @@ defun($h_Terminal_destroy) {
     Reads characters from the Terminal until no more are available without
     blocking.
 
-  SYMBOL: $i_Terminal_input_type
-    The value returned by get_wch (see get_wch(3ncurses)) on the most recent
-    call (ie, in $f_Terminal_read).
-
   SYMBOL: $i_Terminal_input_value
     The character value read in the most recent call to get_wch (ie, in
-    $f_Terminal_read). If $i_Terminal_input_type is 0, this is the Unicode
-    value of the character the user typed.
+    $f_Terminal_read). If bit 31 of this value is zero, it is a single Unicode
+    character or ASCII control character. If bit 31 is set, the lower 31 bits
+    are the value of a KEY_ constant returned by curses. (See getch(3ncurses).)
 
   SYMBOL: $f_Terminal_getch
     Called for each character read from the Terminal, within the Terminal's
@@ -144,13 +141,16 @@ defun($h_Terminal_destroy) {
 defun($h_Terminal_read) {
   set_term($$p_Terminal_screen);
   wint_t wchar;
-  while (ERR != ($i_Terminal_input_type = get_wch(&wchar))) {
+  int type;
+  while (ERR != (type = get_wch(&wchar))) {
     if (wchar == EOF) {
       $f_Terminal_destroy();
       return;
     }
 
     $i_Terminal_input_value = wchar;
+    if (type == KEY_CODE_YES)
+      $i_Terminal_input_value |= (1 << 31);
     $f_Terminal_getch();
   }
 }
