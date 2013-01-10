@@ -3,6 +3,8 @@ AM_CXXFLAGS=-Wall -Os -g0
 bin_PROGRAMS = sol
 noinst_PROGRAMS = silc
 silc_SOURCES = silc.cxx
+# Why is this not the default?
+AUTOMAKE_OPTIONS = subdir-objects
 
 .PHONY: clean-silc
 clean-silc:
