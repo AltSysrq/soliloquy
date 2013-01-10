@@ -176,3 +176,70 @@ shows up only in that Workspace, but on all terminals whose current View refers
 to that Workspace; a Clip pinned to a Terminal shows up only on that Terminal,
 but across all Views on that Terminal.
 
+List Template
+-------------
+The list template (instantiated by $l... symbols) defines an immutable,
+Lisp-style linked list, of type list_C, where C is whatever came after the 'l'
+in the symbol type. All list manipulation functions end with the subtype C.
+
+A list is composed of a NULL-terminated chain of cons cells; NULL is the empty
+list. The car field of a list contains an item from the list, and the cdr field
+links to the next cons cell.
+
+cons_C(item,tail) constructs a new cons cell with the given car (_item_) and
+cdr (_tail_). The effect is that a list equal to _tail_, but with _item_
+prepended, is returned.
+
+find_C(list,item) searches for an item in _list_ equal to _item_. If it is
+found, the cons cell containing _item_ is returned. Otherwise, NULL is
+returned.
+
+find_where_C(list,test) is like find_C, but _test_(item) is called for each
+item in the list until _test_ returns true or the end of the list is reached.
+
+fold_C(list,fun) invokes _fun_ for each item in _list_, with a second parameter
+of type `void*` which is NULL on the first call, and the return value of the
+previous call to _fun_ on each subsequent call. The return value of the last
+call to _fun_ is returned, or NULL for the empty list.
+
+each_C(list,fun) calls _fun_(item) for each item in _list_.
+
+lrm_C(list,item) returns a list equal to _list_, but with the *first* cons cell
+whose car equals _item_ removed. If _item_ does not exist in _list_, the return
+value has the same number of elements as _list_.
+
+llen_C(list) returns the number of elements in _list_.
+
+Dynamic Array Template
+----------------------
+The dynamic array template (instantiated by $a... symbols) defines a mutable,
+resizable array, of type dynar_C, where C is whatever came after the 'a' in the
+symbol type. All dynar manipulation functions end with the subtype C.
+
+dynar_C->len is the number of elements in the dynamic array. dynar_C->v is the
+array of elements, which is at least as large as
+`sizeof(TYPE)*dynar_C->len`. The size member should not be accessed.
+
+dynar_new_C(void) returns a new, empty dynar_C.
+
+dynar_push_C(dynar,item) appends _item_ to _dynar_, expanding it first if
+necessary.
+
+dynar_pop_C(dynar) removes the last item from _dynar_, returning the value that
+was removed and decreasing the length by 1. The deleted item is zeroed. The
+effects of calling this on an empty dynar are undefined.
+
+dynar_top_C(dynar) returns the last item in _dynar_. The effect of calling it
+on an empty dynar are undefined.
+
+dynar_expand_by_C(dynar,amt) increases _dynar_'s length by _amt_, increasing
+the extra allocation if necessary. The range of `dynar->v` between `dynar->len`
+and `dynar->len+amt` will be zero.
+
+dynar_contract_by_C(dynar,amt) decreases _dynar_'s length by _amt_, zeroing
+element at the tail which follows `dynar->len-amt`. Behaviour is undefined if
+_amt_ is greater than the length of _dynar_.
+
+dynar_clone_C(dynar) returns a shallow copy of _dynar_; the two will have
+separate `v` members, but no deeper copying occurs. That is, if `v` is an array
+of pointers, only the pointers are copied, rather than what they point to.

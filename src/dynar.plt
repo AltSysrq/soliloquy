@@ -35,6 +35,12 @@ static inline typeof(CTYPE) dynar_pop_HUNG(dynar_HUNG this) {
   return val;
 }
 
+static inline void dynar_contract_by_HUNG(dynar_HUNG this,
+                                          size_t amt) {
+  this->len -= amt;
+  memset(this->v + this->len, 0, sizeof(CTYPE) * amt);
+}
+
 static inline dynar_HUNG dynar_new_HUNG(void) {
   dynar_HUNG this = new(struct dynar_HUNG);
   this->size = 4;
