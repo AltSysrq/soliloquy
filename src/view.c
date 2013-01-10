@@ -45,7 +45,7 @@
     The workspace bound to this View.
 
   SYMBOL: $lo_Terminal_views
-    A list of all Views bound to the Terminal.
+    A listmap of all Views bound to the Terminal, keyed by Workspace.
 
   SYMBOL: $lo_Workspace_views
     A list of all Views bound to the Workspace.
@@ -81,7 +81,7 @@ defun($h_View) {
                      cons_o($o_View, $lo_Workspace_views);
                  }));
 
-  $lo_Terminal_views = cons_o($o_View, $lo_Terminal_views);
+  $lo_Terminal_views = lmput_o($lo_Terminal_views, $o_View_workspace, $o_View);
 }
 
 /*
@@ -111,5 +111,5 @@ defun($h_View_destroy) {
                      lrm_o($lo_Workspace_views, $o_View);
                  }));
   $o_View_workspace = NULL;
-  $lo_Terminal_views = lrm_o($lo_Terminal_views, $o_View);
+  $lo_Terminal_views = lmdel_o($lo_Terminal_views, $o_View_workspace);
 }
