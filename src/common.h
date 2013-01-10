@@ -333,6 +333,19 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
     }                                           \
     _GLUE(_lambdav_,ANONYMOUS); })
 
+/**
+ * Establishes a "dynamic" binding for the given variable, which should be
+ * global. _var_ will take on the value of _expr_ until the containing scope
+ * exits, at which point its former value will be restored.
+ */
+#define let(var,expr)                                           \
+  typeof(var) _GLUE(var,_GLUE($backup,__LINE__)) = (var);       \
+  void _GLUE(var,_GLUE($restore,__LINE__))(char*) {             \
+    var = _GLUE(var,_GLUE($backup,__LINE__));                   \
+  }                                                             \
+  char _GLUE(var,_GLUE($trigger,__LINE__))                      \
+  __attribute__((cleanup(_GLUE(var,_GLUE($restore,__LINE__)))))
+
 /* While the below macro will cause add_symbol_to_domain to be run multiple
  * times for the same symbol if multiple compilation units use it (which will
  * happen, for example, with implicit domain membership of public symbols), it
