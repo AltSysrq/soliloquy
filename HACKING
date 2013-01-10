@@ -216,6 +216,11 @@ The dynamic array template (instantiated by $a... symbols) defines a mutable,
 resizable array, of type dynar_C, where C is whatever came after the 'a' in the
 symbol type. All dynar manipulation functions end with the subtype C.
 
+Note that dynars are *not* "persistent"; if you, eg, implant an existing dynar
+into a new object, mutations to either variable will affect the other, since
+they point to the same mutable object. Use dynar_clone_C() when you need to
+"fork" instances like this.
+
 dynar_C->len is the number of elements in the dynamic array. dynar_C->v is the
 array of elements, which is at least as large as
 `sizeof(TYPE)*dynar_C->len`. The size member should not be accessed.
