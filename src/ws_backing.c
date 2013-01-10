@@ -88,7 +88,7 @@ defun($h_Backing_alter) {
             $ao_Backing_lines->v + ix + $i_Backing_ndeletions,
             sizeof(object) *
               ($ao_Backing_lines->len - ix - $i_Backing_ndeletions));
-    $ao_Backing_lines->len -= $i_Backing_ndeletions;
+    dynar_contract_by_o($ao_Backing_lines, $i_Backing_ndeletions);
     $y_Backing_alteration_was_append = false;
   } else if ($lo_Backing_replacements) {
     //Insertions
