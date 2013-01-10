@@ -41,10 +41,6 @@
     Identity of the change notification hook used by View, to find out when
     portions of the view must be updated.
 
-  SYMBOL: $u_View_Backing_extend_notify
-    Identity of the extend notification hook used by View, to find out when to
-    move cut downward if needed.
-
   SYMBOL: $o_View_workspace
     The workspace bound to this View.
 */
@@ -55,15 +51,10 @@ defun($h_View) {
   $o_View_workspace = $o_Workspace;
   within_context($($o_View_workspace,$o_Workspace_backing),
                  ({
-                   add_hook_obj(&$h_Backing_changed, HOOK_AFTER,
+                   add_hook_obj(&$h_Backing_alter, HOOK_AFTER,
                                 $u_View_Backing_change_notify,
                                 $u_View,
                                 $f_View_backing_changed,
-                                $o_View, NULL);
-                   add_hook_obj(&$h_Backing_extended, HOOK_AFTER,
-                                $u_View_Backing_extend_notify,
-                                $u_View,
-                                $f_View_backing_extended,
                                 $o_View, NULL);
                  }));
   within_context($o_View_workspace,
@@ -85,13 +76,9 @@ defun($h_View) {
 defun($h_View_destroy) {
   within_context($($o_View_workspace,$o_Workspace_backing),
                  ({
-                   del_hook(&$h_Backing_changed,
+                   del_hook(&$h_Backing_alter,
                             HOOK_AFTER,
                             $u_View_Backing_change_notify,
-                            $o_View);
-                   del_hook(&$h_Backing_extended,
-                            HOOK_AFTER,
-                            $u_View_Backing_extend_notify,
                             $o_View);
                  }));
   within_context($o_View_workspace,
