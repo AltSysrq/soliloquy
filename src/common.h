@@ -338,13 +338,14 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
  * global. _var_ will take on the value of _expr_ until the containing scope
  * exits, at which point its former value will be restored.
  */
-#define let(var,expr)                                           \
-  typeof(var) _GLUE(var,_GLUE($backup,__LINE__)) = (var);       \
-  void _GLUE(var,_GLUE($restore,__LINE__))(char*) {             \
-    var = _GLUE(var,_GLUE($backup,__LINE__));                   \
-  }                                                             \
-  char _GLUE(var,_GLUE($trigger,__LINE__))                      \
-  __attribute__((cleanup(_GLUE(var,_GLUE($restore,__LINE__)))))
+#define let(var,expr)                                                   \
+  typeof(var) _GLUE(var,_GLUE($backup,__LINE__)) = (var);               \
+  void _GLUE(var,_GLUE($restore,__LINE__))(char*c) {                    \
+    var = _GLUE(var,_GLUE($backup,__LINE__));                           \
+  }                                                                     \
+  char _GLUE(var,_GLUE($trigger,__LINE__))                              \
+  __attribute__((unused,cleanup(_GLUE(var,_GLUE($restore,__LINE__))))); \
+  var = (expr);
 
 /* While the below macro will cause add_symbol_to_domain to be run multiple
  * times for the same symbol if multiple compilation units use it (which will
