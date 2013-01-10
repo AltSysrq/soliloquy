@@ -104,10 +104,15 @@ defun($h_Workspace_destroy) {
 
   SYMBOL: $f_Workspace_remove_pin
     Removes $o_Clip from this Workspace's pin list. The Clip is not destroyed;
-    it becomes the caller's responsibility after this call.
+    it becomes the caller's responsibility after this call. This should be
+    called within the context of the clip, so that no long-term reference to it
+    is created.
 
   SYMBOL: $f_Workspace_destroy_pin
-    Calls $f_Workspace_remove_pin, then destroys $o_Clip.
+    Calls $f_Workspace_remove_pin, then destroys $o_Clip. This must be called
+    within the context of $o_Clip. This is both due to how it calls
+    $f_Clip_destroy(), and because this prevents passing the Clip in a manner
+    which would preserve a reference to it after the call exits.
  */
 defun($h_Workspace_add_pin) {
   $lo_Workspace_pins = cons_o($o_Clip, $lo_Workspace_pins);
