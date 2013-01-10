@@ -506,11 +506,14 @@ void del_hook(struct hook_point* point,
   del_hook_impl(point, priority, id, context);
 }
 
-void invoke_hook(struct hook_point* point) {
+void invoke_hook(struct hook_point* ppoint) {
+  // Make a copy so that concurrent modifications do not interfere with this
+  // invocation of the hook.
+  struct hook_point point = *ppoint;
   for (unsigned priority = 0;
-       priority < sizeof(point->entries)/sizeof(point->entries[0]);
+       priority < sizeof(point.entries)/sizeof(point.entries[0]);
        ++priority)
-    for (struct hook_point_entry* curr = point->entries[priority];
+    for (struct hook_point_entry* curr = point.entries[priority];
          curr; curr = curr->next)
       within_context(curr->context, curr->fun());
 }
