@@ -9,11 +9,24 @@ typedef struct dynar_HUNG {
 static inline typeof(CTYPE) dynar_push_HUNG(dynar_HUNG this,
                                             typeof(CTYPE) val) {
   if (this->len == this->size) {
-    this->v = gcrealloc(this->v, this->size);
     this->size *= 2;
+    this->v = gcrealloc(this->v, this->size*sizeof(CTYPE));
   };
   this->v[this->len++] = val;
   return val;
+}
+
+static inline void dynar_expand_by_HUNG(dynar_HUNG this,
+                                        size_t amt) {
+  this->len += amt;
+  if (this->size < this->len) {
+    //Either double size, or expand to exactly fit, whichever is bigger
+    this->size *= 2;
+    if (this->size < this->len)
+      this->size = this->len;
+
+    this->v = gcrealloc(this->v, this->size * sizeof(CTYPE));
+  }
 }
 
 static inline typeof(CTYPE) dynar_pop_HUNG(dynar_HUNG this) {
