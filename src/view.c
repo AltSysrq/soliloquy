@@ -65,6 +65,12 @@ defun($h_View) {
                                 $u_View,
                                 $f_View_pin_changed,
                                 $o_View, NULL);
+                   add_hook_obj(&$h_Workspace_destroy,
+                                HOOK_BEFORE,
+                                $u_View,
+                                $u_View,
+                                $f_View_destroy,
+                                $o_View, NULL);
                  }));
 }
 
@@ -86,6 +92,10 @@ defun($h_View_destroy) {
                    del_hook(&$h_Workspace_pin_changed,
                             HOOK_AFTER,
                             $u_View_pin_change_notify,
+                            $o_View);
+                   del_hook(&$h_Workspace_destroy,
+                            HOOK_BEFORE,
+                            $u_View,
                             $o_View);
                  }));
   $o_View_workspace = NULL;
