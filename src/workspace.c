@@ -90,6 +90,7 @@ defun($h_Workspace_destroy) {
   $lo_workspaces = lrm_o($lo_workspaces, $o_Workspace);
 
   each_o($lo_Workspace_pins, lambdav((object o), $M_destroy(0,o)));
+  each_o($lo_Workspace_activities, lambdav((object o), $M_destroy(0,o)));
 }
 
 /*
