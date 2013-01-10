@@ -303,6 +303,36 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
   }                                                  \
   static void _GLUE(hook,$main)(void)
 
+/**
+ * Expands into an anonymous function which takes the given arguments and
+ * returns the given expression. If you need multiple statements within expr,
+ * enclose it in ({...}), and place the return value as the last statement
+ * (without the "return" keyword).
+ *
+ * Note that, while this does form a closure, the function will be invalid once
+ * the containing function returns.
+ *
+ * Example:
+ *   find_where_i(list_of_integers, lambda((int i), i > 5))
+ */
+#define lambda(args, expr)                              \
+  ({typeof(expr) _GLUE(_lambda_,ANONYMOUS) args {       \
+      return expr;                                      \
+    }                                                   \
+    _GLUE(_lambda_,ANONYMOUS); })
+
+/**
+ * Like lambda, but the inner function returns void.
+ *
+ * Example:
+ *   each_i(list_of_integers, lambdav((int i), printf("%d\n", i)));
+ */
+#define lambdav(args, expr)                     \
+  ({void _GLUE(_lambdav_,ANONYMOUS) args {      \
+      expr;                                     \
+    }                                           \
+    _GLUE(_lambdav_,ANONYMOUS); })
+
 /* While the below macro will cause add_symbol_to_domain to be run multiple
  * times for the same symbol if multiple compilation units use it (which will
  * happen, for example, with implicit domain membership of public symbols), it
