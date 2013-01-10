@@ -24,7 +24,7 @@
     within the workspace and on the screen).
 */
 
-//class $c_Terminal
+//class $c_Terminal $c_Workspace
 
 /*
   SYMBOL: $c_View
@@ -43,7 +43,13 @@
 
   SYMBOL: $o_View_workspace
     The workspace bound to this View.
-*/
+
+  SYMBOL: $lo_Terminal_views
+    A list of all Views bound to the Terminal.
+
+  SYMBOL: $lo_Workspace_views
+    A list of all Views bound to the Workspace.
+ */
 defun($h_View) {
   $i_View_cut_on_screen = 0;
   $i_View_cut_in_workspace = $($($o_Workspace, $o_Workspace_backing),
@@ -71,7 +77,11 @@ defun($h_View) {
                                 $u_View,
                                 $f_View_destroy,
                                 $o_View, NULL);
+                   $lo_Workspace_views =
+                     cons_o($o_View, $lo_Workspace_views);
                  }));
+
+  $lo_Terminal_views = cons_o($o_View, $lo_Terminal_views);
 }
 
 /*
@@ -97,6 +107,9 @@ defun($h_View_destroy) {
                             HOOK_BEFORE,
                             $u_View,
                             $o_View);
+                   $lo_Workspace_views =
+                     lrm_o($lo_Workspace_views, $o_View);
                  }));
   $o_View_workspace = NULL;
+  $lo_Terminal_views = lrm_o($lo_Terminal_views, $o_View);
 }
