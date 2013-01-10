@@ -186,6 +186,11 @@ A list is composed of a NULL-terminated chain of cons cells; NULL is the empty
 list. The car field of a list contains an item from the list, and the cdr field
 links to the next cons cell.
 
+A listmap is a list with an even number of elements, where every even-indexed
+element is a key, and following odd-indexed element is the value mapped to that
+key. Listmaps are apporpriate for relatively small or infrequently-used
+mappings.
+
 cons_C(item,tail) constructs a new cons cell with the given car (_item_) and
 cdr (_tail_). The effect is that a list equal to _tail_, but with _item_
 prepended, is returned.
@@ -209,6 +214,17 @@ whose car equals _item_ removed. If _item_ does not exist in _list_, the return
 value has the same number of elements as _list_.
 
 llen_C(list) returns the number of elements in _list_.
+
+lmget_C(list,key) returns the first cons cell after a key element in _list_
+equaling _key_, or NULL if not found. _list_ must be a listmap.
+
+lmdel_C(list,key) returns a copy of _list_ with the key-value pair denoted by
+_key_ removed, if present. If multiple such keys exist, only the first is
+affected. _list_ must be a listmap.
+
+lmput_C(list,key,value) returns _list_, with _key_ mapped to _value_. If _key_
+already exists as a key in _list_, that pair is deleted first. _list_ must be a
+listmap.
 
 Dynamic Array Template
 ----------------------

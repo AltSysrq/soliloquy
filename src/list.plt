@@ -71,4 +71,34 @@ static inline unsigned llen_HUNG(list_HUNG this) {
   return len;
 }
 
+static inline list_HUNG lmget_HUNG(list_HUNG this, CTYPE key) {
+  while (this && this->car != key)
+    this = this->cdr->cdr;
+
+  if (this)
+    return this->cdr;
+  else
+    return NULL;
+}
+
+static inline list_HUNG lmdel_HUNG(list_HUNG this, CTYPE key) {
+  if (this == NULL) return NULL;
+  if (this->car == key)
+    return this->cdr->cdr;
+
+  return
+    cons_HUNG(
+      this->car,
+      cons_HUNG(
+        this->cdr->car,
+        lmdel_HUNG(this->cdr->cdr, key)));
+}
+
+static inline list_HUNG lmput_HUNG(list_HUNG this, CTYPE key, CTYPE value) {
+  if (lmget_HUNG(this, key))
+    this = lmdel_HUNG(this, key);
+
+  return cons_HUNG(key, cons_HUNG(value, this));
+}
+
 #endif /* HAVE_DEFINED_LIST_HUNG */
