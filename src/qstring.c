@@ -82,7 +82,7 @@ size_t qstrlcpy(mqstring dst, qstring src, size_t maxsz) {
   if (!maxsz) return srclen;
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
   memcpy(dst, src, sizeof(qchar)*len);
-  dst[len] = 0;
+  memset(dst+len, 0, sizeof(qchar)*(maxsz-len));
   return srclen;
 }
 
@@ -95,7 +95,7 @@ size_t qstrlcat(mqstring dstbase, qstring src, size_t maxsz) {
 
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
   memcpy(dst, src, len*sizeof(qchar));
-  dst[len] = 0;
+  memset(dst+len, 0, sizeof(qchar)*(maxsz-len));
 
   return len + (dst-dstbase);
 }
@@ -105,7 +105,7 @@ size_t wstrlcpy(mwstring dst, wstring src, size_t maxsz) {
   if (!maxsz) return srclen;
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
   memcpy(dst, src, sizeof(wchar_t)*len);
-  dst[len] = 0;
+  memset(dst+len, 0, sizeof(wchar_t)*(maxsz-len));
   return srclen;
 }
 
@@ -118,7 +118,10 @@ size_t wstrlcat(mwstring dstbase, wstring src, size_t maxsz) {
 
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
   memcpy(dst, src, len*sizeof(wchar_t));
-  dst[len] = 0;
+  memset(dst+len, 0, sizeof(wchar_t)*(maxsz-len));
 
   return len + (dst-dstbase);
 }
+
+static qchar zero = 0;
+const qchar*const qempty = &zero;

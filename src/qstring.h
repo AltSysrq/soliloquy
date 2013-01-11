@@ -160,4 +160,9 @@ size_t wstrlcpy(wchar_t* dst, const wchar_t* src, size_t sz);
  * Like strlcat(), but for wstrings.
  */
 size_t wstrlcat(wchar_t* dst, const wchar_t* src, size_t sz);
+
+/**
+ * The empty qstring.
+ */
+extern const qchar*const qempty;
 #endif /* QSTRING_H_ */

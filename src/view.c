@@ -189,17 +189,14 @@ defun($h_View_paint_line) {
   int row = $i_View_line_to_paint % ($i_Terminal_rows-1);
   col *= ($i_column_width + $i_line_meta_width);
 
-  qchar line[$i_column_width + $i_line_meta_width];
-  memset(line, 0, sizeof(line));
+  qchar line[$i_column_width + $i_line_meta_width+1];
 
   object oline =
     $($($o_View_workspace,$o_Workspace_backing),
       $ao_Backing_lines)->v[$i_View_line_to_paint];
-  $M_format_meta(0,oline,
-                 $p_format_dst = line, $i_format_size = $i_line_meta_width);
-  $M_format_main(0,oline,
-                 $p_format_dst = line + $i_line_meta_width,
-                 $i_format_size = $i_column_width);
+  qstrlcpy(line, $(oline, $q_Rendered_Line_meta), $i_line_meta_width+1);
+  qstrlcpy(line+$i_line_meta_width,
+           $(oline, $q_Rendered_Line_body), $i_column_width+1);
 
   within_context($o_View_terminal, ({
         for (unsigned i = 0; i < sizeof(line)/sizeof(qchar); ++i)

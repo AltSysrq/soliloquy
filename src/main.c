@@ -45,12 +45,14 @@ int main(void) {
     return 1;
   }
 
+  within_context($$o_term, ({
+        $o_Terminal_current_view =
+          $c_View($o_View_terminal = $$o_term,
+                  $o_View_workspace =
+                    $c_Workspace(
+                      $o_Workspace_backing = $c_Fizz_Buzz()));}));
+
   $f_kernel_main();
   return 0;
 }
 
-advise_after($h_Terminal_getch) {
-  qchar qc = $i_Terminal_input_value;
-  let($q_qch, &qc);
-  $F_Terminal_putch(0,0, ++$i_x);
-}
