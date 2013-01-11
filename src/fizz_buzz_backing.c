@@ -60,7 +60,7 @@ defun($h_Fizz_Buzz_task) {
     else if (ix % 5 == 0)
       wstr = L"buzz";
     else {
-      wprintf(str, L"%d", ix);
+      swprintf(str, sizeof(str), L"%d", ix);
       wstr = str;
     }
 

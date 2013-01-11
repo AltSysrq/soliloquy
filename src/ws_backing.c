@@ -96,9 +96,9 @@ defun($h_Backing_alter) {
     dynar_expand_by_o($ao_Backing_lines, cnt);
     //Handle the case of appending specially, since it's quite common and much
     //faster.
-    if (ix == $ao_Backing_lines->len) {
+    if (ix+cnt == $ao_Backing_lines->len) {
       while ($lo_Backing_replacements) {
-        dynar_push_o($ao_Backing_lines, $lo_Backing_replacements->car);
+        $ao_Backing_lines->v[ix++] = $lo_Backing_replacements->car;
         $lo_Backing_replacements = $lo_Backing_replacements->cdr;
       }
     } else {

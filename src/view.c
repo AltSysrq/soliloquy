@@ -66,9 +66,8 @@
  */
 defun($h_View) {
   $i_View_cut_on_screen = 0;
-  $i_View_cut_in_workspace = $($($o_Workspace, $o_Workspace_backing),
+  $i_View_cut_in_workspace = $($($o_View_workspace, $o_Workspace_backing),
                                $ao_Backing_lines)->len;
-  $o_View_workspace = $o_Workspace;
   $o_View_terminal = $o_Terminal;
   within_context($($o_View_workspace,$o_Workspace_backing),
                  ({
@@ -164,7 +163,7 @@ defun($h_View_backing_changed) {
 
   for ($i_View_line_to_paint = $i_Backing_alteration_begin;
        $i_View_line_to_paint < $i_View_cut_in_workspace;
-       ++$i_View_cut_in_workspace)
+       ++$i_View_line_to_paint)
     $F_View_paint_line(0,$o_View_terminal);
 }
 
