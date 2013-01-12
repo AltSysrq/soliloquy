@@ -158,8 +158,11 @@ defun($h_View_backing_changed) {
 
   // If this was an append and we were at the end, move cut forward
   if ($y_Backing_alteration_was_append &&
-      $i_View_cut_in_workspace == $i_Backing_alteration_begin)
+      $i_View_cut_in_workspace == $i_Backing_alteration_begin) {
+    $i_View_cut_on_screen += $ao_Backing_lines->len - $i_View_cut_in_workspace;
+    $i_View_cut_on_screen %= $i_View_rows;
     $i_View_cut_in_workspace = $ao_Backing_lines->len;
+  }
 
   for ($i_View_line_to_paint = $i_Backing_alteration_begin;
        $i_View_line_to_paint < $i_View_cut_in_workspace;
@@ -184,8 +187,12 @@ defun($h_View_backing_changed) {
     The width, in characters, of the line metadata area.
  */
 defun($h_View_paint_line) {
-  int col = $i_View_line_to_paint / ($i_Terminal_rows-1);
-  int row = $i_View_line_to_paint % ($i_Terminal_rows-1);
+  int line_to_paint = $i_View_line_to_paint - $i_View_cut_in_workspace;
+  line_to_paint += $i_View_rows /* since the above is always negative */ +
+                   $i_View_cut_on_screen;
+  line_to_paint %= $i_View_rows;
+  int col = line_to_paint / ($i_Terminal_rows-1);
+  int row = line_to_paint % ($i_Terminal_rows-1);
   col *= ($i_column_width + $i_line_meta_width);
 
   qchar line[$i_column_width + $i_line_meta_width+1];
