@@ -32,7 +32,7 @@ AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h locale.h],
                  [AC_MSG_ERROR([A required header could not be found.])])
 
 AC_CHECK_HEADERS([gc.h gc/gc.h])
-AC_CHECK_HEADERS([ncursesw/curses.h ncurses/cursesw.h cursesw.h curses.h])
+AC_CHECK_HEADERS([ncursesw/cursesw.h ncurses/cursesw.h ncursesw/curses.h cursesw.h curses.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE

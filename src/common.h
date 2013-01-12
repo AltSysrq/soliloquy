@@ -28,7 +28,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
+
+#ifdef HAVE_GC_GC_H
+#include <gc/gc.h>
+#else
 #include <gc.h>
+#endif
 
 #include "qstring.h"
 

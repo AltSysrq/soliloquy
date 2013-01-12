@@ -24,10 +24,7 @@
 
 #include "terminal.slc"
 
-#ifndef _XOPEN_SORUCE_EXTENDED
-#define _XOPEN_SORUCE_EXTENDED 1
-#endif
-#include <ncursesw/curses.h>
+#include "inc_ncurses.h"
 
 /*
   SYMBOL: $c_Terminal
