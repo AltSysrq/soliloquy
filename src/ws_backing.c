@@ -106,9 +106,9 @@ defun($h_Backing_alter) {
       $y_Backing_alteration_was_append = false;
       memmove($ao_Backing_lines->v + ix + cnt,
               $ao_Backing_lines->v + ix,
-              $ao_Backing_lines->len - ix - cnt);
+              ($ao_Backing_lines->len - ix - cnt)*sizeof(object));
       while ($lo_Backing_replacements) {
-        $ao_Backing_lines->v[ix] = $lo_Backing_replacements->car;
+        $ao_Backing_lines->v[ix++] = $lo_Backing_replacements->car;
         $lo_Backing_replacements = $lo_Backing_replacements->cdr;
       }
     }
