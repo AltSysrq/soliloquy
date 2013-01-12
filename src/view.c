@@ -163,6 +163,13 @@ defun($h_View_backing_changed) {
     $i_View_cut_on_screen %= $i_View_rows;
     $i_View_cut_in_workspace = $ao_Backing_lines->len;
   }
+  //If the change leaves cut outside the workspace, move it back
+  if ($i_View_cut_in_workspace > $ao_Backing_lines->len) {
+    $i_View_cut_on_screen -= $i_View_cut_in_workspace - $ao_Backing_lines->len;
+    while ($i_View_cut_on_screen < 0)
+      $i_View_cut_on_screen += $i_View_rows;
+    $i_View_cut_in_workspace = $ao_Backing_lines->len;
+  }
 
   for ($i_View_line_to_paint = $i_Backing_alteration_begin;
        $i_View_line_to_paint < $i_View_cut_in_workspace;
