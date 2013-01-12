@@ -279,7 +279,9 @@ void object_implant(struct symbol_header* sym,
       this->data = gcrealloc(this->data, this->data_size);
     }
     // Write value into data
-    this->data_end += sym->size;
+    // We need to ensure that any following data are aligned properly so that
+    // the GC can see pointers embedded within the data.
+    this->data_end += SIZEALIGN(sym->size);
     memcpy(this->data + offset, sym->payload, sym->size);
 
     // Push ownership to the object
