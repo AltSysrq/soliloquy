@@ -212,7 +212,7 @@ defun($h_View_paint_line) {
            $(oline, $q_Rendered_Line_body), $i_column_width+1);
 
   within_context($o_View_terminal, ({
-        for (unsigned i = 0; i < sizeof(line)/sizeof(qchar); ++i)
+        for (unsigned i = 0; i < sizeof(line)/sizeof(qchar)-1; ++i)
           $F_Terminal_putch(0,0, $i_x = col++, $i_y = row, $q_qch = line+i);
         0;
       }));
