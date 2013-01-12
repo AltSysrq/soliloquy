@@ -35,8 +35,8 @@ defun($h_Fizz_Buzz) {
 
 defun($h_Fizz_Buzz_task) {
   $y_kernel_poll_infinite = false;
-  if ($i_kernel_poll_duration_ms > 1000)
-    $i_kernel_poll_duration_ms = 1000;
+  if ($i_kernel_poll_duration_ms > 256)
+    $i_kernel_poll_duration_ms = 256;
 
   wchar_t str[32];
   int ix = ++$i_Fizz_Buzz_ix;
