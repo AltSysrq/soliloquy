@@ -291,6 +291,24 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
 /** Like advise, but runs at AFTER priority. */
 #define advise_after(hook) _ADVISE(hook, HOOK_AFTER)
 
+#define _ADVISE_ID(id,hook,priority)                 \
+  static void _GLUE(advice,__LINE__)(void);          \
+  ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) { \
+    add_hook(&hook, priority,                        \
+             id,                                     \
+             NULL, _GLUE(advice,__LINE__), NULL);    \
+  }                                                  \
+  static void _GLUE(advice,__LINE__)(void)
+
+/**
+ * Like advise, but takes an explicit ID.
+ */
+#define advise_id(id,hook) _ADVISE_ID(id, hook, HOOK_MAIN)
+/** Like advise_id, but runs at BEFORE priority. */
+#define advise_id_before(id, hook) _ADVISE_ID(id, hook, HOOK_BEFORE)
+/** Like advise_id, but runs at AFTER priority. */
+#define advise_id_after(id, hook) _ADVISE_ID(id, hook, HOOK_AFTER)
+
 /**
  * Usage:
  *   defun($h_some_hook) { (* body *) }
