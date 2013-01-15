@@ -33,7 +33,7 @@ defun($h_Fizz_Buzz) {
                NULL);
 }
 
-defun($h_Fizz_Buzz_task) {
+advise_id($u_Fizz_Buzz, $h_Fizz_Buzz_task) {
   $y_kernel_poll_infinite = false;
   if ($i_kernel_poll_duration_ms > 256)
     $i_kernel_poll_duration_ms = 256;
