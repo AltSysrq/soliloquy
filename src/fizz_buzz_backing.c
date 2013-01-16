@@ -26,6 +26,8 @@
 
 subclass($c_Backing,$c_Fizz_Buzz)
 
+STATIC_INIT_TO($i_Fizz_Buzz_delay, 256)
+
 defun($h_Fizz_Buzz) {
   add_hook_obj(&$h_run_tasks, HOOK_MAIN,
                $u_Fizz_Buzz, $u_Fizz_Buzz,
@@ -35,8 +37,8 @@ defun($h_Fizz_Buzz) {
 
 advise_id($u_Fizz_Buzz, $h_Fizz_Buzz_task) {
   $y_kernel_poll_infinite = false;
-  if ($i_kernel_poll_duration_ms > 256)
-    $i_kernel_poll_duration_ms = 256;
+  if ($i_kernel_poll_duration_ms > $i_Fizz_Buzz_delay)
+    $i_kernel_poll_duration_ms = $i_Fizz_Buzz_delay;
 
   wchar_t str[32];
   int ix = ++$i_Fizz_Buzz_ix;
@@ -75,4 +77,12 @@ advise_id($u_Fizz_Buzz, $h_Fizz_Buzz_task) {
                            $q_Rendered_Line_body = wstrtoqstr(wstr)),
                          NULL));
   }
+}
+
+defun($h_Fizz_Buzz_go_faster) {
+  $i_Fizz_Buzz_delay -= 32;
+}
+
+defun($h_Fizz_Buzz_go_slower) {
+  $i_Fizz_Buzz_delay += 32;
 }

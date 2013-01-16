@@ -220,8 +220,12 @@ defun($h_Producer_destroy) {
   $$lo_producers = lrm_o($$lo_producers, $o_Producer);
 }
 
+/*
+  SYMBOL: $y_keep_running
+    When set to false, the kernel exits when the current cycle completes.
+*/
 advise_before($h_kernel_main) {
-  $$y_keep_running = true;
+  $y_keep_running = true;
 }
 
 /*
@@ -229,7 +233,7 @@ advise_before($h_kernel_main) {
     The main loop of the kernel. Typically called once for the whole program.
 */
 defun($h_kernel_main) {
-  while ($$y_keep_running)
+  while ($y_keep_running)
     $f_kernel_cycle();
 }
 

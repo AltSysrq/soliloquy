@@ -67,7 +67,7 @@ advise_id($u_key_dispatch, $h_Terminal_getch) {
     A list of lists of keybinding*s defining the keybindings for the current
     Workspace.
 
-  SYMBOL: $llp_Backing_keybap
+  SYMBOL: $llp_Backing_keymap
     A list of lists of keybinding*s defining the keybindings for the current
     Workspace Backing.
 
@@ -77,7 +77,7 @@ advise_id($u_key_dispatch, $h_Terminal_getch) {
  */
 static bool search_all(qchar key) {
   if (!search($llp_Terminal_keymap, key)) {
-    $$($o_Terminal_view) {
+    $$($o_Terminal_current_view) {
       if (!search($llp_View_keymap, key)) {
         $$($o_View_workspace) {
           if (!search($llp_Workspace_keymap, key)) {
@@ -139,4 +139,15 @@ static bool search(list_lp llst, qchar key) {
   }
 
   return false;
+}
+
+keybinding* mk_keybinding(qchar qch, identity mode, identity newmode,
+                          void (*fun)(void)) {
+  keybinding kb = {
+    .trigger = qch,
+    .mode = mode,
+    .newmode = newmode,
+    .function = fun,
+  };
+  return newdup(&kb);
 }
