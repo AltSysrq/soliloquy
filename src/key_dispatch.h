@@ -47,8 +47,9 @@
  * Handler functions are called within the context of the object whose keymap
  * it was found within, as well as within the contexts of the objects searched
  * first. The exception is Activities, for which only the Activity which the
- * keymap was found in will be eviscerated, in addition to the Backing et al
- * (versus all Activities thereto being eviscerated as well).
+ * keymap was found in will be eviscerated, in addition to the Workspace and
+ * everything above it (versus all Activities thereto and the Backing being
+ * eviscerated as well).
  *
  * Any handling function may set $y_key_dispatch_continue to true to indicate
  * that it has not processed the keystroke, which causes the search to continue

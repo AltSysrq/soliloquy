@@ -179,6 +179,22 @@ object object_current(void);
   } while(0)
 
 /**
+ * $$(obj) { ... } $$$; works like within_context, but does not cause the entire
+ * body to appear to be on the same line to the compiler. It is therefore
+ * preferable to longer blocks. It is also safe to return or otherwise jump out
+ * of this structure, unlike within_context.
+ */
+#define $$(obj)                                           \
+  do {                                                    \
+    object _$$_object                                     \
+    __attribute__((cleanup(reembowel_if_not_null)))       \
+    = (obj);                                              \
+    if (_$$_object)                                       \
+      object_eviscerate(_$$_object);                      \
+    do
+#define $$$ while(0); } while(0)
+
+/**
  * Implants the given symbol, or domain of symbols, into the current context.
  *
  * The effect of using this macro to implant something which is not a symbol is
@@ -456,6 +472,10 @@ struct symbol_domain {
 
 void object_eviscerate(object);
 void object_reembowel(void);
+static inline void reembowel_if_not_null(object* that) {
+  if (*that)
+    object_reembowel();
+}
 void object_implant(struct symbol_header*, enum implantation_type);
 void object_get_implanted_value(void* dst, object,
                                 struct symbol_header* sym);
