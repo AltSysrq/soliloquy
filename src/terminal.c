@@ -63,6 +63,9 @@
 subclass($c_Consumer,$c_Terminal)
 member_of_domain($$d_Terminal, $d_Terminal)
 
+STATIC_INIT_TO($y_Terminal_cursor_visible, true)
+STATIC_INIT_TO($$y_Terminal_cursor_visible, true)
+
 defun($h_Terminal) {
   $$p_Terminal_screen = newterm($s_Terminal_type,
                                 $p_Terminal_output, $p_Terminal_input);
@@ -210,6 +213,11 @@ defun($h_Terminal_putch) {
     The coordinates on the screen where the hardware cursor should be
     displayed. If you change these, make sure to call $f_Terminal_update().
 
+  SYMBOL: $y_Terminal_cursor_visible
+    Indicates whether the hardware cursor for the Terminal should be
+    visible. Changes will not have effect unless $f_Terminal_update() is
+    called.
+
   SYMBOL: $f_Terminal_update
     Schedules a refresh of the Terminal immediately before the next kernel
     cycle begins. This MUST be called to update the cursor location. It is
@@ -227,7 +235,16 @@ defun($h_Terminal_update) {
 
 defun($$h_Terminal_refresh) {
   set_term($$p_Terminal_screen);
-  move($i_Terminal_cursor_y, $i_Terminal_cursor_x);
+  if ($$y_Terminal_cursor_visible != $y_Terminal_cursor_visible) {
+    if (ERR == curs_set($y_Terminal_cursor_visible? 1 : 0))
+      // The terminal does not support this cursor mode
+      $y_Terminal_cursor_visible = $$y_Terminal_cursor_visible;
+    leaveok(stdscr, $y_Terminal_cursor_visible? 0 : 1);
+    $$y_Terminal_cursor_visible = $y_Terminal_cursor_visible;
+  }
+
+  if ($y_Terminal_cursor_visible)
+    move($i_Terminal_cursor_y, $i_Terminal_cursor_x);
   refresh();
   $$y_Terminal_needs_refresh = false;
   del_hook(&$h_kernel_cycle, HOOK_BEFORE, $u_Terminal_refresh, $o_Terminal);

@@ -49,7 +49,8 @@ int main(void) {
 
   if (!($$o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
                                $p_Terminal_input = stdin,
-                               $p_Terminal_output = stdout))) {
+                               $p_Terminal_output = stdout,
+                               $y_Terminal_cursor_visible = false))) {
     perror("initialising terminal");
     return 1;
   }
