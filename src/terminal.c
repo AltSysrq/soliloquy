@@ -202,6 +202,21 @@ defun($h_Terminal_putch) {
   mvadd_wch($i_y, $i_x, &wch);
 
   // Schedule refresh if not already so scheduled
+  $f_Terminal_update();
+}
+
+/*
+  SYMBOL: $i_Terminal_cursor_x $i_Terminal_cursor_y
+    The coordinates on the screen where the hardware cursor should be
+    displayed. If you change these, make sure to call $f_Terminal_update().
+
+  SYMBOL: $f_Terminal_update
+    Schedules a refresh of the Terminal immediately before the next kernel
+    cycle begins. This MUST be called to update the cursor location. It is
+    called automatically by $f_Terminal_putch(), so calling it only in cases of
+    screen display changes is unnecessary.
+ */
+defun($h_Terminal_update) {
   if (!$$y_Terminal_needs_refresh) {
     $$y_Terminal_needs_refresh = true;
     add_hook_obj(&$h_kernel_cycle, HOOK_BEFORE,
@@ -212,6 +227,7 @@ defun($h_Terminal_putch) {
 
 defun($$h_Terminal_refresh) {
   set_term($$p_Terminal_screen);
+  move($i_Terminal_cursor_y, $i_Terminal_cursor_x);
   refresh();
   $$y_Terminal_needs_refresh = false;
   del_hook(&$h_kernel_cycle, HOOK_BEFORE, $u_Terminal_refresh, $o_Terminal);
