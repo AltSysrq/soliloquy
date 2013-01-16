@@ -22,3 +22,4 @@ symbols.def
 src/Makefile.am
 src/silc
 compile
+src/classes

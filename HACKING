@@ -150,6 +150,30 @@ a public method. In such cases, a BEFORE hook will be added to $f_CLASS which
 runs after $u_superconstructor and assigns $H_NAME to $h_CLASS_NAME (after
 implanting it).
 
+Notes about Public Domains / Classes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Each compilation unit is responsible for domain (and thus class) membership of
+the symbols it references. Ordinarily, this creates non-intuitive behaviour for
+public class and domain symbols. Suppose foo.c defines $c_Foo, and bar.c tries
+to add $i_Foo_bar to it. If bar.c does not reference $c_Foo (or $d_Foo), this
+would result in $i_Foo_bar being free *unless* some other compilation unit
+referenced both $i_Foo_bar and $c_Foo.
+
+To work around this, the build system maintains a list of all classes/domains
+referenced. For the purposes of class/domain membership, all compilation units
+are considered to reference all classes and domains listed therein. This means
+that in the scenario described above, the results are expected.
+
+However, to avoid needing to rebuild all the sources every time anything is
+modified, the dependency on the class list is only ordering. Since classes are
+generally written before anyone adds external extensions, this is generally not
+a problem. However, suppose that in the example above, bar.c was written and
+compiled before $c_Foo was compiled. In this case, $i_Foo_bar will be a free
+variable until bar.c is compiled again.
+
+In summary, if you seem to have free variables that should be class members,
+try touching the source file in question and recompile.
+
 Information Structure
 ---------------------
 A Soliloquy instance has zero or more connected Terminals (see terminal.c);

@@ -6,9 +6,14 @@ silc_SOURCES = silc.cxx
 # Why is this not the default?
 AUTOMAKE_OPTIONS = subdir-objects
 
+classes: genclasses $(sol_SOURCES)
+	@echo "  CLASSES"
+	@./genclasses
+
 .PHONY: clean-silc
 clean-silc:
 	find . -name '*.slc' -delete
+	rm -f classes
 
 clean: clean-silc clean-am
 

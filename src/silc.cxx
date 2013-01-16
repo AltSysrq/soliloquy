@@ -54,6 +54,7 @@ static int exit_status = 0;
 
 static void process_file(const string&);
 static void process_symbol(const string&);
+static void read_external_classes(void);
 static void domain_membership(void);
 static void method_membership(void);
 int main(int argc, const char*const* argv) {
@@ -81,6 +82,7 @@ int main(int argc, const char*const* argv) {
   process_symbol("$u_main");
 
   //Post-processing tasks dealing with inter-symbol relations
+  read_external_classes();
   method_membership();
   domain_membership();
 
@@ -584,6 +586,7 @@ static void method_membership(void) {
           string constr(change_symbol_type_char(*it, 'h'));
           process_symbol(hook);
           process_symbol(identity);
+          process_symbol(constr);
           const char* ext, * attr;
           linkage_of(ext, attr, *sit);
           format("static void _setup_`SYM(void) {                           \n"
@@ -606,4 +609,15 @@ static void method_membership(void) {
         orphans.erase(*it);
     }
   }
+}
+
+void read_external_classes(void) {
+  /* Read all classes from the "classes" file, and add them to processesd
+   * symbols so that classes mentioned in other files will be handled
+   * correctly (ie, implantation).
+   */
+  ifstream in("classes");
+  string clazz;
+  while (getline(in, clazz, '\n'))
+    symbols_processed.insert(clazz);
 }
