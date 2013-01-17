@@ -27,8 +27,8 @@
     Encapsulates a line of text already prepared to be displayed to the
     screen. A fully-constructed Rendered_Line has its $q_Rendered_Line_meta and
     $q_Rendered_Line_body symbols set. When constructed, if
-    $q_Rendered_Line_meta is NULL, $llo_Rendered_Line_meta is consulted to
-    generate $q_Rendered_Line_meta.
+    $q_Rendered_Line_meta is NULL, $f_Rendered_Line_gen_meta() is called to
+    generate it.
 
   SYMBOL: $q_Rendered_Line_body
     The formatted text of the line itself.
@@ -36,10 +36,17 @@
   SYMBOL: $q_Rendered_Line_meta
     The metadata for the line, in formatted text format.
 
-  SYMBOL: $llo_Rendered_Line_meta
-    How this will work is yet to be determined.
-*/
+  SYMBOL: $h_Rendered_Line_gen_meta
+    Called from $f_Rendered_Line() if $q_Rendered_Line_meta was NULL. When this
+    is called, $q_Rendered_Line_meta has been initialised to a qchar array of
+    length (1 + $i_line_meta_width), filled with NULs. Hooks to this point
+    should populate at most $i_line_meta_width of characters, and should not
+    alter characters set to non-NUL values by hooks that run before them
+    (though changing formatting is acceptable).
+ */
 defun($h_Rendered_Line) {
-  //Eventually, we'll want to test $q_Rendered_Line_meta and generate it from
-  //$llo_Rendered_Line_meta if it is NULL.
+  if (!$q_Rendered_Line_meta) {
+    $q_Rendered_Line_meta = gcalloc(sizeof(qchar)*(1 + $i_line_meta_width));
+    $f_Rendered_Line_gen_meta();
+  }
 }
