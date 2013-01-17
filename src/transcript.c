@@ -37,10 +37,38 @@ subclass($c_Backing, $c_Transcript)
 
 STATIC_INIT_TO($i_Transcript_num_output_groups, 32)
 
+/*
+  SYMBOL: $ai_Transcript_output_groups
+    An array of even length. Each even index is the line index of the start of
+    an output group (the top of it), and each corresponding odd index is the
+    length of that output group.
+    Blocks which "start" at line -1 do not exist.
+
+  SYMBOL: $i_Transcript_num_output_groups
+    The initial number of groups in $ai_Transcript_output_groups (ie, half its
+    length). This is only used to construct $ai_Transcript_output_groups, and
+    is unused afterward.
+
+  SYMBOL: $ai_Transcript_line_refs
+    An array of indices into $ao_Backing_lines which must be maintained. These
+    are used to maintain references into the lines array, even in the presence
+    of structural changes to the array. Entries which are -1 indicate deleted
+    references. The zeroth element should never be -1.
+
+  SYMBOL: $i_Transcript_line_ref_offset
+    The logical index of the zeroth element of $ai_Transcript_line_refs.
+
+  SYMBOL: $y_Transcript_next_group_colour
+    Toggled every time an output group is appended. Used to colour
+    Rendered_Line metadata to allow to easily distinguish output groups.
+ */
 defun($h_Transcript) {
+  $i_Transcript_line_ref_offset = 0;
   $ai_Transcript_output_groups = dynar_new_i();
   dynar_expand_by_i($ai_Transcript_output_groups,
                     2*$i_Transcript_num_output_groups);
   memset($ai_Transcript_output_groups->v, -1,
          sizeof(int)*$ai_Transcript_output_groups->len);
+
+  $ai_Transcript_line_refs = dynar_new_i();
 }
