@@ -179,20 +179,17 @@ object object_current(void);
   } while(0)
 
 /**
- * $$(obj) { ... } $$$; works like within_context, but does not cause the entire
+ * $$(obj) { ... } works like within_context, but does not cause the entire
  * body to appear to be on the same line to the compiler. It is therefore
  * preferable to longer blocks. It is also safe to return or otherwise jump out
  * of this structure, unlike within_context.
  */
-#define $$(obj)                                           \
-  do {                                                    \
-    object _$$_object                                     \
-    __attribute__((cleanup(reembowel_if_not_null)))       \
-    = (obj);                                              \
-    if (_$$_object)                                       \
-      object_eviscerate(_$$_object);                      \
-    do
-#define $$$ while(0); } while(0)
+#define $$(obj)                                                    \
+  for (object _GLUE(_$$_,__LINE__)                                 \
+                __attribute__((cleanup(reembowel_if_not_null)))    \
+                = (obj), _GLUE(_$$_ctl_,__LINE__) = NULL;          \
+       control$$(_GLUE(_$$_,__LINE__), &_GLUE(_$$_ctl_,__LINE__)); \
+    )
 
 /**
  * Implants the given symbol, or domain of symbols, into the current context.
@@ -487,6 +484,20 @@ void add_symbol_to_domain(struct symbol_header*, struct symbol_domain**,
 
 hook_constraint constraint_after_superconstructor(
   identity, identity, identity, identity);
+
+static inline bool control$$(object obj, object* ctl) {
+  if (!*ctl) {
+    // *ctl is still NULL, this is the first time through the $$ "loop"
+    if (obj)
+      object_eviscerate(obj);
+    // Point it at anything that isn't NULL
+    *ctl = (object)ctl;
+    return true;
+  } else {
+    // control$$ has run for this pair already, terminate loop
+    return false;
+  }
+}
 
 #define SIZEALIGN(x) (((x)+sizeof(void*)-1)/sizeof(void*)*sizeof(void*))
 

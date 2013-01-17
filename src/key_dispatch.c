@@ -84,14 +84,14 @@ static bool search_all(qchar key) {
             bool found;
             $$($o_Workspace_backing) {
               found = search($llp_Backing_keymap, key);
-            } $$$;
+            }
             if (!found) {
               for (list_o curr = $lo_Workspace_activities; curr;
                    curr = curr->cdr) {
                 $$(curr->car) {
                   if (search($llp_Activity_keymap, key))
                     return true;
-                } $$$;
+                }
               }
             } else {
               return true;
@@ -99,11 +99,11 @@ static bool search_all(qchar key) {
           } else {
             return true;
           }
-        } $$$;
+        }
       } else {
         return true;
       }
-    } $$$;
+    }
   } else {
     return true;
   }
