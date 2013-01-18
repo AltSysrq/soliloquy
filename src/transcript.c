@@ -143,14 +143,15 @@ defun($h_Transcript_group) {
   // Apply face to all metadata
   $lo_Transcript_output =
     map_o($lo_Transcript_output,
-          lambda((object o),
-                 $c_Rendered_Line($q_Rendered_Line_body =
-                                    $(o, $q_Rendered_Line_body),
-                                  $q_Rendered_Line_meta =
-                                    apply_face_str(
-                                      group_face,
-                                      qstrdup(
-                                        $(o, $q_Rendered_Line_meta))))));
+          lambda((object o), ({
+                mqstring new_meta = gcalloc($i_line_meta_width+1);
+                memcpy(new_meta, $(o, $q_Rendered_Line_meta),
+                       sizeof(qchar)*$i_line_meta_width);
+                apply_face_arr(group_face, new_meta, $i_line_meta_width);
+                $c_Rendered_Line($q_Rendered_Line_body =
+                                   $(o, $q_Rendered_Line_body),
+                                 $q_Rendered_Line_meta = new_meta);
+              })));
 
   // Add this group to the group array
   int begin = $ao_Backing_lines->len;

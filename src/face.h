@@ -105,4 +105,12 @@ qchar apply_face(face, qchar);
  */
 mqstring apply_face_str(face, mqstring);
 
+/**
+ * Applies the given face to the first n characters of the given character
+ * array.
+ *
+ * Returns the input array.
+ */
+mqstring apply_face_arr(face, mqstring, size_t);
+
 #endif /* FACE_H_ */

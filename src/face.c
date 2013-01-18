@@ -157,3 +157,10 @@ mqstring apply_face_str(face f, mqstring str) {
 
   return str_begin;
 }
+
+mqstring apply_face_arr(face f, mqstring str, size_t n) {
+  for (size_t i = 0; i < n; ++i)
+    str[i] = apply_face(f, str[i]);
+
+  return str;
+}
