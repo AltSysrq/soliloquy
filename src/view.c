@@ -65,7 +65,6 @@
     The currently-active view of the Terminal.
  */
 defun($h_View) {
-  $i_View_cut_on_screen = 0;
   $i_View_cut_in_workspace = $($($o_View_workspace, $o_Workspace_backing),
                                $ao_Backing_lines)->len;
   $o_View_terminal = $o_Terminal;
@@ -100,6 +99,10 @@ defun($h_View) {
   $i_View_cols = $i_Terminal_cols / ($i_column_width + $i_line_meta_width);
   if ($i_View_cols == 0) $i_View_cols = 1;
   $i_View_rows = $i_View_cols * ($i_Terminal_rows - 1);
+  if ($i_View_cut_in_workspace < $i_View_rows)
+    $i_View_cut_on_screen = $i_View_cut_in_workspace;
+  else
+    $i_View_cut_on_screen = $i_View_rows;
 }
 
 /*
