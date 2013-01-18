@@ -38,14 +38,11 @@ ATSTART(wait_for_debugging, 101) {
 #endif
 
 class_keymap($c_Terminal, $$lp_main_keymap, $llp_Terminal_keymap)
-//class_keymap($c_Fizz_Buzz, $$lp_fb_keymap, $llp_Backing_keymap)
 
 int main(void) {
   setlocale(LC_ALL, "");
 
   bind_char($$lp_main_keymap, $u_ground, CONTROL_C, NULL, $$f_quit);
-//  bind_char($$lp_fb_keymap, $u_ground, L'+', NULL, $f_Fizz_Buzz_go_faster);
-//  bind_char($$lp_fb_keymap, $u_ground, L'-', NULL, $f_Fizz_Buzz_go_slower);
 
   if (!($$o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
                                $p_Terminal_input = stdin,
