@@ -38,14 +38,14 @@ ATSTART(wait_for_debugging, 101) {
 #endif
 
 class_keymap($c_Terminal, $$lp_main_keymap, $llp_Terminal_keymap)
-class_keymap($c_Fizz_Buzz, $$lp_fb_keymap, $llp_Backing_keymap)
+//class_keymap($c_Fizz_Buzz, $$lp_fb_keymap, $llp_Backing_keymap)
 
 int main(void) {
   setlocale(LC_ALL, "");
 
   bind_char($$lp_main_keymap, $u_ground, CONTROL_C, NULL, $$f_quit);
-  bind_char($$lp_fb_keymap, $u_ground, L'+', NULL, $f_Fizz_Buzz_go_faster);
-  bind_char($$lp_fb_keymap, $u_ground, L'-', NULL, $f_Fizz_Buzz_go_slower);
+//  bind_char($$lp_fb_keymap, $u_ground, L'+', NULL, $f_Fizz_Buzz_go_faster);
+//  bind_char($$lp_fb_keymap, $u_ground, L'-', NULL, $f_Fizz_Buzz_go_slower);
 
   if (!($$o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
                                $p_Terminal_input = stdin,
@@ -55,12 +55,13 @@ int main(void) {
     return 1;
   }
 
-  within_context($$o_term, ({
-        $o_Terminal_current_view =
-          $c_View($o_View_terminal = $$o_term,
-                  $o_View_workspace =
-                    $c_Workspace(
-                      $o_Workspace_backing = $c_Fizz_Buzz()));}));
+  $$($$o_term) {
+    $o_Terminal_current_view =
+      $c_View($o_View_terminal = $$o_term,
+              $o_View_workspace =
+                $c_Workspace(
+                  $o_Workspace_backing = $c_Primes_Transcript()));
+  }
 
   $f_kernel_main();
   $M_destroy(0,$$o_term);
