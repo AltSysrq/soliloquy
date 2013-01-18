@@ -226,6 +226,11 @@ returned.
 find_where_C(list,test) is like find_C, but _test_(item) is called for each
 item in the list until _test_ returns true or the end of the list is reached.
 
+map_C(list,fun) returns a new list of the same length as _list_, but whose
+elements are the return values of applying _fun_ to each element in
+_list_. Note that _fun_ must return the same type it takes, which restricts the
+usage of map in comparison to functional languages.
+
 fold_C(list,fun) invokes _fun_ for each item in _list_, with a second parameter
 of type `void*` which is NULL on the first call, and the return value of the
 previous call to _fun_ on each subsequent call. The return value of the last
