@@ -105,7 +105,7 @@ face mkface_of(face f, string str) {
     bits = parse_alteration(&str, &family);
     if (bits == INVALID_ALTERATION) continue;
 
-    switch (*str++) {
+    switch (type) {
     case '+':
       //Clear the bits with AND-NOT, then set with XOR
       f |= bits >> FACE_AND_SHIFT;
@@ -148,9 +148,12 @@ qchar apply_face(face f, qchar ch) {
   return ch;
 }
 
-void apply_face_str(face f, mqstring str) {
+mqstring apply_face_str(face f, mqstring str) {
+  mqstring str_begin = str;
   while (*str) {
     *str = apply_face(f, *str);
     ++str;
   }
+
+  return str_begin;
 }

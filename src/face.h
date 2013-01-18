@@ -100,7 +100,9 @@ face mkface_of(face, string);
 qchar apply_face(face, qchar);
 /**
  * Applies the given face to all members of the given mutable string in-place.
+ *
+ * Returns the string given.
  */
-void apply_face_str(face, mqstring);
+mqstring apply_face_str(face, mqstring);
 
 #endif /* FACE_H_ */
