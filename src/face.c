@@ -55,7 +55,6 @@ static face parse_alteration(string* str, face* family) {
     unsigned colour = translate_colour(*(*str)++);
     if (colour == INVALID_COLOUR)
       return INVALID_ALTERATION;
-    colour ^= 0xE;
     *family = QC_FG;
     return colour << QC_FG_SHIFT;
   }
@@ -107,12 +106,20 @@ face mkface_of(face f, string str) {
 
     switch (type) {
     case '+':
+      //If this is the foreground, invert the colour bits to get the expected
+      //result.
+      if (family == QC_FG)
+        bits ^= 0xE << QC_FG_SHIFT;
       //Clear the bits with AND-NOT, then set with XOR
       f |= bits >> FACE_AND_SHIFT;
       f |= bits >> FACE_XOR_SHIFT;
       break;
 
     case '-':
+      //If this is the foreground, invert the colour bits to get the expected
+      //result.
+      if (family == QC_FG)
+        bits ^= 0xE << QC_FG_SHIFT;
       //Clear bits with AND-NOT
       f |= bits >> FACE_AND_SHIFT;
       //Reset XOR mask for these bits
@@ -126,6 +133,10 @@ face mkface_of(face f, string str) {
       break;
 
     case '*':
+      //If this is the foreground, invert the colour bits to get the expected
+      //result.
+      if (family == QC_FG)
+        bits ^= 0xE << QC_FG_SHIFT;
       f |= family >> FACE_AND_SHIFT;
       f &= ~(family >> FACE_XOR_SHIFT);
       f |= bits >> FACE_XOR_SHIFT;

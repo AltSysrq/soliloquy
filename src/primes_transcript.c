@@ -70,7 +70,7 @@ defun($h_Primes_Transcript_task) {
     swprintf(str, sizeof(str), L"%d", $i_Primes_Transcript_val);
     $lo_Primes_Transcript_np = cons_o(
       $c_Rendered_Line($q_Rendered_Line_body = wstrtoqstr(str),
-                       $q_Rendered_Line_meta = wstrtoqstr(L"---")),
+                       $q_Rendered_Line_meta = wstrtoqstr(L"XXX")),
       $lo_Primes_Transcript_np);
   } else {
     // Output current non-primes, reset accum, then notify that this is
