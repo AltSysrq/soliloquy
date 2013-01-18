@@ -502,7 +502,7 @@ static inline bool control$$(object obj, object* ctl) {
 
 #define SIZEALIGN(x) (((x)+sizeof(void*)-1)/sizeof(void*)*sizeof(void*))
 
-#define _ID(x) x
+#define _ID(...) __VA_ARGS__
 #define STRIP_PARENS(x) _ID(_ID x)
 
 #define ANONYMOUS_SLC _GLUE(_anon_slc_,__LINE__)
