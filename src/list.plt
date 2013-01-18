@@ -54,6 +54,20 @@ static inline void each_HUNG
   }
 }
 
+static inline list_HUNG map_HUNG(list_HUNG this,
+                                 CTYPE (*fun)(CTYPE)) {
+  if (!this) return this;
+  struct list_HUNG* curr = new(struct list_HUNG);
+  list_HUNG ret = curr;
+  while (this) {
+    curr->car = fun(this->car);
+    this = this->cdr;
+    if (this)
+      curr = (struct list_HUNG*)(curr->cdr = new(struct list_HUNG));
+  }
+  return ret;
+}
+
 static inline list_HUNG lrm_HUNG(list_HUNG this, CTYPE needle) {
   if (this == NULL) return NULL;
   if (this->car == needle)
