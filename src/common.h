@@ -352,7 +352,8 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
  *   find_where_i(list_of_integers, lambda((int i), i > 5))
  */
 #define lambda(args, expr)                              \
-  ({typeof(expr) _GLUE(_lambda_,ANONYMOUS) args {       \
+  ({typeof(({STRIP_PARENS(args); expr;}))               \
+  _GLUE(_lambda_,ANONYMOUS) args {                      \
       return expr;                                      \
     }                                                   \
     _GLUE(_lambda_,ANONYMOUS); })
@@ -500,6 +501,9 @@ static inline bool control$$(object obj, object* ctl) {
 }
 
 #define SIZEALIGN(x) (((x)+sizeof(void*)-1)/sizeof(void*)*sizeof(void*))
+
+#define _ID(x) x
+#define STRIP_PARENS(x) _ID(_ID x)
 
 #define ANONYMOUS_SLC _GLUE(_anon_slc_,__LINE__)
 #endif /* COMMON_H_ */
