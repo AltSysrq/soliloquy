@@ -43,10 +43,14 @@
     $m_get_echo_area_contents() on the current Activity.
 
   SYMBOL: $f_Activity_get_echo_area_contents
-    Sets the current echo area details ($q_Workspace_echo_area_contents,
-    $q_Workspace_echo_area_meta, and $i_Workspace_echo_area_cursor) to be drawn
-    on the current View/Terminal. When this is called, both contents and meta
-    are empty strings, and the cursor is -1 (invisible).
+    Sets the current echo area details ($q_Workspace_echo_area_contents and
+    $i_Workspace_echo_area_cursor) to be drawn on the current
+    View/Terminal. When this is called, both contents and meta are empty
+    strings, and the cursor is -1 (invisible).
+
+  SYMBOL: $f_Activity_get_echo_area_meta
+    Appends the metadata string for the current activity to
+    $q_Workspace_echo_area_meta.
 
   SYMBOL: $m_is_echo_enabled
     Method on Activity to set $y_Workspace_is_echo_enabled to indicate whether
@@ -69,8 +73,10 @@ defun($h_Workspace_draw_echo_area) {
   $i_Workspace_echo_area_cursor = -1;
   // Get actual contents
   if ($lo_Workspace_activities)
-    $F_Activity_get_echo_area_contents(
-      0, $lo_Workspace_activities->car);
+    $F_Activity_get_echo_area_contents(0, $lo_Workspace_activities->car);
+
+  for (list_o curr = $lo_Workspace_activities; curr; curr = curr->cdr)
+    $F_Activity_get_echo_area_meta(0, curr->car);
 
   qchar str[$i_Terminal_cols+1];
   memset(str, 0, sizeof(str));
