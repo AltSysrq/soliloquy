@@ -509,6 +509,8 @@ void del_hook(struct hook_point* point,
 }
 
 void invoke_hook(struct hook_point* ppoint) {
+  if (!ppoint) return;
+
   // Make a copy so that concurrent modifications do not interfere with this
   // invocation of the hook.
   struct hook_point point = *ppoint;
