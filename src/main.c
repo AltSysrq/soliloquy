@@ -46,8 +46,7 @@ int main(void) {
 
   if (!($$o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
                                $p_Terminal_input = stdin,
-                               $p_Terminal_output = stdout,
-                               $y_Terminal_cursor_visible = false))) {
+                               $p_Terminal_output = stdout))) {
     perror("initialising terminal");
     return 1;
   }
@@ -58,6 +57,7 @@ int main(void) {
               $o_View_workspace =
                 $c_Workspace(
                   $o_Workspace_backing = $c_Primes_Transcript()));
+    $M_redraw(0,$o_Terminal_current_view);
   }
 
   $f_kernel_main();

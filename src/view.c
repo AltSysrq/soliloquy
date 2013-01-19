@@ -146,7 +146,9 @@ defun($h_View_redraw) {
     $f_View_paint_line();
   //TODO: pins
 
-  $f_View_draw_echo_area();
+  $$($o_View_terminal) {
+    $F_Workspace_draw_echo_area(0, $o_View_workspace);
+  }
 }
 
 /*
