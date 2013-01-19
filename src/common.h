@@ -165,24 +165,24 @@ object object_current(void);
 
 /**
  * Executes _body_ within the context of _obj_, restoring context when _body_
- * completes. This is not an expression; any return value of _body_ is
- * discarded.
+ * completes. The result of evaluating _body_ is returned.
  */
-#define within_context(obj,body) \
-  do {                                                                  \
-    object _wc_object = (obj);                                          \
-    if (_wc_object)                                                     \
-      object_eviscerate(_wc_object);                                    \
-    body;                                                               \
-    if (_wc_object)                                                     \
-      object_reembowel();                                               \
-  } while(0)
+#define within_context(obj,body)                    \
+  ({                                                \
+    object _wc_object                               \
+    __attribute__((cleanup(reembowel_if_not_null))) \
+    = (obj);                                        \
+    if (_wc_object)                                 \
+      object_eviscerate(_wc_object);                \
+    body;                                           \
+  })
 
 /**
  * $$(obj) { ... } works like within_context, but does not cause the entire
  * body to appear to be on the same line to the compiler. It is therefore
  * preferable to longer blocks. It is also safe to return or otherwise jump out
- * of this structure, unlike within_context.
+ * of this structure, unlike within_context. Unlike within_context, it is not
+ * an expression.
  */
 #define $$(obj)                                                    \
   for (object _GLUE(_$$_,__LINE__)                                 \
