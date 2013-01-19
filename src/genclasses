@@ -2,3 +2,4 @@
 find `dirname $0` -name '*.c' -exec \
     grep -Eo '\$\$?[cd]_[a-zA-Z0-9_]+' '{}' \; | grep -Fv '$$' \
     | sort -u >classes
+sed -i~ -r 's/\$c_(.*)/$c_\1\n$d_\1/' classes

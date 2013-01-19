@@ -44,7 +44,7 @@
 #include <map>
 using namespace std;
 
-static set<string> symbols_processed, templates_instantiated;
+static set<string> symbols_processed, symbols_known, templates_instantiated;
 static ofstream out;
 
 static string current_file;
@@ -539,8 +539,8 @@ static void domain_membership(void) {
   set<string> orphans(symbols_processed);
   // Iterate through the processed symbols in reverse order (longer, more
   // specific domains will come first).
-  for (set<string>::reverse_iterator it = symbols_processed.rbegin();
-       it != symbols_processed.rend(); ++it) {
+  for (set<string>::reverse_iterator it = symbols_known.rbegin();
+       it != symbols_known.rend(); ++it) {
     if (symbol_get_type(*it) == "d") {
       string dom(string("_") + symbol_base_name(*it) + "_");
       // Since for some reason the C++03 API doesn't have set::erase() return a
@@ -552,6 +552,7 @@ static void domain_membership(void) {
         if (sit->find('_') == sit->find(dom) &&
             symbol_is_global(*it) == symbol_is_global(*sit) &&
             is_first_class(*sit)) {
+          process_symbol(*it);
           format("member_of_domain(`SYM, `DOM);\n",
                  "`SYM", sit->c_str(), "`DOM", it->c_str(), NULL);
           to_erase.push_back(*sit);
@@ -569,8 +570,8 @@ static void method_membership(void) {
   set<string> orphans(symbols_processed);
   // As with domain_membership, run in reverse order to get nested classes
   // first
-  for (set<string>::reverse_iterator it = symbols_processed.rbegin();
-       it != symbols_processed.rend(); ++it) {
+  for (set<string>::reverse_iterator it = symbols_known.rbegin();
+       it != symbols_known.rend(); ++it) {
     if (symbol_get_type(*it) == "c") {
       string prefix(string("$h_") + symbol_base_name(*it) + "_");
       if (!symbol_is_global(*it))
@@ -612,6 +613,7 @@ static void method_membership(void) {
 }
 
 void read_external_classes(void) {
+  symbols_known = symbols_processed;
   /* Read all classes from the "classes" file, and add them to processesd
    * symbols so that classes mentioned in other files will be handled
    * correctly (ie, implantation).
@@ -619,5 +621,5 @@ void read_external_classes(void) {
   ifstream in("classes");
   string clazz;
   while (getline(in, clazz, '\n'))
-    symbols_processed.insert(clazz);
+    symbols_known.insert(clazz);
 }
