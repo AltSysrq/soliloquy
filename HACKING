@@ -299,3 +299,12 @@ _amt_ is greater than the length of _dynar_.
 dynar_clone_C(dynar) returns a shallow copy of _dynar_; the two will have
 separate `v` members, but no deeper copying occurs. That is, if `v` is an array
 of pointers, only the pointers are copied, rather than what they point to.
+
+dynar_ins_C(dynar,offset,values,count) inserts _count_ elements from _values_
+(a raw pointer to the contained type; ie, an array if _count_ > 1) into _dynar_
+beginning at _offset_, expanding and moving elements out of the way as
+necessary.
+
+dynar_erase_C(dynar,offset,count) deletes _count_ elements from _dynar_
+beginning at _offset_, moving elements downward as necessary to fill the
+resulting hole.

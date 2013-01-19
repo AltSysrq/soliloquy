@@ -59,4 +59,18 @@ static inline typeof(CTYPE) dynar_top_HUNG(dynar_HUNG this) {
   return this->v[this->len-1];
 }
 
+static inline void dynar_ins_HUNG(dynar_HUNG this, size_t off,
+                                  const CTYPE* value, size_t cnt) {
+  dynar_expand_by_HUNG(this, cnt);
+  memmove(this->v + off + cnt, this->v + off,
+          (this->len - off - cnt)*sizeof(CTYPE));
+  memcpy(this->v + off, value, cnt*sizeof(CTYPE));
+}
+
+static inline void dynar_erase_HUNG(dynar_HUNG this, size_t off, size_t cnt) {
+  memmove(this->v + off, this->v + off + cnt,
+          (this->len - off - cnt)*sizeof(CTYPE));
+  dynar_contract_by_HUNG(this, cnt);
+}
+
 #endif /* HAVE_DEFINED_DYNAR_HUNG */
