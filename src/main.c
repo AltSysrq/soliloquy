@@ -42,7 +42,7 @@ class_keymap($c_Terminal, $$lp_main_keymap, $llp_Terminal_keymap)
 int main(void) {
   setlocale(LC_ALL, "");
 
-  bind_char($$lp_main_keymap, $u_ground, CONTROL_C, NULL, $$f_quit);
+  bind_char($$lp_main_keymap, $u_extended, CONTROL_C, NULL, $$f_quit);
 
   if (!($$o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
                                $p_Terminal_input = stdin,
