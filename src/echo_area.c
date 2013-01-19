@@ -42,12 +42,11 @@
     this Workspace, or -1 for no cursor. This should be set by calls to
     $m_get_echo_area_contents() on the current Activity.
 
-  SYMBOL: $m_get_echo_area_contents
-    Method on Activity to set the current echo area details
-    ($q_Workspace_echo_area_contents, $q_Workspace_echo_area_meta, and
-    $i_Workspace_echo_area_cursor) to be drawn on the current
-    View/Terminal. When this is called, both contents and meta are empty
-    strings, and the cursor is -1 (invisible).
+  SYMBOL: $f_Activity_get_echo_area_contents
+    Sets the current echo area details ($q_Workspace_echo_area_contents,
+    $q_Workspace_echo_area_meta, and $i_Workspace_echo_area_cursor) to be drawn
+    on the current View/Terminal. When this is called, both contents and meta
+    are empty strings, and the cursor is -1 (invisible).
 
   SYMBOL: $m_is_echo_enabled
     Method on Activity to set $y_Workspace_is_echo_enabled to indicate whether
@@ -70,7 +69,7 @@ defun($h_Workspace_draw_echo_area) {
   $i_Workspace_echo_area_cursor = -1;
   // Get actual contents
   if ($lo_Workspace_activities)
-    $M_get_echo_area_contents(
+    $F_Activity_get_echo_area_contents(
       0, $lo_Workspace_activities->car);
 
   qchar str[$i_Terminal_cols+1];
@@ -126,6 +125,6 @@ defun($h_Workspace_draw_echo_area) {
   for (unsigned i = 0; i < $i_Terminal_cols; ++i) {
     let($i_x, i);
     let($q_qch, str + i);
-    $m_putch();
+    $f_Terminal_putch();
   }
 }

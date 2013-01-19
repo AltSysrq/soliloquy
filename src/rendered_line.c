@@ -36,17 +36,18 @@
   SYMBOL: $q_Rendered_Line_meta
     The metadata for the line, in formatted text format.
 
-  SYMBOL: $h_Rendered_Line_gen_meta
-    Called from $f_Rendered_Line() if $q_Rendered_Line_meta was NULL. When this
-    is called, $q_Rendered_Line_meta has been initialised to a qchar array of
-    length (1 + $i_line_meta_width), filled with NULs. Hooks to this point
-    should populate at most $i_line_meta_width of characters, and should not
-    alter characters set to non-NUL values by hooks that run before them
-    (though changing formatting is acceptable).
+  SYMBOL: $H_gen_meta
+    Method on Rendered_Line. Called from $f_Rendered_Line() if
+    $q_Rendered_Line_meta was NULL. When this is called, $q_Rendered_Line_meta
+    has been initialised to a qchar array of length (1 + $i_line_meta_width),
+    filled with NULs. Hooks to this point should populate at most
+    $i_line_meta_width of characters, and should not alter characters set to
+    non-NUL values by hooks that run before them (though changing formatting is
+    acceptable).
  */
 defun($h_Rendered_Line) {
   if (!$q_Rendered_Line_meta) {
     $q_Rendered_Line_meta = gcalloc(sizeof(qchar)*(1 + $i_line_meta_width));
-    $f_Rendered_Line_gen_meta();
+    $m_gen_meta();
   }
 }

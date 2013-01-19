@@ -201,7 +201,8 @@ defun($h_Terminal_putch) {
   set_term($$p_Terminal_screen);
 
   cchar_t wch;
-  $F_translate_qchar_to_ncurses(0,0, $p_wch = &wch);
+  let($p_wch, &wch);
+  $f_translate_qchar_to_ncurses();
   mvadd_wch($i_y, $i_x, &wch);
 
   // Schedule refresh if not already so scheduled

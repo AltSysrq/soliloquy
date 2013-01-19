@@ -126,5 +126,5 @@ defun($h_Workspace_remove_pin) {
 
 defun($h_Workspace_destroy_pin) {
   $f_Workspace_remove_pin();
-  $f_Clip_destroy();
+  $m_destroy();
 }

@@ -106,7 +106,7 @@ defun($h_Transcript_append) {
              $lo_Transcript_output);
   $lo_Transcript_output = NULL;
 
-  $f_Transcript_check_size();
+  $m_check_size();
 }
 
 /*
