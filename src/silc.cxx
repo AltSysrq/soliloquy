@@ -285,11 +285,11 @@ static void process_function_macro(const string& symF) {
 
   format("#define `SYMF(ret, this, ...) ({\\\n"
          "  typeof(ret) _`SYMF$local_ret; \\\n"
-         "  within_context((this), {      \\\n"
+         "  $$(this) {                    \\\n"
          "    (void)({__VA_ARGS__; 0;});  \\\n"
          "    `SYMf();                    \\\n"
          "    _`SYMF$local_ret = (ret);   \\\n"
-         "  });                           \\\n"
+         "  }                             \\\n"
          "  _`SYMF$local_ret; })            \n",
          "`SYMF", symF.c_str(), "`SYMf", symf.c_str(), NULL);
 }
@@ -308,12 +308,12 @@ static void process_class(const string& csym) {
   process_symbol(hsym);
   format("#define `CSYM(...) ({                                          \\\n"
          "  object _`CSYM$local_this = object_new(NULL);                 \\\n"
-         "  within_context(_`CSYM$local_this, {                          \\\n"
+         "  $$(_`CSYM$local_this) {                                      \\\n"
          "    implant(`OSYM); implant(`DSYM); implant(`HSYM);            \\\n"
          "    `OSYM = _`CSYM$local_this;                                 \\\n"
          "    (void)({__VA_ARGS__; 0;});                                 \\\n"
          "    `FSYM();                                                   \\\n"
-         "  });                                                          \\\n"
+         "  }                                                            \\\n"
          "  _`CSYM$local_this; })                                          \n"
          "#define `CSYM$domain `DSYM                                       \n"
          "#define `CSYM$function `FSYM                                     \n"

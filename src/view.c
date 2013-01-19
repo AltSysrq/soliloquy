@@ -68,31 +68,24 @@ defun($h_View) {
   $i_View_cut_in_workspace = $($($o_View_workspace, $o_Workspace_backing),
                                $ao_Backing_lines)->len;
   $o_View_terminal = $o_Terminal;
-  within_context($($o_View_workspace,$o_Workspace_backing),
-                 ({
-                   add_hook_obj(&$h_Backing_alter, HOOK_AFTER,
-                                $u_View_Backing_change_notify,
-                                $u_View,
-                                $f_View_backing_changed,
-                                $o_View, NULL);
-                 }));
-  within_context($o_View_workspace,
-                 ({
-                   add_hook_obj(&$h_Workspace_pin_changed,
-                                HOOK_AFTER,
-                                $u_View_pin_change_notify,
-                                $u_View,
-                                $f_View_pin_changed,
-                                $o_View, NULL);
-                   add_hook_obj(&$h_Workspace_destroy,
-                                HOOK_BEFORE,
-                                $u_View,
-                                $u_View,
-                                $f_View_destroy,
-                                $o_View, NULL);
-                   $lo_Workspace_views =
-                     cons_o($o_View, $lo_Workspace_views);
-                 }));
+  $$($($o_View_workspace,$o_Workspace_backing)) {
+    add_hook_obj(&$h_Backing_alter, HOOK_AFTER,
+                 $u_View_Backing_change_notify, $u_View,
+                 $f_View_backing_changed, $o_View,
+                 NULL);
+  }
+  $$($o_View_workspace) {
+    add_hook_obj(&$h_Workspace_pin_changed, HOOK_AFTER,
+                 $u_View_pin_change_notify, $u_View,
+                 $f_View_pin_changed, $o_View,
+                 NULL);
+    add_hook_obj(&$h_Workspace_destroy, HOOK_BEFORE,
+                 $u_View, $u_View,
+                 $f_View_destroy, $o_View,
+                 NULL);
+    $lo_Workspace_views =
+      cons_o($o_View, $lo_Workspace_views);
+  }
 
   $lo_Terminal_views = lmput_o($lo_Terminal_views, $o_View_workspace, $o_View);
 
@@ -111,26 +104,21 @@ defun($h_View) {
     its hook thereinto.
 */
 defun($h_View_destroy) {
-  within_context($($o_View_workspace,$o_Workspace_backing),
-                 ({
-                   del_hook(&$h_Backing_alter,
-                            HOOK_AFTER,
-                            $u_View_Backing_change_notify,
-                            $o_View);
-                 }));
-  within_context($o_View_workspace,
-                 ({
-                   del_hook(&$h_Workspace_pin_changed,
-                            HOOK_AFTER,
-                            $u_View_pin_change_notify,
-                            $o_View);
-                   del_hook(&$h_Workspace_destroy,
-                            HOOK_BEFORE,
-                            $u_View,
-                            $o_View);
-                   $lo_Workspace_views =
-                     lrm_o($lo_Workspace_views, $o_View);
-                 }));
+  $$($($o_View_workspace,$o_Workspace_backing)) {
+    del_hook(&$h_Backing_alter, HOOK_AFTER,
+             $u_View_Backing_change_notify,
+             $o_View);
+  }
+  $$($o_View_workspace) {
+    del_hook(&$h_Workspace_pin_changed, HOOK_AFTER,
+             $u_View_pin_change_notify,
+             $o_View);
+    del_hook(&$h_Workspace_destroy, HOOK_BEFORE,
+             $u_View,
+             $o_View);
+    $lo_Workspace_views = lrm_o($lo_Workspace_views, $o_View);
+  }
+
   $o_View_workspace = NULL;
   $lo_Terminal_views = lmdel_o($lo_Terminal_views, $o_View_workspace);
 }
@@ -216,11 +204,10 @@ defun($h_View_paint_line) {
   qstrlcpy(line+$i_line_meta_width,
            $(oline, $q_Rendered_Line_body), $i_column_width+1);
 
-  within_context($o_View_terminal, ({
-        for (unsigned i = 0; i < sizeof(line)/sizeof(qchar)-1; ++i)
-          $F_Terminal_putch(0,0, $i_x = col++, $i_y = row, $q_qch = line+i);
-        0;
-      }));
+  $$($o_View_terminal) {
+    for (unsigned i = 0; i < sizeof(line)/sizeof(qchar)-1; ++i)
+      $F_Terminal_putch(0,0, $i_x = col++, $i_y = row, $q_qch = line+i);
+  }
 }
 
 STATIC_INIT_TO($i_column_width, 80)
