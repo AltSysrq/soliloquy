@@ -285,12 +285,13 @@ static void process_function_macro(const string& symF) {
 
   format("#define `SYMF(ret, this, ...) ({\\\n"
          "  typeof(ret) _`SYMF$local_ret; \\\n"
-         "  $$(this) {                    \\\n"
+         "  within_context(this, ({       \\\n"
          "    (void)({__VA_ARGS__; 0;});  \\\n"
          "    `SYMf();                    \\\n"
          "    _`SYMF$local_ret = (ret);   \\\n"
-         "  }                             \\\n"
-         "  _`SYMF$local_ret; })            \n",
+         "  }));                          \\\n"
+         "  _`SYMF$local_ret;             \\\n"
+         "})                                \n",
          "`SYMF", symF.c_str(), "`SYMf", symf.c_str(), NULL);
 }
 
