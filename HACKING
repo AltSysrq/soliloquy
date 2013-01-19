@@ -255,6 +255,12 @@ lmput_C(list,key,value) returns _list_, with _key_ mapped to _value_. If _key_
 already exists as a key in _list_, that pair is deleted first. _list_ must be a
 listmap.
 
+lpush_C(list,value) is a macro which pushes _value_ onto the head of
+_list_. _list_ must be an lvalue, and will be overwritten.
+
+lpop_C(list) is a macro which replaces _list_ with its tail. _list_ must be an
+lvalue, and will be overwritten.
+
 Dynamic Array Template
 ----------------------
 The dynamic array template (instantiated by $a... symbols) defines a mutable,

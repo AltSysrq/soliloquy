@@ -115,4 +115,13 @@ static inline list_HUNG lmput_HUNG(list_HUNG this, CTYPE key, CTYPE value) {
   return cons_HUNG(key, cons_HUNG(value, this));
 }
 
+#define lpush_HUNG(lst,value) ({                \
+  list_HUNG* _lv = &(lst);                      \
+  *_lv = cons_HUNG((value), *_lv);              \
+})
+#define lpop_HUNG(lst) ({                       \
+  list_HUNG* _lv = &(lst);                      \
+  *_lv = (*_lv)->cdr;                           \
+})
+
 #endif /* HAVE_DEFINED_LIST_HUNG */
