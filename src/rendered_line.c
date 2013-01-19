@@ -27,7 +27,7 @@
     Encapsulates a line of text already prepared to be displayed to the
     screen. A fully-constructed Rendered_Line has its $q_Rendered_Line_meta and
     $q_Rendered_Line_body symbols set. When constructed, if
-    $q_Rendered_Line_meta is NULL, $f_Rendered_Line_gen_meta() is called to
+    $q_Rendered_Line_meta is NULL, $m_gen_meta() is called to
     generate it.
 
   SYMBOL: $q_Rendered_Line_body
