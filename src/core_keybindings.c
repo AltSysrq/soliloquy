@@ -38,8 +38,14 @@
   SYMBOL: $u_extended_meta
     Key mode when Escape was read while in the $u_extended key mode. See also
     $u_meta.
+
+  SYMBOL: $v_end_meta
+    The key mode to switch to after a meta command. Defaults to $u_ground;
+    seting it to NULL will give somewhat vi-like behaviour (though you'll need
+    to arrange to exit $u_meta mode somehow).
  */
 ATSTART(setup_core_keybindings, STATIC_INITIALISATION_PRIORITY) {
+  $v_end_meta = $u_ground;
   bind_char($$lp_core_keybindings, $u_ground, L'\033', $u_meta, NULL);
   bind_char($$lp_core_keybindings, $u_ground, CONTROL_X, $u_extended, NULL);
   bind_char($$lp_core_keybindings, $u_extended, L'\033', $u_extended_meta,NULL);
