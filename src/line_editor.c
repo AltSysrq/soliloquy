@@ -16,8 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <time.h>
 #include "line_editor.slc"
+#include <time.h>
+#include <ctype.h>
+#include <wctype.h>
 #include "key_dispatch.h"
 
 /*
@@ -249,6 +251,34 @@ defun($h_Line_Editor_move_backward_char) {
 }
 
 /*
+  SYMBOL: $f_Line_Editor_home
+    Moves cursor to the first non-whitespace character, or to column zero if it
+    was already there.
+ */
+defun($h_Line_Editor_home) {
+  unsigned firstNonWhitespace = 0;
+  while (firstNonWhitespace < $az_Line_Editor_buffer->len &&
+         iswspace($az_Line_Editor_buffer->v[firstNonWhitespace]))
+    ++firstNonWhitespace;
+
+  if ($i_Line_Editor_cursor == firstNonWhitespace)
+    $i_Line_Editor_cursor = 0;
+  else
+    $i_Line_Editor_cursor = firstNonWhitespace;
+
+  $m_changed();
+}
+
+/*
+  SYMBOL: $f_Line_Editor_end
+    Moves the cursor past the last character in the line.
+ */
+defun($h_Line_Editor_end) {
+  $i_Line_Editor_cursor = $az_Line_Editor_buffer->len;
+  $m_changed();
+}
+
+/*
   SYMBOL: $lp_Line_Editor_keybindings
     List of keybindings supported by generic Line_Editors.
  */
@@ -264,4 +294,8 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $f_Line_Editor_delete_backward_char);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L';', $v_end_meta,
             $f_Line_Editor_delete_forward_char);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'h', $v_end_meta,
+            $f_Line_Editor_home);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'n', $v_end_meta,
+            $f_Line_Editor_end);
 }
