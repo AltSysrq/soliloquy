@@ -30,8 +30,8 @@ find `dirname $0` -name '*.c' -exec \
 
 exit_status=0
 find `dirname $0` -name '*.c' | (while read cfile; do
-    if grep -Eo '\$\$?[a-zA-Z0-9_]+' $cfile | grep -Ev '\$[\$mM]' | \
-       sort -u | sed 's/$[a-zA-Z]*_//' | grep -vxFf symbols.documented; then
+    if grep -Eo '\$\$?[a-zA-Z0-9]+_[a-zA-Z0-9_]+' $cfile | grep -Ev '\$[\$mM]' \
+       | sort -u | sed 's/$[a-zA-Z]*_//' | grep -vxFf symbols.documented; then
         echo "File $cfile references the above undocumented public symbols." >&2
         echo "" >&2
         exit_status=1
