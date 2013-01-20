@@ -117,7 +117,10 @@ defun($h_Workspace_draw_echo_area) {
   }
 
   // Populate contents of str
-  qstrlcpy(str, $q_Workspace_echo_area_contents, contents_size+1);
+  qstrlcpy(str,
+           $q_Workspace_echo_area_contents +
+             $i_View_echo_area_scroll - contents_size,
+           contents_size+1);
   qstrlcpy(str + $i_Terminal_cols - meta_size, $q_Workspace_echo_area_meta,
            meta_size+1);
 
