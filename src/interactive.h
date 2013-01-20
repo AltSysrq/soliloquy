@@ -31,7 +31,7 @@
  *
  * Example:
  *   interactive($h_insert_n_chars_i, $h_insert_n_chars,
- *               i_(z, $z_ch, L"Character: "), i_(I,$I_cnt, L"Count: ")) {
+ *               i_(z, $z_ch, L"Character"), i_(I,$I_cnt, L"Count")) {
  *     ...
  *   }
  *
@@ -43,26 +43,26 @@
  * declared in your header, since Silc won't generate that symbol in the user's
  * compilation unit unless they reference it themselves).
  */
-#define interactive(name, bound, ...)           \
-  defun(name) {                                 \
-    object iactive = mk_interactive_obj();      \
-    $$(iactive) {                               \
-      __VA_ARGS__;                              \
-    }                                           \
-    invoke_interactive(iactive, &bound);        \
-  }                                             \
+#define interactive(name, bound, ...)                   \
+  defun(name) {                                         \
+    object iactive = mk_interactive_obj(&bound);        \
+    $$(iactive) {                                       \
+      __VA_ARGS__;                                      \
+    }                                                   \
+    invoke_interactive(iactive);                        \
+  }                                                     \
   defun(bound)
 
 /**
  * Creates and returns an object suitable for use by the interactive() macro.
  */
-object mk_interactive_obj(void);
+object mk_interactive_obj(struct hook_point*);
 
 /**
  * Begins invoking an interactive function, using iactive to store arguments,
- * and eventually calling bound once all are obtained.
+ * and eventually calling the bound function once all are obtained.
  */
-void invoke_interactive(object iactive, struct hook_point* bound);
+void invoke_interactive(object iactive);
 
 /**
  * Defines a single interactive parameter. _type_ is the type of the symbol
