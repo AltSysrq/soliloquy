@@ -42,13 +42,13 @@
     this Workspace, or -1 for no cursor. This should be set by calls to
     $m_get_echo_area_contents() on the current Activity.
 
-  SYMBOL: $f_Activity_get_echo_area_contents
+  SYMBOL: $m_get_echo_area_contents
     Sets the current echo area details ($q_Workspace_echo_area_contents and
     $i_Workspace_echo_area_cursor) to be drawn on the current
     View/Terminal. When this is called, both contents and meta are empty
     strings, and the cursor is -1 (invisible).
 
-  SYMBOL: $f_Activity_get_echo_area_meta
+  SYMBOL: $m_get_echo_area_meta
     Appends the metadata string for the current activity to
     $q_Workspace_echo_area_meta.
 
@@ -73,10 +73,10 @@ defun($h_Workspace_draw_echo_area) {
   $i_Workspace_echo_area_cursor = -1;
   // Get actual contents
   if ($lo_Workspace_activities)
-    $F_Activity_get_echo_area_contents(0, $lo_Workspace_activities->car);
+    $M_get_echo_area_contents(0, $lo_Workspace_activities->car);
 
   for (list_o curr = $lo_Workspace_activities; curr; curr = curr->cdr)
-    $F_Activity_get_echo_area_meta(0, curr->car);
+    $M_get_echo_area_meta(0, curr->car);
 
   qchar str[$i_Terminal_cols+1];
   memset(str, 0, sizeof(str));
@@ -84,13 +84,15 @@ defun($h_Workspace_draw_echo_area) {
   // Try to show as much meta as possible, but give at least $i_column_width
   // characters to the contents.
   // If echo is off, instead devote as much as possible to metadata.
-  int contents_size, meta_size;
+  int contents_size, meta_size, theoretical_contents_size;
+  theoretical_contents_size =
+    $i_Terminal_cols - qstrlen($q_Workspace_echo_area_meta);
+  if (theoretical_contents_size < $i_column_width)
+    theoretical_contents_size = $i_column_width;
   if ($lo_Workspace_activities &&
       $M_is_echo_enabled($y_Workspace_is_echo_enabled,
                          $lo_Workspace_activities->car)) {
-    contents_size = $i_Terminal_cols - qstrlen($q_Workspace_echo_area_meta);
-    if (contents_size < $i_column_width)
-      contents_size = $i_column_width;
+    contents_size = theoretical_contents_size;
     meta_size = $i_Terminal_cols - contents_size;
   } else {
     contents_size = 0;
@@ -102,13 +104,14 @@ defun($h_Workspace_draw_echo_area) {
   // Ensure that the cursor is visible (if present), and that the scrolling is
   // sane.
   if ($i_View_echo_area_scroll > qstrlen($q_Workspace_echo_area_contents) ||
-      $i_View_echo_area_scroll < contents_size)
-    $i_View_echo_area_scroll = contents_size;
+      $i_View_echo_area_scroll < theoretical_contents_size)
+    $i_View_echo_area_scroll = theoretical_contents_size;
 
   if ($i_Workspace_echo_area_cursor != -1) {
-    if ($i_Workspace_echo_area_cursor + contents_size <
+    if ($i_Workspace_echo_area_cursor + theoretical_contents_size <
         $i_View_echo_area_scroll)
-      $i_View_echo_area_scroll = $i_Workspace_echo_area_cursor + contents_size;
+      $i_View_echo_area_scroll =
+        $i_Workspace_echo_area_cursor + theoretical_contents_size;
     else if ($i_Workspace_echo_area_cursor >= $i_View_echo_area_scroll)
       $i_View_echo_area_scroll = $i_Workspace_echo_area_cursor + 1;
   }
@@ -121,7 +124,8 @@ defun($h_Workspace_draw_echo_area) {
   //Set cursor status and render
   if (-1 != $i_Workspace_echo_area_cursor) {
     $i_Terminal_cursor_x =
-      $i_Workspace_echo_area_cursor + contents_size - $i_View_echo_area_scroll;
+      $i_Workspace_echo_area_cursor + theoretical_contents_size -
+      $i_View_echo_area_scroll;
     $i_Terminal_cursor_y = $i_Terminal_rows - 1;
     $y_Terminal_cursor_visible = true;
   } else {
@@ -132,5 +136,22 @@ defun($h_Workspace_draw_echo_area) {
     let($i_x, i);
     let($q_qch, str + i);
     $f_Terminal_putch();
+  }
+}
+
+/*
+  Updates the echo area for this Workspace on all Terminals on which it is
+  visible.
+ */
+defun($h_Workspace_update_echo_area) {
+  for (list_o curr = $lo_Workspace_views; curr; curr = curr->cdr) {
+    if (curr->car ==
+        $($(curr->car, $o_View_terminal), $o_Terminal_current_view)) {
+      $$(curr->car) {
+        $$($o_View_terminal) {
+          $f_Workspace_draw_echo_area();
+        }
+      }
+    }
   }
 }

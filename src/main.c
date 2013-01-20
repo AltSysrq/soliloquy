@@ -57,6 +57,12 @@ int main(void) {
               $o_View_workspace =
                 $c_Workspace(
                   $o_Workspace_backing = $c_Primes_Transcript()));
+    $$($o_Terminal_current_view) {
+      $$($o_View_workspace) {
+        lpush_o($lo_Workspace_activities,
+                $c_Line_Editor());
+      }
+    }
     $M_redraw(0,$o_Terminal_current_view);
   }
 
