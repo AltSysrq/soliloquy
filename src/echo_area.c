@@ -143,8 +143,9 @@ defun($h_Workspace_draw_echo_area) {
 }
 
 /*
-  Updates the echo area for this Workspace on all Terminals on which it is
-  visible.
+  SYMBOL: $f_Workspace_update_echo_area
+    Updates the echo area for this Workspace on all Terminals on which it is
+    visible.
  */
 defun($h_Workspace_update_echo_area) {
   for (list_o curr = $lo_Workspace_views; curr; curr = curr->cdr) {
