@@ -49,7 +49,7 @@ subclass($c_Activity, $c_Line_Editor)
     Echo mode in which the user's text is hidden, but cursor is shown, in the
     ecno area.
  */
-STATIC_INIT_TO($v_Workspace_echo_mode, $u_echo_ghost)
+STATIC_INIT_TO($v_Workspace_echo_mode, $u_echo_on)
 
 /*
   SYMBOL: $i_Line_Editor_cursor
