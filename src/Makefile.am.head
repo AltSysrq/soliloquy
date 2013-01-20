@@ -1,4 +1,4 @@
-AM_CFLAGS=-Wall -Werror=implicit-function-declaration -std=gnu99 -D_GNU_SOURCE -g3
+AM_CFLAGS=-Wall -Werror=implicit-function-declaration -std=gnu99 -D_GNU_SOURCE -D_XOPEN_SOURCE_EXTENDED=1 -g3
 AM_CXXFLAGS=-Wall -Os -g0
 bin_PROGRAMS = sol
 noinst_PROGRAMS = silc

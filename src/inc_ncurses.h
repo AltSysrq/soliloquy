@@ -19,10 +19,12 @@
 #ifndef INC_NCURSES_H_
 #define INC_NCURSES_H_
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #ifndef _XOPEN_SORUCE_EXTENDED
-#define _XOPEN_SORUCE_EXTENDED 1
+#define _XOPEN_SORUCE_EXTENDED
 #endif
 
 #if defined(HAVE_NCURSESW_CURSESW_H)
@@ -30,7 +32,7 @@
 #elif defined(HAVE_NCURSES_CURSESW_H)
 #include <ncurses/cursesw.h>
 #elif defined(HAVE_CURSESW_H)
-#include <ncursesw.h>
+#include <cursesw.h>
 #elif defined(HAVE_NCURSESW_CURSES_H)
 #include <ncursesw/curses.h>
 #else
