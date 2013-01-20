@@ -10,9 +10,9 @@ echo >>src/Makefile.am
 # Compile silc files as needed
 find src -name '*.c' -printf '%P\n' | (while read name; do
     name=`echo $name | sed 's/.c$//'`
-    printf "$name.slc: $name.c silc dynar.plt list.plt | classes\n"
+    printf "$name.slc: $name.c silc\$(EXEEXT) dynar.plt list.plt | classes\n"
     printf "\\t@echo '  SILC   $name.slc'\n"
-    printf "\\t@./silc $name\n"
+    printf "\\t@./silc\$(EXEEXT) $name\n"
     printf "$name.o: $name.slc\n"
 done) >>src/Makefile.am
 
