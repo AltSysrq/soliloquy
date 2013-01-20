@@ -155,9 +155,15 @@ defun($h_Line_Editor_self_insert) {
   SYMBOL: $f_Line_Editor_changed
     Called after modifications to $az_Line_Editor_buffer have occurred, so that
     the echo area can be updated as needed, etc. This must be called within the
-    context of the current Workspace.
+    context of the current Workspace. Besides repainting the echo area, it also
+    ensures that the cursor is within allowable boundaries.
  */
 defun($h_Line_Editor_changed) {
+  if ($i_Line_Editor_cursor < 0)
+    $i_Line_Editor_cursor = 0;
+  else if ($i_Line_Editor_cursor > $az_Line_Editor_buffer->len)
+    $i_Line_Editor_cursor = $az_Line_Editor_buffer->len;
+
   $f_Workspace_update_echo_area();
 }
 
@@ -192,6 +198,57 @@ defun($h_Line_Editor_get_echo_area_contents) {
 }
 
 /*
+  SYMBOL: $f_Line_Editor_delete_backward_char
+    Delete the character immediately before the cursor.
+ */
+defun($h_Line_Editor_delete_backward_char) {
+  if ($i_Line_Editor_cursor != 0) {
+    let($y_Line_Editor_edit_is_minor, true);
+    $f_Line_Editor_push_undo();
+    --$i_Line_Editor_cursor;
+    dynar_erase_z($az_Line_Editor_buffer, $i_Line_Editor_cursor, 1);
+
+    $m_changed();
+  }
+}
+
+/*
+  SYMBOL: $f_Line_Editor_delete_forward_char
+    Delete the character immediately after the cursor.
+ */
+defun($h_Line_Editor_delete_forward_char) {
+  if ($i_Line_Editor_cursor != $az_Line_Editor_buffer->len) {
+    let($y_Line_Editor_edit_is_minor, true);
+    $f_Line_Editor_push_undo();
+    dynar_erase_z($az_Line_Editor_buffer, $i_Line_Editor_cursor, 1);
+
+    $m_changed();
+  }
+}
+
+/*
+  SYMBOL: $f_Line_Editor_move_forward_char
+    Moves the cursor one character to the right.
+ */
+defun($h_Line_Editor_move_forward_char) {
+  if ($i_Line_Editor_cursor != $az_Line_Editor_buffer->len) {
+    ++$i_Line_Editor_cursor;
+    $m_changed();
+  }
+}
+
+/*
+  SYMBOL: $f_Line_Editor_move_backward_char
+    Moves the cursor one character to the left.
+ */
+defun($h_Line_Editor_move_backward_char) {
+  if ($i_Line_Editor_cursor != 0) {
+    --$i_Line_Editor_cursor;
+    $m_changed();
+  }
+}
+
+/*
   SYMBOL: $lp_Line_Editor_keybindings
     List of keybindings supported by generic Line_Editors.
  */
@@ -199,4 +256,12 @@ class_keymap($c_Line_Editor, $lp_Line_Editor_keybindings, $llp_Activity_keymap)
 ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
   bind_kp($lp_Line_Editor_keybindings, $u_ground, KEYBINDING_DEFAULT, NULL,
           $f_Line_Editor_self_insert);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'j', $v_end_meta,
+            $f_Line_Editor_move_backward_char);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'k', $v_end_meta,
+            $f_Line_Editor_move_forward_char);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'l', $v_end_meta,
+            $f_Line_Editor_delete_backward_char);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L';', $v_end_meta,
+            $f_Line_Editor_delete_forward_char);
 }
