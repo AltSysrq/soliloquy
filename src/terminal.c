@@ -128,7 +128,7 @@ defun($h_Terminal_destroy) {
     Reads characters from the Terminal until no more are available without
     blocking.
 
-  SYMBOL: $i_Terminal_input_value
+  SYMBOL: $x_Terminal_input_value
     The character value read in the most recent call to get_wch (ie, in
     $f_Terminal_read). If bit 31 of this value is zero, it is a single Unicode
     character or ASCII control character. If bit 31 is set, the lower 31 bits
@@ -148,9 +148,9 @@ defun($h_Terminal_read) {
       return;
     }
 
-    $i_Terminal_input_value = wchar;
+    $x_Terminal_input_value = wchar;
     if (type == KEY_CODE_YES)
-      $i_Terminal_input_value |= (1 << 31);
+      $x_Terminal_input_value |= (1 << 31);
     $f_Terminal_getch();
   }
 }

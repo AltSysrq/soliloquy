@@ -39,7 +39,7 @@
  * are effectively flattened when searched.
  *
  * Searching is performed in two passes. On the first pass, the exact keystroke
- * ($i_Terminal_input_value) is compared against keybindings' triggers,
+ * ($x_Terminal_input_value) is compared against keybindings' triggers,
  * respecting mode. If no such keybinding is found, the search is repeated
  * searching as if KEYBINDING_DEFAULT had been typed. If that search is also
  * unsuccessful, $f_key_undefined() is called.

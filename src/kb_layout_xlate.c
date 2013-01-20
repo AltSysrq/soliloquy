@@ -127,16 +127,16 @@ STATIC_INIT_TO($lv_Terminal_kb_xlate_modes,
  */
 advise_id_before($u_kb_xlate, $h_Terminal_getch) {
   // Do nothing if not a character
-  if ((1<<31) & $i_Terminal_input_value) return;
+  if ((1<<31) & $x_Terminal_input_value) return;
 
   if (find_v($lv_Terminal_kb_xlate_modes, $v_Terminal_key_mode)) {
     wstring layout = $w_Terminal_keyboard_layout;
     wstring target = $$w_layout_qwerty_us;
-    while (*layout && $i_Terminal_input_value != *layout)
+    while (*layout && $x_Terminal_input_value != *layout)
       ++layout, ++target;
 
     if (*layout)
       // Found a match
-      $i_Terminal_input_value = *target;
+      $x_Terminal_input_value = *target;
   }
 }

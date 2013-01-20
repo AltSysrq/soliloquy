@@ -31,6 +31,7 @@ The letters of a symbol's name between the dollars and the first underscore
 identify its type. Supported types are (* = non-first-class):
   F*    method call (macro)
   H     abstract hook point (type struct hook_point*)
+  I     integer (type unsigned)
   M*    abstract method call (macro)
   Q     mutable qstring (type qchar*; aka mqstring)
   S     mutable string (type char*; aka mstring)
@@ -40,7 +41,7 @@ identify its type. Supported types are (* = non-first-class):
   d*    symbol domain (discussed below) (typeless)
   f*    function to call the corresponding hook (type void (void))
   h     hook point (type struct hook_point)
-  i     integer (type signed or unsigned)
+  i     integer (type signed)
   lT    list of type T (may be multidimenional) (type list_T)
   m*    abstract method (type void (void))
   o     object (type object)
@@ -50,7 +51,9 @@ identify its type. Supported types are (* = non-first-class):
   u*    unique identifier (a pointer to itself, simply to indicate identity)
   v     reference to unique identifier (type identity)
   w     wstring (type const wchar_t*; aka wstring)
+  x     formatted character (type qchar)
   y     boolean (type bool)
+  z     wide character (type wchar_t)
 
 Besides simply being implicit global variables, symbols form the basis of
 Soliloquy's "eviscerated object" system. Any first-class symbol may be

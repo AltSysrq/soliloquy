@@ -213,6 +213,7 @@ static void process_unique_identity(const string&);
 static const pair<char, void (*)(const string&)> symbol_processors_[] = {
   p('F', process_function_macro),
   p('H', process_first_class),
+  p('I', process_first_class),
   p('M', process_function_macro),
   p('Q', process_first_class),
   p('S', process_first_class),
@@ -232,7 +233,9 @@ static const pair<char, void (*)(const string&)> symbol_processors_[] = {
   p('u', process_unique_identity),
   p('v', process_first_class),
   p('w', process_first_class),
+  p('x', process_first_class),
   p('y', process_first_class),
+  p('z', process_first_class),
 };
 const map<char, void (*)(const string&)> symbol_processors(
   symbol_processors_,
@@ -388,6 +391,10 @@ static bool get_ctype_of_type(string& ctype,
     ctype = "struct hook_point*";
     break;
 
+  case 'I':
+    ctype = "unsigned";
+    break;
+
   case 'Q':
     ctype = "mqstring";
     break;
@@ -409,7 +416,7 @@ static bool get_ctype_of_type(string& ctype,
     break;
 
   case 'i':
-    ctype = "int";
+    ctype = "signed";
     break;
 
   case 'l':
@@ -440,8 +447,16 @@ static bool get_ctype_of_type(string& ctype,
     ctype = "wstring";
     break;
 
+  case 'x':
+    ctype = "qchar";
+    break;
+
   case 'y':
     ctype = "bool";
+    break;
+
+  case 'z':
+    ctype = "wchar_t";
     break;
 
   default:

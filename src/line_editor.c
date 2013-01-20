@@ -61,7 +61,7 @@ STATIC_INIT_TO($v_Workspace_echo_mode, $u_echo_on)
     If non-NULL, the initial text for the Line_Editor when it is
     constructed. Otherwise, the initial text is the empty string.
 
-  SYMBOL: $ai_Line_Editor_buffer
+  SYMBOL: $az_Line_Editor_buffer
     An array of integers (wchar_ts) which comprise the current text of the
     Line_Editor.
 
@@ -73,16 +73,16 @@ STATIC_INIT_TO($i_Line_Editor_cursor, -1)
 
 defun($h_Line_Editor) {
   if (!$w_Line_Editor_text)
-    $ai_Line_Editor_buffer = dynar_new_i();
+    $az_Line_Editor_buffer = dynar_new_z();
   else {
-    $ai_Line_Editor_buffer = dynar_new_i();
-    dynar_expand_by_i($ai_Line_Editor_buffer, wcslen($w_Line_Editor_text));
+    $az_Line_Editor_buffer = dynar_new_z();
+    dynar_expand_by_z($az_Line_Editor_buffer, wcslen($w_Line_Editor_text));
     for (unsigned i = 0; $w_Line_Editor_text[i]; ++i)
-      $ai_Line_Editor_buffer->v[i] = (signed)(unsigned)$w_Line_Editor_text[i];
+      $az_Line_Editor_buffer->v[i] = (signed)(unsigned)$w_Line_Editor_text[i];
   }
 
   if (-1 == $i_Line_Editor_cursor)
-    $i_Line_Editor_cursor = $ai_Line_Editor_buffer->len;
+    $i_Line_Editor_cursor = $az_Line_Editor_buffer->len;
 }
 
 /*
@@ -93,12 +93,12 @@ defun($h_Line_Editor) {
     $y_Line_Editor_previous_edit_was_minor is true, and
     $i_Line_Editor_last_edit is still equal to time(0).
 
-  SYMBOL: $lai_Line_Editor_undo
-    A list of copies of former values of $ai_Line_Editor_buffer, representing
+  SYMBOL: $laz_Line_Editor_undo
+    A list of copies of former values of $az_Line_Editor_buffer, representing
     states that the user can undo back to.
 
-  SYMBOL: $lai_Line_Editor_redo
-    A list of copies of former values of $ai_Line_Editor_buffer, representing
+  SYMBOL: $laz_Line_Editor_redo
+    A list of copies of former values of $az_Line_Editor_buffer, representing
     states that the user moved away from by using undo.
 
   SYMBOL: $y_Line_Editor_edit_is_minor
@@ -117,26 +117,26 @@ defun($h_Line_Editor_push_undo) {
   if (!$y_Line_Editor_edit_is_minor ||
       !$y_Line_Editor_previous_edit_was_minor ||
       time(0) != $i_Line_Editor_last_edit)
-    lpush_ai($lai_Line_Editor_undo, dynar_clone_i($ai_Line_Editor_buffer));
+    lpush_az($laz_Line_Editor_undo, dynar_clone_z($az_Line_Editor_buffer));
 
   $y_Line_Editor_previous_edit_was_minor =
     $y_Line_Editor_edit_is_minor;
   $i_Line_Editor_last_edit = time(0);
 
-  $lai_Line_Editor_redo = NULL;
+  $laz_Line_Editor_redo = NULL;
 }
 
 /*
   SYMBOL: $f_Line_Editor_self_insert
-    Inserts $i_Terminal_input_value into $ai_Line_Editor_buffer at
+    Inserts $x_Terminal_input_value into $az_Line_Editor_buffer at
     $i_Line_Editor_cursor, then increments the cursor position. If
-    $i_Terminal_input_value is not a non-control character, the function sets
+    $x_Terminal_input_value is not a non-control character, the function sets
     $y_key_dispatch_continue to true and returns without taking action.
  */
 defun($h_Line_Editor_self_insert) {
-  if (((unsigned)$i_Terminal_input_value) < L' ' ||
-      $i_Terminal_input_value == 0x7F ||
-      ($i_Terminal_input_value & (1<<31))) {
+  if (((unsigned)$x_Terminal_input_value) < L' ' ||
+      $x_Terminal_input_value == 0x7F ||
+      ($x_Terminal_input_value & (1<<31))) {
     // Control character or non-character
     $y_key_dispatch_continue = true;
     return;
@@ -144,15 +144,16 @@ defun($h_Line_Editor_self_insert) {
 
   let($y_Line_Editor_edit_is_minor, true);
   $m_push_undo();
-  dynar_ins_i($ai_Line_Editor_buffer, $i_Line_Editor_cursor++,
-              &$i_Terminal_input_value, 1);
+  wchar_t input = (wchar_t)$x_Terminal_input_value;
+  dynar_ins_z($az_Line_Editor_buffer, $i_Line_Editor_cursor++,
+              &input, 1);
 
   $m_changed();
 }
 
 /*
   SYMBOL: $f_Line_Editor_changed
-    Called after modifications to $ai_Line_Editor_buffer have occurred, so that
+    Called after modifications to $az_Line_Editor_buffer have occurred, so that
     the echo area can be updated as needed, etc. This must be called within the
     context of the current Workspace.
  */
@@ -176,11 +177,11 @@ defun($h_Line_Editor_is_echo_enabled) {
     cursor position therein (see $m_get_echo_area_contents).
  */
 defun($h_Line_Editor_get_echo_area_contents) {
-  mqstring result = gcalloc((1+$ai_Line_Editor_buffer->len) *
+  mqstring result = gcalloc((1+$az_Line_Editor_buffer->len) *
                             sizeof(qchar));
-  for (unsigned i = 0; i < $ai_Line_Editor_buffer->len; ++i)
-    result[i] = (qchar)$ai_Line_Editor_buffer->v[i];
-  result[$ai_Line_Editor_buffer->len] = 0;
+  for (unsigned i = 0; i < $az_Line_Editor_buffer->len; ++i)
+    result[i] = (qchar)$az_Line_Editor_buffer->v[i];
+  result[$az_Line_Editor_buffer->len] = 0;
 
   $q_Workspace_echo_area_contents = result;
 

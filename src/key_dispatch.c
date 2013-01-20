@@ -49,7 +49,7 @@ static bool search_all(qchar);
     Called when a key is pressed which does not have any known mapping.
  */
 advise_id($u_key_dispatch, $h_Terminal_getch) {
-  if (!search_all($i_Terminal_input_value))
+  if (!search_all($x_Terminal_input_value))
     if (!search_all(KEYBINDING_DEFAULT))
       $f_key_undefined();
 }
