@@ -45,5 +45,6 @@ defun($h_Activity) {
 defun($h_Activity_destroy) {
   $$($o_Activity_workspace) {
     $lo_Workspace_activities = lrm_o($lo_Workspace_activities, $o_Activity);
+    $m_update_echo_area();
   }
 }
