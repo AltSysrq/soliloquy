@@ -326,6 +326,11 @@ defun($h_Line_Editor_end) {
 interactive($h_Line_Editor_seek_forward_to_char_i,
             $h_Line_Editor_seek_forward_to_char,
             i_(z, $z_Line_Editor_seek_dst, L"Seek")) {
+  if ($i_Line_Editor_cursor >= $az_Line_Editor_buffer->len)
+    return; //already at end
+
+  ++$i_Line_Editor_cursor;
+
   while ($i_Line_Editor_cursor < $az_Line_Editor_buffer->len &&
          $z_Line_Editor_seek_dst !=
            $az_Line_Editor_buffer->v[$i_Line_Editor_cursor])
@@ -341,6 +346,10 @@ interactive($h_Line_Editor_seek_forward_to_char_i,
 interactive($h_Line_Editor_seek_backward_to_char_i,
             $h_Line_Editor_seek_backward_to_char,
             i_(z, $z_Line_Editor_seek_dst, L"Seek")) {
+  if (!$i_Line_Editor_cursor) return; //Already at beginning
+
+  --$i_Line_Editor_cursor;
+
   while ($i_Line_Editor_cursor > 0 &&
          $z_Line_Editor_seek_dst !=
            $az_Line_Editor_buffer->v[$i_Line_Editor_cursor])
@@ -356,10 +365,11 @@ interactive($h_Line_Editor_seek_backward_to_char_i,
 interactive($h_Line_Editor_seek_forward_to_word_i,
             $h_Line_Editor_seek_forward_to_word,
             i_(z, $z_Line_Editor_seek_dst, L"Seek")) {
-  while ($i_Line_Editor_cursor != $az_Line_Editor_buffer->len &&
-         $z_Line_Editor_seek_dst !=
-           $az_Line_Editor_buffer->v[$i_Line_Editor_cursor])
+  do {
     $f_Line_Editor_move_forward_word();
+  }  while ($i_Line_Editor_cursor != $az_Line_Editor_buffer->len &&
+            $z_Line_Editor_seek_dst !=
+              $az_Line_Editor_buffer->v[$i_Line_Editor_cursor]);
 }
 
 /*
@@ -370,10 +380,11 @@ interactive($h_Line_Editor_seek_forward_to_word_i,
 interactive($h_Line_Editor_seek_backward_to_word_i,
             $h_Line_Editor_seek_backward_to_word,
             i_(z, $z_Line_Editor_seek_dst, L"Seek")) {
-  while ($i_Line_Editor_cursor &&
-         $z_Line_Editor_seek_dst !=
-           $az_Line_Editor_buffer->v[$i_Line_Editor_cursor])
+  do {
     $f_Line_Editor_move_backward_word();
+  } while ($i_Line_Editor_cursor &&
+           $z_Line_Editor_seek_dst !=
+             $az_Line_Editor_buffer->v[$i_Line_Editor_cursor]);
 }
 
 /*
