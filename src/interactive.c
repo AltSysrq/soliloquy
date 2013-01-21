@@ -174,6 +174,10 @@ defun($h_IActive_Activity) {
   $q_IActive_Activity_name = wstrtoqstr($w_IArg_name);
 }
 
+/*
+  SYMBOL: $f_IActive_Activity_get_echo_area_meta
+    Adds the prompt for this IActive_Activity to the meta string.
+ */
 defun($h_IActive_Activity_get_echo_area_meta) {
   size_t len =
     (wcslen($w_IArg_name) + qstrlen($q_Workspace_echo_area_meta) + 2);
