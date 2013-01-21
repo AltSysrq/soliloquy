@@ -349,6 +349,34 @@ interactive($h_Line_Editor_seek_backward_to_char_i,
 }
 
 /*
+  SYMBOL: $h_Line_Editor_seek_forward_to_word_i $h_Line_Editor_seek_forward_to_word
+    Moves point forward by words until the end of the buffer or
+    $z_Line_Editor_seek_dst is encountered.
+ */
+interactive($h_Line_Editor_seek_forward_to_word_i,
+            $h_Line_Editor_seek_forward_to_word,
+            i_(z, $z_Line_Editor_seek_dst, L"Seek")) {
+  while ($i_Line_Editor_cursor != $az_Line_Editor_buffer->len &&
+         $z_Line_Editor_seek_dst !=
+           $az_Line_Editor_buffer->v[$i_Line_Editor_cursor])
+    $f_Line_Editor_move_forward_word();
+}
+
+/*
+  SYMBOL: $h_Line_Editor_seek_backward_to_word_i $h_Line_Editor_seek_backward_to_word
+    Moves point backward by words until the end of the buffer or
+    $z_Line_Editor_seek_dst is encountered.
+ */
+interactive($h_Line_Editor_seek_backward_to_word_i,
+            $h_Line_Editor_seek_backward_to_word,
+            i_(z, $z_Line_Editor_seek_dst, L"Seek")) {
+  while ($i_Line_Editor_cursor &&
+         $z_Line_Editor_seek_dst !=
+           $az_Line_Editor_buffer->v[$i_Line_Editor_cursor])
+    $f_Line_Editor_move_backward_word();
+}
+
+/*
   SYMBOL: $lp_Line_Editor_keybindings
     List of keybindings supported by generic Line_Editors.
  */
@@ -368,6 +396,10 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $f_Line_Editor_seek_backward_to_char_i);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L'K', $v_end_meta,
             $f_Line_Editor_seek_forward_to_char_i);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'U', $v_end_meta,
+            $f_Line_Editor_seek_backward_to_word_i);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'I', $v_end_meta,
+            $f_Line_Editor_seek_forward_to_word_i);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L'l', $v_end_meta,
             $f_Line_Editor_delete_backward_char);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L';', $v_end_meta,
