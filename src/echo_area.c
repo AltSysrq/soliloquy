@@ -34,7 +34,7 @@
 
   SYMBOL: $q_Workspace_echo_area_meta
     The metadata to display in the echo area of the current Workspace. This
-    should be set by calls to $m_get_echo_area_contents() on the current
+    should be set by calls to $m_get_echo_area_meta() on the current
     Activity.
 
   SYMBOL: $i_Workspace_echo_area_cursor
