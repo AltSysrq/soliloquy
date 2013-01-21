@@ -250,6 +250,44 @@ defun($h_Line_Editor_move_backward_char) {
 }
 
 /*
+  SYMBOL: $f_Line_Editor_move_forward_word
+    Moves the cursor forward one word, as defined by is_word_boundary().
+ */
+defun($h_Line_Editor_move_forward_word) {
+  if ($i_Line_Editor_cursor == $az_Line_Editor_buffer->len)
+    // Already at end
+    return;
+
+  do {
+    ++$i_Line_Editor_cursor;
+  } while ($i_Line_Editor_cursor != $az_Line_Editor_buffer->len &&
+           !is_word_boundary(
+             $az_Line_Editor_buffer->v[$i_Line_Editor_cursor-1],
+             $az_Line_Editor_buffer->v[$i_Line_Editor_cursor  ]));
+
+  $m_changed();
+}
+
+/*
+  SYMBOL: $f_Line_Editor_move_backward_word
+    Moves the cursor backward one word, as defined by is_word_boundary().
+ */
+defun($h_Line_Editor_move_backward_word) {
+  if ($i_Line_Editor_cursor == 0)
+    // Already at the beginning
+    return;
+
+  do {
+    --$i_Line_Editor_cursor;
+  } while ($i_Line_Editor_cursor &&
+           !is_word_boundary(
+             $az_Line_Editor_buffer->v[$i_Line_Editor_cursor-1],
+             $az_Line_Editor_buffer->v[$i_Line_Editor_cursor  ]));
+
+  $m_changed();
+}
+
+/*
   SYMBOL: $f_Line_Editor_home
     Moves cursor to the first non-whitespace character, or to column zero if it
     was already there.
@@ -322,6 +360,10 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $f_Line_Editor_move_backward_char);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L'k', $v_end_meta,
             $f_Line_Editor_move_forward_char);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'u', $v_end_meta,
+            $f_Line_Editor_move_backward_word);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'i', $v_end_meta,
+            $f_Line_Editor_move_forward_word);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L'J', $v_end_meta,
             $f_Line_Editor_seek_backward_to_char_i);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L'K', $v_end_meta,
