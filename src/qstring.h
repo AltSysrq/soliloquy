@@ -162,6 +162,19 @@ size_t wstrlcpy(wchar_t* dst, const wchar_t* src, size_t sz);
 size_t wstrlcat(wchar_t* dst, const wchar_t* src, size_t sz);
 
 /**
+ * Returns whether the given character is a non-control character, taking into
+ * account the existence of virtual key non-characters.
+ */
+bool is_nc_char(qchar);
+
+/**
+ * Returns whether the given pair of characters constitute a word boundary;
+ * that is, it returns true if the second parameter is the beginning of a
+ * logical word, given the character that precedes it.
+ */
+bool is_word_boundary(qchar,qchar);
+
+/**
  * The empty qstring.
  */
 extern const qchar*const qempty;
