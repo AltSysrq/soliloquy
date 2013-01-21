@@ -71,7 +71,7 @@ void invoke_interactive(object iactive);
  * user, a wide string.
  */
 #define i_(type, sym, prompt) ({                \
-      object_implant(sym);                      \
+      implant(sym);                             \
       interactive_##type(&sym, prompt);         \
     })
 

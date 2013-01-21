@@ -64,9 +64,15 @@ defun($h_Interactive) {
 
   SYMBOL: $p_IArg_destination
     Pointer to argument destination.
+
+  SYMBOL: $w_IArg_name
+    Name to show as metadata for the activity.
+
+  SYMBOL: $o_IArg_context
+    The context of the Interactive command.
  */
 defun($h_IArg) {
-  // Nothing to do
+  $o_IArg_context = $o_Interactive;
 }
 
 void invoke_interactive(object this) {
@@ -127,9 +133,7 @@ defun($h_invoke_interactive) {
   $$(workspace) {
     $$(activity) {
       $o_Activity_workspace = workspace;
-      $$(factory) {
-        invoke_hook($H_IArg_activate);
-      }
+      invoke_hook($H_IArg_activate);
 
       // Set continuation up
       add_hook_obj(&$h_Activity_destroy, HOOK_AFTER,
@@ -154,6 +158,9 @@ static hook_constraint before_terminal_refresh(
   SYMBOL: $c_IActive_Activity
     Subclass of Activity which implements functionality common to most
     Activites to be used with the Interactive system.
+
+  SYMBOL: $q_IActive_Activity_name
+    The name of this Activity, for within metadata.
  */
 subclass($c_Activity, $c_IActive_Activity)
 defun($h_IActive_Activity) {
@@ -164,6 +171,18 @@ defun($h_IActive_Activity) {
                $f_IActive_Activity_show_prompt, $o_IActive_Activity,
                before_terminal_refresh);
   $y_IActive_Activity_show_prompt_is_first = true;
+  $q_IActive_Activity_name = wstrtoqstr($w_IArg_name);
+}
+
+defun($h_IActive_Activity_get_echo_area_meta) {
+  size_t len =
+    (wcslen($w_IArg_name) + qstrlen($q_Workspace_echo_area_meta) + 2);
+  mqstring result = gcalloc(len*sizeof(qchar));
+  qstrlcpy(result, $q_Workspace_echo_area_meta, len);
+  result[qstrlen($q_Workspace_echo_area_meta)] = L':';
+  result[qstrlen($q_Workspace_echo_area_meta)+1] = 0;
+  qstrlcat(result, $q_IActive_Activity_name, len);
+  $q_Workspace_echo_area_meta = result;
 }
 
 /*
@@ -171,7 +190,7 @@ defun($h_IActive_Activity) {
     Cleans up this IActive_Activity.
  */
 defun($h_IActive_Activity_destroy) {
-  del_hook(&$h_run_tasks, HOOK_MAIN,
+  del_hook(&$h_run_tasks, HOOK_BEFORE,
            $u_IActive_Activity, $o_IActive_Activity);
   $f_Activity_destroy();
 }
@@ -215,9 +234,15 @@ defun($h_IActive_Activity_abort) {
   SYMBOL: $c_WChar_IArg
     Activity which reads a single non-control character from the user.
  */
-subclass($c_IActive_Activity, $c_WChar_IArg)
+subclass($c_IArg, $c_WChar_IArg)
 defun($h_WChar_IArg) {
   $H_IArg_activate = &$h_WChar_IActive;
+}
+
+void interactive_z(wchar_t* dst, wstring prompt) {
+  object iarg = $c_WChar_IArg($p_IArg_destination = dst,
+                              $w_IArg_name = prompt);
+  dynar_push_o($ao_Interactive_arguments, iarg);
 }
 
 /*
@@ -231,7 +256,7 @@ defun($h_WChar_IArg) {
   SYMBOL: $lp_WChar_IActive_keymap
     Keymap for $c_WChar_IActive.
  */
-subclass($c_WChar_IActive, $c_IActive_Activity)
+subclass($c_IActive_Activity, $c_WChar_IActive)
 class_keymap($c_WChar_IActive, $lp_WChar_IActive_keymap, $llp_Activity_keymap)
 defun($h_WChar_IActive_char) {
   if ($x_Terminal_input_value < L' ' || $x_Terminal_input_value == 0x7F ||
@@ -243,8 +268,10 @@ defun($h_WChar_IActive_char) {
   }
 
   //OK
-  wchar_t* dst = $p_IArg_destination;
-  *dst = $x_Terminal_input_value;
+  $$($o_IArg_context) {
+    wchar_t* dst = $p_IArg_destination;
+    *dst = $x_Terminal_input_value;
+  }
   $m_destroy();
 }
 
