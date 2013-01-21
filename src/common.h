@@ -330,13 +330,13 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
  * with the id and class $u_main. Ie, it defines the primary implementation of
  * the given function.
  */
-#define defun(hook)                                  \
-  static void _GLUE(hook,$main)(void);               \
-  ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) { \
-    add_hook(&hook, HOOK_MAIN,                       \
-             $u_main, $u_main, _GLUE(hook,$main),    \
-             NULL);                                  \
-  }                                                  \
+#define defun(hook)                                                     \
+  static void _GLUE(hook,$main)(void);                                  \
+  ATSTART(_GLUE(hook,$main_setup), ADVICE_INSTALLATION_PRIORITY) {      \
+    add_hook(&hook, HOOK_MAIN,                                          \
+             $u_main, $u_main, _GLUE(hook,$main),                       \
+             NULL);                                                     \
+  }                                                                     \
   static void _GLUE(hook,$main)(void)
 
 /**
@@ -484,6 +484,8 @@ void add_symbol_to_domain(struct symbol_header*, struct symbol_domain**,
                           enum implantation_type);
 
 hook_constraint constraint_after_superconstructor(
+  identity, identity, identity, identity);
+hook_constraint constraint_before_superconstructor(
   identity, identity, identity, identity);
 
 static inline bool control$$(object obj, object* ctl) {

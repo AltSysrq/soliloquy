@@ -28,7 +28,10 @@
 
   SYMBOL: $u_superconstructor
     Identifies hooks which call a class's superclass's constructor.
-*/
+
+  SYMBOL: $u_fundamental_construction
+    Identifies the hook which performs a class's fundamental construction.
+ */
 
 #include "common.slc"
 
@@ -527,6 +530,14 @@ hook_constraint constraint_after_superconstructor(
 ) {
   if (that_class == $u_superconstructor)
     return HookConstraintAfter;
+  return HookConstraintNone;
+}
+
+hook_constraint constraint_before_superconstructor(
+  identity a, identity b, identity c, identity that_class
+) {
+  if (that_class == $u_superconstructor)
+    return HookConstraintBefore;
   return HookConstraintNone;
 }
 

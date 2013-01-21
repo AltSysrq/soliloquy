@@ -72,6 +72,7 @@ int main(int argc, const char*const* argv) {
   if (ifstream((basename + ".h").c_str()))
     out << "#include \"" << basename << ".h\"\n";
 
+  process_symbol("$u_fundamental_construction");
   process_file(basename + ".c");
 
   // Some implicit symbols
@@ -313,6 +314,8 @@ static void process_class(const string& csym) {
   format("#define `CSYM(...) ({                                          \\\n"
          "  object _`CSYM$local_this = object_new(NULL);                 \\\n"
          "  $$(_`CSYM$local_this) {                                      \\\n"
+         //This is redundant with the fundamental constructor, but is necessary
+         //to get the expected results when calling via the $c frontend.
          "    implant(`OSYM); implant(`DSYM); implant(`HSYM);            \\\n"
          "    `OSYM = _`CSYM$local_this;                                 \\\n"
          "    (void)({__VA_ARGS__; 0;});                                 \\\n"
@@ -323,7 +326,16 @@ static void process_class(const string& csym) {
          "#define `CSYM$function `FSYM                                     \n"
          "#define `CSYM$identity `USYM                                     \n"
          "#define `CSYM$hook `HSYM                                         \n"
-         "#define `CSYM$this `OSYM                                         \n",
+         "#define `CSYM$this `OSYM                                         \n"
+         "static void _`CSYM$fun_ctor(void) {                              \n"
+         "  implant(`OSYM); implant(`DSYM); implant(`HSYM);                \n"
+         "  `OSYM = object_current();                                      \n"
+         "}                                                                \n"
+         "ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {               \n"
+         "  add_hook(&`HSYM, HOOK_BEFORE,                                  \n"
+         "           $u_fundamental_construction, `USYM,                   \n"
+         "           _`CSYM$fun_ctor,constraint_before_superconstructor);  \n"
+         "}                                                                \n",
          "`CSYM", csym.c_str(), "`OSYM", osym.c_str(),
          "`USYM", usym.c_str(), "`DSYM", dsym.c_str(),
          "`HSYM", hsym.c_str(), "`FSYM", fsym.c_str(), NULL);
