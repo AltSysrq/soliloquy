@@ -92,6 +92,7 @@ size_t qstrlcat(mqstring dstbase, qstring src, size_t maxsz) {
 
   mqstring dst = dstbase;
   while (*dst++ && maxsz--);
+  --dst;
 
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
   memcpy(dst, src, len*sizeof(qchar));
@@ -115,6 +116,7 @@ size_t wstrlcat(mwstring dstbase, wstring src, size_t maxsz) {
 
   mwstring dst = dstbase;
   while (*dst++ && maxsz--);
+  --dst;
 
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
   memcpy(dst, src, len*sizeof(wchar_t));
