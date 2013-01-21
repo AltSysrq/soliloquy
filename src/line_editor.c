@@ -21,6 +21,7 @@
 #include <ctype.h>
 #include <wctype.h>
 #include "key_dispatch.h"
+#include "interactive.h"
 
 /*
   TITLE: Line Editor Abstract Class
@@ -279,6 +280,39 @@ defun($h_Line_Editor_end) {
 }
 
 /*
+  SYMBOL: $h_Line_Editor_seek_forward_to_char $h_Line_Editor_seek_forward_to_char_i
+    Moves point forward by characters until the end of the buffer or
+    $z_Line_Editor_seek_dst is encountered.
+
+  SYMBOL: $z_Line_Editor_seek_dst
+    Character to which to seek on target-based functions.
+ */
+interactive($h_Line_Editor_seek_forward_to_char_i,
+            $h_Line_Editor_seek_forward_to_char,
+            i_(z, $z_Line_Editor_seek_dst, L"Seek")) {
+  while ($i_Line_Editor_cursor < $az_Line_Editor_buffer->len &&
+         $z_Line_Editor_seek_dst !=
+           $az_Line_Editor_buffer->v[$i_Line_Editor_cursor])
+    ++$i_Line_Editor_cursor;
+  $m_changed();
+}
+
+/*
+  SYMBOL: $h_Line_Editor_seek_backward_to_char $h_Line_Editor_seek_backward_to_char_i
+    Moves point backward by characters until the beginning of the buffer or
+    $z_Line_Editor_seek_dst is encountered.
+ */
+interactive($h_Line_Editor_seek_backward_to_char_i,
+            $h_Line_Editor_seek_backward_to_char,
+            i_(z, $z_Line_Editor_seek_dst, L"Seek")) {
+  while ($i_Line_Editor_cursor > 0 &&
+         $z_Line_Editor_seek_dst !=
+           $az_Line_Editor_buffer->v[$i_Line_Editor_cursor])
+    --$i_Line_Editor_cursor;
+  $m_changed();
+}
+
+/*
   SYMBOL: $lp_Line_Editor_keybindings
     List of keybindings supported by generic Line_Editors.
  */
@@ -290,6 +324,10 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $f_Line_Editor_move_backward_char);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L'k', $v_end_meta,
             $f_Line_Editor_move_forward_char);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'J', $v_end_meta,
+            $f_Line_Editor_seek_backward_to_char_i);
+  bind_char($lp_Line_Editor_keybindings, $u_meta, L'K', $v_end_meta,
+            $f_Line_Editor_seek_forward_to_char_i);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L'l', $v_end_meta,
             $f_Line_Editor_delete_backward_char);
   bind_char($lp_Line_Editor_keybindings, $u_meta, L';', $v_end_meta,
