@@ -263,8 +263,7 @@ void interactive_z(wchar_t* dst, wstring prompt) {
 subclass($c_IActive_Activity, $c_WChar_IActive)
 class_keymap($c_WChar_IActive, $lp_WChar_IActive_keymap, $llp_Activity_keymap)
 defun($h_WChar_IActive_char) {
-  if ($x_Terminal_input_value < L' ' || $x_Terminal_input_value == 0x7F ||
-      ($x_Terminal_input_value & (1<<31))) {
+  if (!is_nc_char($x_Terminal_input_value)) {
     // Not an acceptable character
     $y_key_dispatch_continue = true;
     $m_abort();

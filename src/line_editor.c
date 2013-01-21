@@ -137,9 +137,7 @@ defun($h_Line_Editor_push_undo) {
     $y_key_dispatch_continue to true and returns without taking action.
  */
 defun($h_Line_Editor_self_insert) {
-  if (((unsigned)$x_Terminal_input_value) < L' ' ||
-      $x_Terminal_input_value == 0x7F ||
-      ($x_Terminal_input_value & (1<<31))) {
+  if (!is_nc_char($x_Terminal_input_value)) {
     // Control character or non-character
     $y_key_dispatch_continue = true;
     return;
