@@ -419,4 +419,6 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $f_LineEditor_home);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'n', $v_end_meta,
             $f_LineEditor_end);
+  bind_char($lp_LineEditor_keybindings, $u_ground, L'\r', NULL,
+            $m_accept);
 }
