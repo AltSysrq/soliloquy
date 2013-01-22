@@ -144,16 +144,6 @@ defun($h_invoke_interactive) {
   }
 }
 
-static hook_constraint before_terminal_refresh(
-  identity this_id, identity this_class,
-  identity that_id, identity that_class
-) {
-  if (that_id == $u_Terminal_refresh)
-    return HookConstraintBefore;
-  else
-    return HookConstraintNone;
-}
-
 /*
   SYMBOL: $c_IActiveActivity
     Subclass of Activity which implements functionality common to most
@@ -164,14 +154,8 @@ static hook_constraint before_terminal_refresh(
  */
 subclass($c_Activity, $c_IActiveActivity)
 defun($h_IActiveActivity) {
-  // If we get no response from the user within 1 second, update the echo area
-  // to show the "prompt".
-  add_hook_obj(&$h_run_tasks, HOOK_BEFORE,
-               $u_IActiveActivity, NULL,
-               $f_IActiveActivity_show_prompt, $o_IActiveActivity,
-               before_terminal_refresh);
-  $y_IActiveActivity_show_prompt_is_first = true;
   $q_IActiveActivity_name = wstrtoqstr($w_IArg_name);
+  $F_Workspace_update_echo_area(0, $o_Activity_workspace);
 }
 
 /*
@@ -182,42 +166,6 @@ defun($h_IActiveActivity_get_echo_area_meta) {
   qchar separator[2] = {L':', 0};
   $q_Workspace_echo_area_meta = qstrap3(
     $q_Workspace_echo_area_meta, separator, $q_IActiveActivity_name);
-}
-
-/*
-  SYMBOL: $f_IActiveActivity_destroy
-    Cleans up this IActiveActivity.
- */
-defun($h_IActiveActivity_destroy) {
-  del_hook(&$h_run_tasks, HOOK_BEFORE,
-           $u_IActiveActivity, $o_IActiveActivity);
-  $f_Activity_destroy();
-}
-
-/*
-  SYMBOL: $f_IActiveActivity_show_prompt
-    Called automatically when a kernel cycle occurs. On the first call, the
-    function does nothing except limit the current cycle to 1 second. On the
-    next, it updates the echo area to show the prompt, then removes the hook
-    that called it.
-
-  SYMBOL: $y_IActiveActivity_show_prompt_is_first
-    Controls $f_IActiveActivity_show_prompt as described.
- */
-defun($h_IActiveActivity_show_prompt) {
-  if ($y_IActiveActivity_show_prompt_is_first) {
-    // First cycle, wait 1024 secs or until next
-    $y_kernel_poll_infinite = false;
-    if ($i_kernel_poll_duration_ms > 1024)
-      $i_kernel_poll_duration_ms = 1024;
-    $y_IActiveActivity_show_prompt_is_first = false;
-    return;
-  } else {
-    // Second cycle; update echo area and remove hook
-    $F_Workspace_update_echo_area(0, $o_Activity_workspace);
-    del_hook(&$h_run_tasks, HOOK_MAIN,
-             $u_IActiveActivity, $o_IActiveActivity);
-  }
 }
 
 /*

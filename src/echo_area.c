@@ -45,8 +45,9 @@
   SYMBOL: $m_get_echo_area_contents
     Sets the current echo area details ($q_Workspace_echo_area_contents and
     $i_Workspace_echo_area_cursor) to be drawn on the current
-    View/Terminal. When this is called, both contents and meta are empty
-    strings, and the cursor is -1 (invisible).
+    View/Terminal. When this is called, contents is NULL, meta is the empty
+    string, and the cursor is -1 (invisible). If it has anything to display. it
+    is to set $q_Workspace_echo_area_contents to any non-NULL value.
 
   SYMBOL: $m_get_echo_area_meta
     Appends the metadata string for the current activity to
@@ -68,12 +69,17 @@
  */
 defun($h_Workspace_draw_echo_area) {
   // Set up the default echo area
-  $q_Workspace_echo_area_contents = qempty;
+  $q_Workspace_echo_area_contents = NULL;
   $q_Workspace_echo_area_meta = qempty;
   $i_Workspace_echo_area_cursor = -1;
   // Get actual contents
-  if ($lo_Workspace_activities)
-    $M_get_echo_area_contents(0, $lo_Workspace_activities->car);
+  for (list_o curr = $lo_Workspace_activities;
+       curr && !$q_Workspace_echo_area_contents;
+       curr = curr->cdr)
+    $M_get_echo_area_contents(0, curr->car);
+
+  if (!$q_Workspace_echo_area_contents)
+    $q_Workspace_echo_area_contents = qempty;
 
   for (list_o curr = $lo_Workspace_activities; curr; curr = curr->cdr)
     $M_get_echo_area_meta(0, curr->car);
