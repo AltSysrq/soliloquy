@@ -105,7 +105,8 @@ It is also possible to manually add members to domains (see member_of_domain in
 common.h); using this facility to make a cycle of subdomains has undefined
 effects. Due to the implicit behaviour of symbol domains (especially public),
 recommended convention is to capitalise the first letter of each word in the
-domain (eg, $d_This_Is_A_Domain).
+domain and to not place underscores between the words of the domain name (eg,
+$d_ThisIsADomain).
 
 Symbols: Classes and Methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

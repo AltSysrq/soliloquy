@@ -200,9 +200,9 @@ defun($h_View_paint_line) {
   object oline =
     $($($o_View_workspace,$o_Workspace_backing),
       $ao_Backing_lines)->v[$i_View_line_to_paint];
-  qstrlcpy(line, $(oline, $q_Rendered_Line_meta), $i_line_meta_width+1);
+  qstrlcpy(line, $(oline, $q_RenderedLine_meta), $i_line_meta_width+1);
   qstrlcpy(line+$i_line_meta_width,
-           $(oline, $q_Rendered_Line_body), $i_column_width+1);
+           $(oline, $q_RenderedLine_body), $i_column_width+1);
 
   $$($o_View_terminal) {
     for (unsigned i = 0; i < sizeof(line)/sizeof(qchar)-1; ++i)

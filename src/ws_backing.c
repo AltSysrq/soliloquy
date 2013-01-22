@@ -20,7 +20,7 @@
 
 /*
   TITLE: Workspace Backing Object
-  OVERVIEW: A Workspace Backing stores an array of Rendered_Lines, and supports
+  OVERVIEW: A Workspace Backing stores an array of RenderedLines, and supports
     notifications of when these change.
 */
 
@@ -30,7 +30,7 @@
     interest, other than manage $ao_Backing_lines.
 
   SYMBOL: $ao_Backing_lines
-    The array of Rendered_Lines stored in this Backing. Third parties,
+    The array of RenderedLines stored in this Backing. Third parties,
     including subclasses, should consider this read-only; the Backing
     manipulation functions should be used with $f_Backing_alter.
 */

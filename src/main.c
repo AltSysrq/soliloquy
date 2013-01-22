@@ -56,10 +56,10 @@ int main(void) {
       $c_View($o_View_terminal = $$o_term,
               $o_View_workspace =
                 $c_Workspace(
-                  $o_Workspace_backing = $c_Primes_Transcript()));
+                  $o_Workspace_backing = $c_PrimesTranscript()));
     $$($o_Terminal_current_view) {
       $$($o_View_workspace) {
-        $c_Line_Editor($o_Activity_workspace = $o_View_workspace);
+        $c_LineEditor($o_Activity_workspace = $o_View_workspace);
       }
     }
     $M_redraw(0,$o_Terminal_current_view);

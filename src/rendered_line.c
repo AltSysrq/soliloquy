@@ -23,31 +23,31 @@
   OVERVIEW: Encapsulates a line of text already prepared to be displayed to the
     screen, complete with metadata.
 
-  SYMBOL: $c_Rendered_Line
+  SYMBOL: $c_RenderedLine
     Encapsulates a line of text already prepared to be displayed to the
-    screen. A fully-constructed Rendered_Line has its $q_Rendered_Line_meta and
-    $q_Rendered_Line_body symbols set. When constructed, if
-    $q_Rendered_Line_meta is NULL, $m_gen_meta() is called to
+    screen. A fully-constructed RenderedLine has its $q_RenderedLine_meta and
+    $q_RenderedLine_body symbols set. When constructed, if
+    $q_RenderedLine_meta is NULL, $m_gen_meta() is called to
     generate it.
 
-  SYMBOL: $q_Rendered_Line_body
+  SYMBOL: $q_RenderedLine_body
     The formatted text of the line itself.
 
-  SYMBOL: $q_Rendered_Line_meta
+  SYMBOL: $q_RenderedLine_meta
     The metadata for the line, in formatted text format.
 
   SYMBOL: $H_gen_meta
-    Method on Rendered_Line. Called from $f_Rendered_Line() if
-    $q_Rendered_Line_meta was NULL. When this is called, $q_Rendered_Line_meta
+    Method on RenderedLine. Called from $f_RenderedLine() if
+    $q_RenderedLine_meta was NULL. When this is called, $q_RenderedLine_meta
     has been initialised to a qchar array of length (1 + $i_line_meta_width),
     filled with NULs. Hooks to this point should populate at most
     $i_line_meta_width of characters, and should not alter characters set to
     non-NUL values by hooks that run before them (though changing formatting is
     acceptable).
  */
-defun($h_Rendered_Line) {
-  if (!$q_Rendered_Line_meta) {
-    $q_Rendered_Line_meta = gcalloc(sizeof(qchar)*(1 + $i_line_meta_width));
+defun($h_RenderedLine) {
+  if (!$q_RenderedLine_meta) {
+    $q_RenderedLine_meta = gcalloc(sizeof(qchar)*(1 + $i_line_meta_width));
     $m_gen_meta();
   }
 }

@@ -155,109 +155,109 @@ static hook_constraint before_terminal_refresh(
 }
 
 /*
-  SYMBOL: $c_IActive_Activity
+  SYMBOL: $c_IActiveActivity
     Subclass of Activity which implements functionality common to most
     Activites to be used with the Interactive system.
 
-  SYMBOL: $q_IActive_Activity_name
+  SYMBOL: $q_IActiveActivity_name
     The name of this Activity, for within metadata.
  */
-subclass($c_Activity, $c_IActive_Activity)
-defun($h_IActive_Activity) {
+subclass($c_Activity, $c_IActiveActivity)
+defun($h_IActiveActivity) {
   // If we get no response from the user within 1 second, update the echo area
   // to show the "prompt".
   add_hook_obj(&$h_run_tasks, HOOK_BEFORE,
-               $u_IActive_Activity, NULL,
-               $f_IActive_Activity_show_prompt, $o_IActive_Activity,
+               $u_IActiveActivity, NULL,
+               $f_IActiveActivity_show_prompt, $o_IActiveActivity,
                before_terminal_refresh);
-  $y_IActive_Activity_show_prompt_is_first = true;
-  $q_IActive_Activity_name = wstrtoqstr($w_IArg_name);
+  $y_IActiveActivity_show_prompt_is_first = true;
+  $q_IActiveActivity_name = wstrtoqstr($w_IArg_name);
 }
 
 /*
-  SYMBOL: $f_IActive_Activity_get_echo_area_meta
-    Adds the prompt for this IActive_Activity to the meta string.
+  SYMBOL: $f_IActiveActivity_get_echo_area_meta
+    Adds the prompt for this IActiveActivity to the meta string.
  */
-defun($h_IActive_Activity_get_echo_area_meta) {
+defun($h_IActiveActivity_get_echo_area_meta) {
   qchar separator[2] = {L':', 0};
   $q_Workspace_echo_area_meta = qstrap3(
-    $q_Workspace_echo_area_meta, separator, $q_IActive_Activity_name);
+    $q_Workspace_echo_area_meta, separator, $q_IActiveActivity_name);
 }
 
 /*
-  SYMBOL: $f_IActive_Activity_destroy
-    Cleans up this IActive_Activity.
+  SYMBOL: $f_IActiveActivity_destroy
+    Cleans up this IActiveActivity.
  */
-defun($h_IActive_Activity_destroy) {
+defun($h_IActiveActivity_destroy) {
   del_hook(&$h_run_tasks, HOOK_BEFORE,
-           $u_IActive_Activity, $o_IActive_Activity);
+           $u_IActiveActivity, $o_IActiveActivity);
   $f_Activity_destroy();
 }
 
 /*
-  SYMBOL: $f_IActive_Activity_show_prompt
+  SYMBOL: $f_IActiveActivity_show_prompt
     Called automatically when a kernel cycle occurs. On the first call, the
     function does nothing except limit the current cycle to 1 second. On the
     next, it updates the echo area to show the prompt, then removes the hook
     that called it.
 
-  SYMBOL: $y_IActive_Activity_show_prompt_is_first
-    Controls $f_IActive_Activity_show_prompt as described.
+  SYMBOL: $y_IActiveActivity_show_prompt_is_first
+    Controls $f_IActiveActivity_show_prompt as described.
  */
-defun($h_IActive_Activity_show_prompt) {
-  if ($y_IActive_Activity_show_prompt_is_first) {
+defun($h_IActiveActivity_show_prompt) {
+  if ($y_IActiveActivity_show_prompt_is_first) {
     // First cycle, wait 1024 secs or until next
     $y_kernel_poll_infinite = false;
     if ($i_kernel_poll_duration_ms > 1024)
       $i_kernel_poll_duration_ms = 1024;
-    $y_IActive_Activity_show_prompt_is_first = false;
+    $y_IActiveActivity_show_prompt_is_first = false;
     return;
   } else {
     // Second cycle; update echo area and remove hook
     $F_Workspace_update_echo_area(0, $o_Activity_workspace);
     del_hook(&$h_run_tasks, HOOK_MAIN,
-             $u_IActive_Activity, $o_IActive_Activity);
+             $u_IActiveActivity, $o_IActiveActivity);
   }
 }
 
 /*
-  SYMBOL: $f_IActive_Activity_abort
+  SYMBOL: $f_IActiveActivity_abort
     Marks the Activity as aborted, then calls $m_destroy().
  */
-defun($h_IActive_Activity_abort) {
+defun($h_IActiveActivity_abort) {
   $y_Activity_abort = true;
   $m_destroy();
 }
 
 /*
-  SYMBOL: $c_WChar_IArg
+  SYMBOL: $c_WCharIArg
     Activity which reads a single non-control character from the user.
  */
-subclass($c_IArg, $c_WChar_IArg)
-defun($h_WChar_IArg) {
-  $H_IArg_activate = &$h_WChar_IActive;
+subclass($c_IArg, $c_WCharIArg)
+defun($h_WCharIArg) {
+  $H_IArg_activate = &$h_WCharIActive;
 }
 
 void interactive_z(wchar_t* dst, wstring prompt) {
-  object iarg = $c_WChar_IArg($p_IArg_destination = dst,
+  object iarg = $c_WCharIArg($p_IArg_destination = dst,
                               $w_IArg_name = prompt);
   dynar_push_o($ao_Interactive_arguments, iarg);
 }
 
 /*
-  SYMBOL: $c_WChar_IActive
-    IActive_Activity which reads a single non-control character from the user.
+  SYMBOL: $c_WCharIActive
+    IActiveActivity which reads a single non-control character from the user.
 
-  SYMBOL: $h_WChar_IActive_char
+  SYMBOL: $h_WCharIActive_char
     If $x_Terminal_input_value is a non-control character, writes to
     $p_IArg_destination (as a wchar_t*) and destroys the current Activity.
 
-  SYMBOL: $lp_WChar_IActive_keymap
-    Keymap for $c_WChar_IActive.
+  SYMBOL: $lp_WCharIActive_keymap
+    Keymap for $c_WCharIActive.
  */
-subclass($c_IActive_Activity, $c_WChar_IActive)
-class_keymap($c_WChar_IActive, $lp_WChar_IActive_keymap, $llp_Activity_keymap)
-defun($h_WChar_IActive_char) {
+subclass($c_IActiveActivity, $c_WCharIActive)
+class_keymap($c_WCharIActive, $lp_WCharIActive_keymap, $llp_Activity_keymap)
+defun($h_WCharIActive_char) {
   if (!is_nc_char($x_Terminal_input_value)) {
     // Not an acceptable character
     $y_key_dispatch_continue = true;
@@ -274,6 +274,6 @@ defun($h_WChar_IActive_char) {
 }
 
 ATSTART(ANONYMOUS, STATIC_INITIALISATION_PRIORITY) {
-  bind_kp($lp_WChar_IActive_keymap, $u_ground, KEYBINDING_DEFAULT, NULL,
-          $f_WChar_IActive_char);
+  bind_kp($lp_WCharIActive_keymap, $u_ground, KEYBINDING_DEFAULT, NULL,
+          $f_WCharIActive_char);
 }

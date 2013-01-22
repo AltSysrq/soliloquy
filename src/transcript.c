@@ -74,7 +74,7 @@ STATIC_INIT_TO($i_Transcript_truncation_amt, 1024)
 
   SYMBOL: $y_Transcript_next_group_colour
     Toggled every time an output group is appended. Used to colour
-    Rendered_Line metadata to allow to easily distinguish output groups.
+    RenderedLine metadata to allow to easily distinguish output groups.
  */
 defun($h_Transcript) {
   $i_Transcript_line_ref_offset = 0;
@@ -93,7 +93,7 @@ defun($h_Transcript) {
     groups.
 
   SYMBOL: $lo_Transcript_output
-    A list of Rendered_Line objects. The lines to append to the Transcript, in
+    A list of RenderedLine objects. The lines to append to the Transcript, in
     a call to $f_Transcript_append or $f_Transcript_group. Will be NULLed after
     those calls.
  */
@@ -127,7 +127,7 @@ STATIC_INIT_TO($i_Transcript_odd_group_meta_highlight_face,
 /*
   SYMBOL: $f_Transcript_group
     Like $f_Transcript_append, but handles the text as a group. Highlighting
-    will be applied to the metadata (by cloning the Rendered_Lines before
+    will be applied to the metadata (by cloning the RenderedLines before
     appending), and a reference to the group added to
     $ai_Transcript_output_groups.
  */
@@ -145,12 +145,12 @@ defun($h_Transcript_group) {
     map_o($lo_Transcript_output,
           lambda((object o), ({
                 mqstring new_meta = gcalloc($i_line_meta_width+1);
-                memcpy(new_meta, $(o, $q_Rendered_Line_meta),
+                memcpy(new_meta, $(o, $q_RenderedLine_meta),
                        sizeof(qchar)*$i_line_meta_width);
                 apply_face_arr(group_face, new_meta, $i_line_meta_width);
-                $c_Rendered_Line($q_Rendered_Line_body =
-                                   $(o, $q_Rendered_Line_body),
-                                 $q_Rendered_Line_meta = new_meta);
+                $c_RenderedLine($q_RenderedLine_body =
+                                   $(o, $q_RenderedLine_body),
+                                 $q_RenderedLine_meta = new_meta);
               })));
 
   // Add this group to the group array
