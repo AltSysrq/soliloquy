@@ -91,12 +91,12 @@ void invoke_interactive(object this) {
   SYMBOL: $u_continuation
     Identifies a hook which triggers some type of continuation.
 
-  SYMBOL: $y_Activity_abort
+  SYMBOL: $y_IArg_abort
     If set by an Interactive-supporting Activity, the Interactive call it is a
     part of will be aborted when the Activity is destroyed.
  */
 defun($h_invoke_interactive) {
-  if ($y_Activity_abort) return;
+  if ($y_IArg_abort) return;
   if ($i_Interactive_ix == $ao_Interactive_arguments->len) {
     // We have all arguments, call the actual function
     invoke_hook(&$h_Interactive_bound);
@@ -173,7 +173,7 @@ defun($h_IActiveActivity_get_echo_area_meta) {
     Marks the Activity as aborted, then calls $m_destroy().
  */
 defun($h_IActiveActivity_abort) {
-  $y_Activity_abort = true;
+  $y_IArg_abort = true;
   $m_destroy();
 }
 

@@ -75,6 +75,11 @@
   linkage void name(void)
 
 /**
+ * Defines a function whose body is run at static initialisation time.
+ */
+#define ATSINIT ATSTART(ANONYMOUS, STATIC_INITIALISATION_PRIORITY)
+
+/**
  * Results in a symbol unique to the given line of the given compilation
  * unit. This is not guaranteed to be unique across compilation units, so it
  * must be used only with local or static scope.
