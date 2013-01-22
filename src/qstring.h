@@ -125,7 +125,7 @@ static inline wchar_t qchrtowchr(qchar ch) {
 /**
  * Returns the length, in characters, of the given qstring.
  */
-size_t qstrlen(const qchar*);
+size_t qstrlen(const qchar*) __attribute__((pure));
 /**
  * Returns a mutable copy of the given qstring.
  */
@@ -142,7 +142,7 @@ wchar_t* wstrdup(const wchar_t*) __attribute__((malloc));
  * formatting. Returns NULL if not found, or a pointer to the first such
  * character otherwise.
  */
-qchar* qstrchr(const qchar*, qchar);
+qchar* qstrchr(const qchar*, qchar) __attribute__((pure));
 /**
  * Like strlcpy(), but for qstrings.
  */
@@ -185,14 +185,14 @@ wchar_t* wstrap(const wchar_t*, const wchar_t*);
  * Returns whether the given character is a non-control character, taking into
  * account the existence of virtual key non-characters.
  */
-bool is_nc_char(qchar);
+bool is_nc_char(qchar ch) __attribute__((pure));
 
 /**
  * Returns whether the given pair of characters constitute a word boundary;
  * that is, it returns true if the second parameter is the beginning of a
  * logical word, given the character that precedes it.
  */
-bool is_word_boundary(qchar,qchar);
+bool is_word_boundary(qchar,qchar) __attribute__((pure));
 
 /**
  * The empty qstring.
