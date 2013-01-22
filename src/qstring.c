@@ -128,6 +128,47 @@ size_t wstrlcat(mwstring dstbase, wstring src, size_t maxsz) {
   return len + (dst-dstbase);
 }
 
+mqstring qstrap(qstring a, qstring b) {
+  size_t alen = qstrlen(a), blen = qstrlen(b);
+  mqstring dst = gcalloc(sizeof(qchar)*(alen+blen+1));
+  memcpy(dst, a, sizeof(qchar)*alen);
+  memcpy(dst+alen, b, sizeof(qchar)*blen);
+  //Final qchar was initialised to zero by gcalloc().
+  return dst;
+}
+
+mwstring wstrap(wstring a, wstring b) {
+  size_t alen = wcslen(a), blen = wcslen(b);
+  mwstring dst = gcalloc(sizeof(wchar_t)*(alen+blen+1));
+  memcpy(dst, a, sizeof(wchar_t)*alen);
+  memcpy(dst+alen, b, sizeof(wchar_t)*blen);
+  return dst;
+}
+
+mqstring qstrap3(qstring a, qstring b, qstring c) {
+  qstring v[3];
+  v[0] = a;
+  v[1] = b;
+  v[2] = c;
+  return qstrapv(v, 3);
+}
+
+mqstring qstrapv(const qstring* v, unsigned cnt) {
+  size_t vlen[cnt];
+  size_t len = 0;
+  for (unsigned i = 0; i < cnt; ++i)
+    len += vlen[i] = qstrlen(v[i]);
+
+  mqstring dst = gcalloc(sizeof(qchar)*(len + 1));
+  mqstring d = dst;
+  for (unsigned i = 0; i < cnt; ++i) {
+    memcpy(d, v[i], vlen[i]*sizeof(qchar));
+    d += vlen[i];
+  }
+
+  return dst;
+}
+
 bool is_nc_char(qchar q) {
   if (q & (1<<31)) return false;
   if (q < L' ') return false;

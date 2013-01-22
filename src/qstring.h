@@ -162,6 +162,26 @@ size_t wstrlcpy(wchar_t* dst, const wchar_t* src, size_t sz);
 size_t wstrlcat(wchar_t* dst, const wchar_t* src, size_t sz);
 
 /**
+ * Concatenates the given qstrings into a new qstring.
+ */
+qchar* qstrap(const qchar*, const qchar*);
+
+/**
+ * Concatenates the three given qstrings into a new qstring.
+ */
+qchar* qstrap3(const qchar*, const qchar*, const qchar*);
+
+/**
+ * Concatenates the given qstrings into a new qstring.
+ */
+qchar* qstrapv(const qchar*const*, unsigned count);
+
+/**
+ * Concatenates the given wstrings into a new wstring.
+ */
+wchar_t* wstrap(const wchar_t*, const wchar_t*);
+
+/**
  * Returns whether the given character is a non-control character, taking into
  * account the existence of virtual key non-characters.
  */

@@ -179,14 +179,9 @@ defun($h_IActive_Activity) {
     Adds the prompt for this IActive_Activity to the meta string.
  */
 defun($h_IActive_Activity_get_echo_area_meta) {
-  size_t len =
-    (wcslen($w_IArg_name) + qstrlen($q_Workspace_echo_area_meta) + 2);
-  mqstring result = gcalloc(len*sizeof(qchar));
-  qstrlcpy(result, $q_Workspace_echo_area_meta, len);
-  result[qstrlen($q_Workspace_echo_area_meta)] = L':';
-  result[qstrlen($q_Workspace_echo_area_meta)+1] = 0;
-  qstrlcat(result, $q_IActive_Activity_name, len);
-  $q_Workspace_echo_area_meta = result;
+  qchar separator[2] = {L':', 0};
+  $q_Workspace_echo_area_meta = qstrap3(
+    $q_Workspace_echo_area_meta, separator, $q_IActive_Activity_name);
 }
 
 /*
