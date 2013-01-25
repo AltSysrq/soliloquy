@@ -84,6 +84,7 @@ ATSTART(initalise_keyboard_layouts, STATIC_INITIALISATION_PRIORITY-1) {
 
 // Some aliases people will expect
 STATIC_INIT_TO($$w_layout_dvorak, $$w_layout_dvorak_m)
+STATIC_INIT_TO($$w_layout_dvorak_classic, $$w_layoud_dvorak_c)
 STATIC_INIT_TO($$w_layout_neo, $$w_layout_neo2)
 STATIC_INIT_TO($$w_layout_qwertz, $$w_layout_qwertz_de)
 STATIC_INIT_TO($$w_layout_azerty, $$w_layout_azerty_fr)
