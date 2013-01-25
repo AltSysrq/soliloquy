@@ -723,3 +723,18 @@ void tx_pop_handler(void) {
 
   lpop_p(tx_current->rollback_handlers);
 }
+
+void tx_write_through_impl(struct symbol_header* sym) {
+  if (!sym->owner_stack) return;
+
+  // Copy into each version of the object.
+  // If there exists a version of the object which does not have the symbol
+  // implanted, this can be identified by the symbol's offset being beyond the
+  // object's data end. If this is encountered, we stop, since all previous
+  // versions will have the same property.
+  for (object curr = sym->owner_stack->owner;
+       curr && sym->owner_stack->offset < curr->data_end;
+       curr = curr->tx_backup)
+    memcpy(curr->data + sym->owner_stack->offset,
+           sym->payload, sym->size);
+}
