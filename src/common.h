@@ -484,7 +484,7 @@ void tx_push_handler(void (*)(void));
  * Pops the handler pushed to the rollback handler stack for the current
  * transaction by the corresponding call to tx_push_handler().
  */
-void tx_pop_handler();
+void tx_pop_handler(void);
 
 /**
  * Propagates the current value of the given symbol within the current context

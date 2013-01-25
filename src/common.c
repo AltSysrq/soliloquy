@@ -711,3 +711,15 @@ void tx_rollback(void) {
   //Should never get here
   abort();
 }
+
+void tx_push_handler(void (*handler)(void)) {
+  if (!tx_current) return;
+
+  lpush_p(tx_current->rollback_handlers, handler);
+}
+
+void tx_pop_handler(void) {
+  if (!tx_current) return;
+
+  lpop_p(tx_current->rollback_handlers);
+}
