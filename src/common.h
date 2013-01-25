@@ -426,6 +426,75 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
              NULL);                                             \
   }
 
+/**
+ * Begins a transaction. A transaction functions as an error-handling structure
+ * similar to exception handling, except that rollback is automatically
+ * performed, so most code running within a transaction does not need to worry
+ * about error handling. (This is in contrast to exceptions, where it is easy
+ * to not worry about error handling, and even easier to leave the program in
+ * an inconsistent state when something is thrown.)
+ *
+ * A transaction is associated with a rollback-exit function, the only
+ * parameter to tx_start(). This function MUST NOT RETURN. It is called after
+ * rollback completes.
+ *
+ * Make sure you commit, at latest, before exiting the context in which you
+ * began the context. If rollback occurs outside of the context where the
+ * transaction started, the program will explode.
+ */
+void tx_start(void (*)(void));
+/**
+ * Commits the current transaction. This may be called in any context; it
+ * merely discards the information for the transaction. However, you generally
+ * want to commit in the same context where you start the transaction for
+ * reasons explained in the documentation for tx_start.
+ */
+void tx_commit(void);
+/**
+ * Rolls the current transaction back. This will invoke rollback handlers in
+ * the reverse order they were pushed, then revert the state of the world to
+ * what it was when the corresponding tx_start() was called, then exits to the
+ * exit function given to tx_start.
+ *
+ * This does not return.
+ */
+void tx_rollback(void) __attribute__((noreturn));
+
+/**
+ * Pushes a rollback handler for the current transaction. If rollback occurs
+ * while this is pushed, the given function will be called before rollback.
+ *
+ * Some precautions must be taken in the handler function. The context in which
+ * it is called is undefined; if you need access to any symbols, you should
+ * save references to the objects you need in local scope in conjunction with
+ * nested functions.
+ *
+ * It is safe to push/pop new contexts during the execution of the handler.
+ *
+ * At the time the handler is called, it has already been popped.
+ *
+ * Normally, the handler should return. It MAY instead not return, though
+ * typically you still need to continue rollback by calling tx_rollback() at
+ * some point if you do so, since you have no idea what context you're running
+ * in.
+ */
+void tx_push_handler(void (*)(void));
+
+/**
+ * Pops the handler pushed to the rollback handler stack for the current
+ * transaction by the corresponding call to tx_push_handler().
+ */
+void tx_pop_handler();
+
+/**
+ * Propagates the current value of the given symbol within the current context
+ * through all transactions.
+ *
+ * This should be used for values which reflect properties of the outside
+ * world, such as details within files.
+ */
+#define tx_write_through(sym) tx_write_through_impl(&_GLUE(sym,$head))
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Mostly internal details below. You need not concern yourself with these.///
 ///////////////////////////////////////////////////////////////////////////////
@@ -511,6 +580,8 @@ static inline bool control$$(object obj, object* ctl) {
     return false;
   }
 }
+
+void tx_write_through_impl(struct symbol_header*);
 
 #define SIZEALIGN(x) (((x)+sizeof(void*)-1)/sizeof(void*)*sizeof(void*))
 

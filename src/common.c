@@ -37,6 +37,10 @@
 
 #include <assert.h>
 
+// Formerly known as $$ao_evisceration_stack
+// (This comment necessary for the dynar_o template)
+static dynar_o evisceration_stack;
+
 const char* gcstrdup(const char* str) {
   size_t len = strlen(str)+1;
   char* dst = gcalloc(len);
@@ -193,7 +197,7 @@ void object_eviscerate(object this) {
 
   ++this->evisceration_count;
 
-  dynar_push_o($$ao_evisceration_stack, this);
+  dynar_push_o(evisceration_stack, this);
   for (unsigned i = 0; i < this->implants->table_size; ++i)
     if (this->implants->entries[i].sym)
       symbol_push_ownership(this, &this->implants->entries[i]);
@@ -224,7 +228,7 @@ static void symbol_push_ownership(object this,
 void object_reembowel(void) {
   object this;
   do {
-    this = dynar_pop_o($$ao_evisceration_stack);
+    this = dynar_pop_o(evisceration_stack);
     for (unsigned i = 0; i < this->implants->table_size; ++i)
       if (this->implants->entries[i].sym)
         symbol_pop_ownership(this, &this->implants->entries[i]);
@@ -252,7 +256,7 @@ static void symbol_pop_ownership(object this,
 }
 
 object object_current(void) {
-  return dynar_top_o($$ao_evisceration_stack);
+  return dynar_top_o(evisceration_stack);
 }
 
 static unsigned object_find_hashtable_entry(object,
@@ -318,7 +322,7 @@ void object_implant(struct symbol_header* sym,
        * - If any instance of an object in the evisceration stack occurs in the
        *   ownership stack, all of them do.
        */
-      unsigned estack = $$ao_evisceration_stack->len-2;
+      unsigned estack = evisceration_stack->len-2;
       struct symbol_owner_stack* ostack = sym->owner_stack;
       /* To make the state consistent, examine pairs from the two stacks with
        * the following rules:
@@ -328,8 +332,8 @@ void object_implant(struct symbol_header* sym,
        *   ownership frame into the ownership stack after the current and move
        *   to it.
        */
-      while (estack < $$ao_evisceration_stack->len /* will wrap around */) {
-        object that = $$ao_evisceration_stack->v[estack--];
+      while (estack < evisceration_stack->len /* will wrap around */) {
+        object that = evisceration_stack->v[estack--];
         if (ostack->next && that == ostack->next->owner) {
           assert(that != this);
           ostack = ostack->next;
@@ -587,8 +591,123 @@ void add_symbol_to_domain(struct symbol_header* sym,
 }
 
 ATSTART(eviscerate_root_object, ROOT_OBJECT_EVISCERATION_PRIORITY) {
-  $$ao_evisceration_stack = dynar_new_o();
+  evisceration_stack = dynar_new_o();
   $o_root = object_new(NULL);
   object_eviscerate($o_root);
 }
 
+// So we get the list_o and list_p templates: $$lo_unused $$lp_unused
+
+typedef struct transaction {
+  //The unique identifier for this transaction
+  unsigned id;
+  //The length of the evisceration stack when the tx started
+  unsigned evisceration_depth;
+  //Objects which have been touched (forked) by this transaction.
+  list_o objects_touched;
+  //A list of void (*)(void) to invoke on (before) rollback
+  list_p rollback_handlers;
+  //Function to call to exit the transaction on rollback
+  void (*exit_function)(void);
+
+  struct transaction* next;
+} transaction;
+
+static unsigned next_tx_id;
+static transaction* tx_current;
+
+static void tx_fork_object(object this) {
+  if (!tx_current || this->tx_id == tx_current->id) return;
+
+  // Write all current values back into the object
+  for (unsigned i = 0; i < this->implants->table_size; ++i) {
+    if (this->implants->entries[i].sym) {
+      if (this->implants->entries[i].sym->owner_stack &&
+          this->implants->entries[i].sym->owner_stack->owner ==
+            this) {
+        memcpy(this->data + this->implants->entries[i].offset,
+               this->implants->entries[i].sym->payload,
+               this->implants->entries[i].sym->size);
+      }
+    }
+  }
+
+  object new = object_clone(this);
+  // Populate data destroyed by object_clone
+  new->evisceration_count = this->evisceration_count;
+  new->tx_id = this->tx_id;
+  new->tx_backup = this->tx_backup;
+
+  this->tx_backup = new;
+  this->tx_id = tx_current->id;
+
+  lpush_o(tx_current->objects_touched, this);
+}
+
+void tx_start(void (*exit_function)(void)) {
+  transaction tx = {
+    .id = ++next_tx_id,
+    .evisceration_depth = evisceration_stack->len,
+    .objects_touched = NULL,
+    .rollback_handlers = NULL,
+    .exit_function = exit_function,
+    .next = tx_current,
+  };
+
+  tx_current = newdup(&tx);
+
+  // Touch all currently-eviscerated objects
+  for (unsigned i = evisceration_stack->len-1;
+       i < evisceration_stack->len; --i)
+    tx_fork_object(evisceration_stack->v[i]);
+}
+
+void tx_commit(void) {
+  // For each object touched, discard its backup and move it to the previous
+  // tx_id
+  for (list_o curr = tx_current->objects_touched; curr; curr = curr->cdr) {
+    object this = curr->car;
+    this->tx_id = this->tx_backup->tx_id;
+    this->tx_backup = this->tx_backup->tx_backup;
+  }
+
+  tx_current = tx_current->next;
+}
+
+void tx_rollback(void) {
+  // Run rollback handlers
+  while (tx_current->rollback_handlers) {
+    void (*h)(void) = tx_current->rollback_handlers->car;
+    tx_current->rollback_handlers = tx_current->rollback_handlers->cdr;
+    h();
+  }
+
+  // Revert touched objects
+  for (list_o curr = tx_current->objects_touched; curr; curr = curr->cdr) {
+    object this = curr->car;
+    memcpy(this, this->tx_backup, sizeof(*this));
+  }
+
+  //Revert all symbols to their pre-transaction values
+  for (unsigned i = 0; i < $o_root->implants->table_size; ++i) {
+    if ($o_root->implants->entries[i].sym &&
+        $o_root->implants->entries[i].sym->owner_stack) {
+      memcpy($o_root->implants->entries[i].sym->payload,
+             $o_root->implants->entries[i].sym->owner_stack->owner->data +
+               $o_root->implants->entries[i].sym->owner_stack->offset,
+             $o_root->implants->entries[i].sym->size);
+    }
+  }
+
+  //Restore evisceration stack
+  while (evisceration_stack->len > tx_current->evisceration_depth)
+    object_reembowel();
+
+  //Exit transaction
+  void (*exit_function)(void) = tx_current->exit_function;
+  tx_current = tx_current->next;
+  exit_function();
+
+  //Should never get here
+  abort();
+}
