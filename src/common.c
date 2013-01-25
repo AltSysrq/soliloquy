@@ -66,6 +66,14 @@ struct object_t {
   object parent;
   struct object_implant_hashtable* implants;
   unsigned evisceration_count;
+  /* When an object is touched by a transaction, it is cloned and the backup
+   * stored in tx_backup. tx_id records the ID of the transaction that caused
+   * this. If tx_backup is NULL, the object is currently untouched by
+   * transactions.
+   */
+  unsigned tx_id;
+  object tx_backup;
+  /* Stored data and data bookkeeping */
   unsigned data_end, data_size;
   unsigned char* data;
 };
@@ -142,6 +150,9 @@ object object_clone(object that) {
   // The clone is not currently on the stack, regardless of the state of the
   // original object
   this->evisceration_count = 0;
+  // Similarly, it is not affected by the current transaction
+  this->tx_id = 0;
+  this->tx_backup = NULL;
   return this;
 }
 
@@ -247,9 +258,17 @@ object object_current(void) {
 static unsigned object_find_hashtable_entry(object,
                                             struct symbol_header*);
 static void object_expand_hashtable(object);
+static struct object_implant_hashtable*
+clone_implants(struct object_implant_hashtable*);
+
 void object_implant(struct symbol_header* sym,
                     enum implantation_type implant_type) {
   object this = object_current();
+  if (this->tx_backup && this->implants == this->tx_backup->implants) {
+    // The transaction backup must keep its implantation table, so create a new
+    // one for the fork.
+    this->implants = clone_implants(this->implants);
+  }
   switch (implant_type) {
   case ImplantDomain: {
     struct symbol_domain* dom = *(struct symbol_domain**)sym->payload;
@@ -326,6 +345,16 @@ void object_implant(struct symbol_header* sym,
     }
   } break;
   }
+}
+
+static struct object_implant_hashtable*
+clone_implants(struct object_implant_hashtable* src) {
+  size_t size =
+    sizeof(struct object_implant_hashtable) +
+    src->table_size * sizeof(struct object_implant_hashtable_entry);
+  struct object_implant_hashtable* new = gcalloc(size);
+  memcpy(new, src, size);
+  return new;
 }
 
 static unsigned object_find_hashtable_entry(object this,
