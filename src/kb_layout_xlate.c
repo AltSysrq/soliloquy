@@ -62,8 +62,8 @@ ATSTART(initalise_keyboard_layouts, STATIC_INITIALISATION_PRIORITY-1) {
   // FR AZERTY
   $$w_layout_azerty_fr    = L"azertyuiopqsdfghjklmwxcvbn,;:!"
                              "AZERTYUIOPQSDFGHJKLMWXCVBN?./§";
-  // US Dvorak Traditional
-  $$w_layout_dvorak_t     = L"/,.pyfgcrlaoeuidhtns;qjkxbmwvz"
+  // US Dvorak Classic
+  $$w_layout_dvorak_c     = L"/,.pyfgcrlaoeuidhtns;qjkxbmwvz"
                              "?<>PYFGCRLAOEUIDHTNS:QJKXBMWVZ";
   // US Dvorak Modern
   $$w_layoud_dvorak_m     = L"',.pyfgcrlaoeuidhtns;qjkxbmwvz"
