@@ -299,7 +299,8 @@ static size_t sizeloc_discard;
 /*
   SYMBOL: $f_FileBuffer
     Tracks the contents and undo/redo of a "file buffer", which may be based in
-    memory.
+    memory. The constructor will roll the current transaction back if
+    construction fails, after calling $f_FileBuffer_destroy().
 
   SYMBOL: $w_FileBuffer_name
     The base filename for the file buffer, or logical name if
@@ -308,13 +309,6 @@ static size_t sizeloc_discard;
   SYMBOL: $y_FileBuffer_is_memory_based
     If true, the file represented by this FileBuffer is stored in memory
     instead of on-disk.
-
-  SYMBOL: $i_FileBuffer_error
-    Indicates the current error status of this FileBuffer. A value of zero
-    indicates that the buffer is OK. Any other value indicates an error;
-    positive values reflect values stored in errno; -1 indicates an unexpected
-    problem with the working file. The only valid operation on a FileBuffer in
-    the error state is to destroy it.
 
   SYMBOL: $p_FileBuffer_file
     A FILE* which backs this FileBuffer.
@@ -364,7 +358,6 @@ static size_t sizeloc_discard;
  */
 defun($h_FileBuffer) {
   $I_FileBuffer_edit_serial_number = 0;
-  $i_FileBuffer_error = 0;
 
   if ($y_FileBuffer_is_memory_based) {
     /* Do this later 
@@ -377,10 +370,11 @@ defun($h_FileBuffer) {
     exit(1);
   }
 
-  $y_FileBuffer_ok = !!$p_FileBuffer_filebacking;
-  if (!$y_FileBuffer_ok) {
-    $i_FileBuffer_error = errno;
-    return;
+  if (!$p_FileBuffer_file) {
+    $m_destroy();
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = strerror(errno);
+    tx_rollback();
   }
 
   // Write header identifying file type, which also means that 0 is never a
@@ -417,9 +411,9 @@ defun($h_FileBuffer_destroy) {
 
 defun($h_FileBuffer_read_entity) {
   if (-1 == fseek($p_FileBuffer_file, $I_FileBuffer_curr_offset, SEEK_SET)) {
-    $y_FileBuffer_ok = false;
-    $i_FileBuffer_error = errno;
-    return;
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = strerror(errno);
+    tx_rollback();
   }
 
   // Read the links in
@@ -431,9 +425,9 @@ defun($h_FileBuffer_read_entity) {
                   &$I_FileBuffer_redo_offset,
                   &$I_FileBuffer_redo_serial_number)) {
     // Something went wrong
-    $y_FileBuffer_ok = false;
-    $i_FileBuffer_error = -1;
-    return;
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = "Corrupted working file";
+    tx_rollback();
   }
 
   // Count the number of characters in the entity
@@ -447,13 +441,10 @@ defun($h_FileBuffer_read_entity) {
 
   if (curr == WEOF) {
     // Unexpected end of file or error
-    $y_FileBuffer_ok = false;
-    if (ferror($p_FileBuffer_file))
-      $i_FileBuffer_error = errno;
-    else
-      $i_FileBuffer_error = -1;
-
-    return;
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = ferror($p_FileBuffer_file)?
+      strerror(errno) : "Truncated working file";
+    tx_rollback();
   }
 
   // Size includes the term NUL at this point, since the terminating \n was
@@ -461,22 +452,19 @@ defun($h_FileBuffer_read_entity) {
   mwstring dst = gcalloc(size);
   $w_FileBuffer_entity_contents = dst;
   if (-1 == fseek($p_FileBuffer_file, contents_start, SEEK_SET)) {
-    $y_FileBuffer_ok = false;
-    $i_FileBuffer_error = errno;
-    return;
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = strerror(errno);
+    tx_rollback();
   }
 
   for (unsigned i = 0; i < size-1; ++i) {
     curr = fgetwc($p_FileBuffer_file);
     if (curr == WEOF) {
       // Error (or someone truncated the file)
-      $y_FileBuffer_ok = false;
-      if (ferror($p_FileBuffer_file)) {
-        $i_FileBuffer_error = errno;
-      } else {
-        $i_FileBuffer_error = -1;
-      }
-      return;
+      $v_rollback_type = $u_FileBuffer;
+      $s_rollback_reason = ferror($p_FileBuffer_file)?
+        strerror(errno) : "Truncated working file";
+      tx_rollback();
     }
 
     dst[i] = curr;
