@@ -76,7 +76,10 @@ defun($$h_quit) {
 }
 
 defun($$h_die) {
+  static char reason[64];
   $v_rollback_type = $$u_user_triggered;
-  $s_rollback_reason = "User-triggered";
+  sprintf(reason, "User triggered: %d",
+          $$i_die_ix++);
+  $s_rollback_reason = reason;
   tx_rollback();
 }
