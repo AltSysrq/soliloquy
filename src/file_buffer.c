@@ -157,20 +157,21 @@ defun($h_FileBufferCursor_retreat) {
 /*
   SYMBOL: $f_FileBufferCursor_read
     Reads the contents of the line the cursor currently refers to, setting
-    $w_FileBuffer_line.
+    $w_FileBufferCursor_line.
 
-  SYMBOL: $w_FileBuffer_line
+  SYMBOL: $w_FileBufferCursor_line
     The current or new contents of the line pointed to by the cursor. Updated
     by calls to $f_FileBufferCursor_read.
  */
 defun($h_FileBufferCursor_read) {
   $w_FileBufferCursor_line =
-    $M_read($w_FileBuffer_line, $o_FileBufferCursor_buffer);
+    $M_read($w_FileBuffer_entity_contents, $o_FileBufferCursor_buffer);
 }
 
 /*
   SYMBOL: $f_FileBufferCursor_write
-    Writes
+    Writes the contents of $w_FileBufferCursor_line to the line pointed to by
+    this cursor, replacing its contents.
  */
 defun($h_FileBufferCursor_write) {
   $M_write(0, $o_FileBufferCursor_buffer);
@@ -181,6 +182,11 @@ defun($h_FileBufferCursor_write) {
     Inserts a new line before the line this cursor refers to, whose content
     will be $w_FileBufferCursor_new_line. This cursor remains here (though its
     line number will be adjusted as necessary).
+
+  SYMBOL: $w_FileBufferCursor_new_line
+    The contents of the new line to insert before/after the line pointed to by
+    the cursor in $f_FileBufferCursor_ins_before and
+    $f_FileBufferCursor_ins_after.
  */
 defun($h_FileBufferCursor_ins_before) {
   unsigned after = $I_FileBufferCursor_offset;
@@ -409,6 +415,11 @@ defun($h_FileBuffer_destroy) {
     free($p_FileBuffer_filebacking);
 }
 
+/*
+  SYMBOL: $f_FileBuffer_read_entity
+    Attempts to read the entity at $I_FileBuffer_curr_offset into the entity
+    symbols. Rolls the current transaction back if this fails for any reason.
+ */
 defun($h_FileBuffer_read_entity) {
   if (-1 == fseek($p_FileBuffer_file, $I_FileBuffer_curr_offset, SEEK_SET)) {
     $v_rollback_type = $u_FileBuffer;
