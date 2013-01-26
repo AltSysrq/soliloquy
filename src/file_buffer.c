@@ -529,3 +529,26 @@ defun($h_FileBuffer_write_entity) {
     }
   }
 }
+
+/*
+  SYMBOL: $f_FileBuffer_write_root_pointer
+    Creates or updates the root pointer within the file, and commits the new
+    value of $I_FileBuffer_root_offset. If anything goes wrong, the current
+    transaction is rolled back.
+ */
+defun($h_FileBuffer_write_root_pointer) {
+  if (-1 == fseek($p_FileBuffer_file,
+                  $I_FileBuffer_root_pointer_offset, SEEK_SET)) {
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = strerror(errno);
+    tx_rollback();
+  }
+
+  if (-1 == fprintf($p_FileBuffer_file, "%08X\n", $I_FileBuffer_root_offset)) {
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = strerror(errno);
+    tx_rollback();
+  }
+
+  tx_write_through($I_FileBuffer_root_offset);
+}
