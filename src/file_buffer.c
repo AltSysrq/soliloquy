@@ -475,15 +475,16 @@ defun($h_FileBuffer_read_entity) {
   SYMBOL: $f_FileBuffer_write_entity
     Writes an entity to the offset specified by $I_FileBuffer_curr_offset. All
     of the I symbols set by $f_FileBuffer_read_entity must be set
-    appropriately. An offset of 0 means the end of the file. If
+    appropriately. An offset of 0 means the end of the file; $I_FileBuffer_curr
+    offset will be set to the offset of the new entity. If
     $w_FileBuffer_entity_contents is non-NULL, it will be written as well. Note
     that it only makes sense to do this when appending
-    ($I_FileBuffer_curr_offset == 0), since the string length is not fixed.
-    If anything goes wrong, the current transaction is rolled back. Note that
-    this could result in partial changes being written to the file, though the
-    only non-permanent failure in this case is running out of disk space, so
-    calls to this function should be ordered to eliminate or minimise the
-    chance of actual inconsistency.
+    ($I_FileBuffer_curr_offset == 0), since the string length is not fixed.  If
+    anything goes wrong, the current transaction is rolled back. Note that this
+    could result in partial changes being written to the file, though the only
+    non-permanent failure in this case is running out of disk space, so calls
+    to this function should be ordered to eliminate or minimise the chance of
+    actual inconsistency.
  */
 defun($h_FileBuffer_write_entity) {
   int ret;
@@ -545,7 +546,57 @@ defun($h_FileBuffer_next_undo) {
     Called within the context of a FileBufferCursor. Calls
     $f_FileBuffer_read_entity at the cursor's current position.
  */
-defun($f_FileBuffer_read_cursor) {
+defun($h_FileBuffer_read_cursor) {
   $I_FileBuffer_curr_offset = $I_FileBufferCursor_offset;
   $m_read_entity();
+}
+
+/*
+  SYMBOL: $f_FileBuffer_replace_line
+    Called within the context of a FileBufferCursor. Replaces the contents of
+    the line at $I_FileBufferCursor_offset with $w_FileBufferCursor_line.
+ */
+defun($h_FileBuffer_replace_line) {
+  unsigned old_line_offset = $I_FileBufferCursor_offset;
+  $I_FileBuffer_curr_offset = old_line_offset;
+  $m_read_entity();
+
+  unsigned prev_line = $I_FileBuffer_prev_offset;
+  unsigned next_line = $I_FileBuffer_next_offset;
+
+  // Write the new entity
+  $I_FileBuffer_curr_offset = 0;
+  $I_FileBuffer_undo_offset = old_line_offset;
+  $I_FileBuffer_redo_offset = 0;
+  $I_FileBuffer_undo_serial_number = $I_FileBuffer_edit_serial_number;
+  $w_FileBuffer_entity_contents = $w_FileBufferCursor_line;
+  $m_write_entity();
+
+  unsigned new_offset = $I_FileBuffer_curr_offset;
+
+  //Link previous and next lines to the new entity
+  $I_FileBuffer_curr_offset = prev_line;
+  $m_read_entity();
+  $I_FileBuffer_next_offset = new_offset;
+  $w_FileBuffer_entity_contents = NULL;
+  $m_write_entity();
+
+  $I_FileBuffer_curr_offset = next_line;
+  $m_read_entity();
+  $I_FileBuffer_prev_offset = new_offset;
+  $w_FileBuffer_entity_contents = NULL;
+  $m_write_entity();
+
+  //If this was the root, update the root pointer
+  if (old_line_offset == $I_FileBuffer_root_offset) {
+    $I_FileBuffer_root_offset = new_offset;
+    $m_write_root_pointer();
+  }
+
+  //Unlink the old line
+  $I_FileBuffer_curr_offset = old_line_offset;
+  $m_read_entity();
+  $I_FileBuffer_prev_offset = $I_FileBuffer_next_offset = 0;
+  $w_FileBuffer_entity_contents = NULL;
+  $m_write_entity();
 }
