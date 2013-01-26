@@ -530,3 +530,12 @@ defun($h_FileBuffer_write_root_pointer) {
 
   tx_write_through($I_FileBuffer_root_offset);
 }
+
+/*
+  SYMBOL: $f_FileBuffer_next_undo
+    Increments the undo serial number for this FileBuffer. New modifications
+    will form a separate undo group.
+ */
+defun($h_FileBuffer_next_undo) {
+  ++$I_FileBuffer_edit_serial_number;
+}
