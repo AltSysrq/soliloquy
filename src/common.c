@@ -700,8 +700,14 @@ void tx_rollback(void) {
   }
 
   //Restore evisceration stack
-  while (evisceration_stack->len > tx_current->evisceration_depth)
-    object_reembowel();
+  dynar_o old_evisceration_stack = evisceration_stack;
+  evisceration_stack = dynar_new_o();
+  for (unsigned i = 0; i < tx_current->evisceration_depth; ++i) {
+    // Eviscerate this object, unless it would be implicitly by the next object
+    if (i == tx_current->evisceration_depth-1 ||
+        !old_evisceration_stack->v[i+1]->parent)
+      object_eviscerate(old_evisceration_stack->v[i]);
+  }
 
   //Exit transaction
   void (*exit_function)(void) = tx_current->exit_function;
