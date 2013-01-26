@@ -43,6 +43,7 @@ int main(void) {
   setlocale(LC_ALL, "");
 
   bind_char($$lp_main_keymap, $u_extended, CONTROL_C, NULL, $$f_quit);
+  bind_char($$lp_main_keymap, $u_extended, CONTROL_X, $u_ground, $$f_die);
 
   if (!($$o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
                                $p_Terminal_input = stdin,
@@ -72,4 +73,10 @@ int main(void) {
 
 defun($$h_quit) {
   $y_keep_running = false;
+}
+
+defun($$h_die) {
+  $v_rollback_type = $$u_user_triggered;
+  $s_rollback_reason = "User-triggered";
+  tx_rollback();
 }
