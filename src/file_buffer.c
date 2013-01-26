@@ -436,16 +436,19 @@ defun($h_FileBuffer_read_entity) {
   }
 
   // Read the links in
-  if (6 != fscanf($p_FileBuffer_file, "%x,%x,%x,%x,%x,%x,",
+  int ret;
+  if (6 !=
+      (ret=fscanf($p_FileBuffer_file, "%x,%x,%x,%x,%x,%x,",
                   &$I_FileBuffer_prev_offset,
                   &$I_FileBuffer_next_offset,
                   &$I_FileBuffer_undo_offset,
                   &$I_FileBuffer_undo_serial_number,
                   &$I_FileBuffer_redo_offset,
-                  &$I_FileBuffer_redo_serial_number)) {
+                  &$I_FileBuffer_redo_serial_number))) {
     // Something went wrong
     $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = "Corrupted working file";
+    $s_rollback_reason =
+      (ret == -1? strerror(errno) : "Corrupted working file");
     tx_rollback();
   }
 
