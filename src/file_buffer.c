@@ -22,604 +22,155 @@
 /*
   TITLE: (Textual) File Buffer
   OVERVIEW: Efficiently manages the lines of text in a file, including undo
-    states. All information regarding the file is stored in an append-only
-    random-access file, allowing for efficient manipulation of undo/redo
-    states, etc.
+    states.
+
+  NOTES: Shared Undo Log Format
+    Undo events are stored in a semi-human-readable, line-based log file. The
+    first line is ignored, and typically holds identifying information. The
+    rest of the file consists of undo records.
+
+    An undo record starts with a line beginning with the character '@', and
+    runs until but not including the next such line, or the end of the file,
+    whichever comes first. Such lines have the format
+      @%X,%X,%X:%s
+    which records the byte offset of the previous undo record (or 0 for none),
+    the 0-based line number of the edit, the timestamp of the edit, and the
+    name of the file this applies to (or the empty string if it is the same as
+    the physically preceding record).
+
+    Following the undo record header are zero or more edit records, one per
+    line. Each edit record begins with either a '+' (insertion) or a '-', and
+    is followed by the text of the line affected. Edits are always written from
+    the perspective of performing them; the contents of the lines in both
+    directions are recorded to allow both undo and redo to operate.
  */
 
 /*
   SYMBOL: $c_FileBufferCursor
-    Maintains a reference into a FileBuffer, which is used to read, write,
-    insert, and delete lines.
-
-  SYMBOL: $I_FileBufferCursor_line_number
-    The current physical line number of this cursor within the buffer, where 1
-    is the first line. 0 indicates an invalid cursor.
-
-  SYMBOL: $I_FileBufferCursor_offset
-    The physical data offset of this cursor within the buffer.
+    Maintains a reference to a location within a FileBuffer, automatically
+    being updated as the buffer is changed, so that the same logical line is
+    referred to. $o_FileBufferCursor_buffer must be set by the caller of the
+    constructor. $I_FileBufferCursor_line_number may be set by the caller, but
+    defaults to 0 (the first line).
 
   SYMBOL: $o_FileBufferCursor_buffer
-    The FileBuffer this cursor is a member of.
+    The buffer this cursor referrs to.
 
-  SYMBOL: $v_FileBufferCursor_shunt_mode
-    Determines how the cursor behaves when the line it references is
-    deleted. This may be $u_shunt_upward, $u_shunt_downward, or $u_invalidate.
-
-  SYMBOL: $u_shunt_upward
-    When applied to $v_FileBufferCursor_shunt_mode, the cursor will move up to
-    the previous remaining line when its parent is destroyed, if possible. If
-    the top-most line of the file is also deleted, it will remain on the new
-    line 1.
-
-  SYMBOL: $u_shunt_downward
-    When applied to $v_FileBufferCursor_shunt_mode, the cursor will move down
-    to the next remaining line when its parent is destroyed, if possible. If
-    all lines to the end of the file are deleted, it will remain pointing to
-    the end of the file.
-
-  SYMBOL: $u_invalidate
-    When applied to $v_FileBufferCursor_shunt_mode, the cursor will become
-    invalid if the line it referenced is deleted. The caller must validate the
-    cursor before using it.
+  SYMBOL: $I_FileBufferCursor_line_number
+    The current 0-based line number this cursor refers to. This ranges from
+    zero to the length of the file in lines, inclusive.
  */
 defun($h_FileBufferCursor) {
-  $I_FileBufferCursor_line_number = 1;
   $$($o_FileBufferCursor_buffer) {
-    $I_FileBufferCursor_offset = $I_FileBuffer_root_offset;
     lpush_o($lo_FileBuffer_cursors, $o_FileBufferCursor);
   }
-
-  if (!$v_FileBufferCursor_shunt_mode)
-    $v_FileBufferCursor_shunt_mode = $u_shunt_upward;
 }
 
 /*
   SYMBOL: $f_FileBufferCursor_destroy
-    Releases the link between this cursor and its buffer.
+    De-registers the FileBufferCursor from its associated FileBuffer.
  */
 defun($h_FileBufferCursor_destroy) {
   $$($o_FileBufferCursor_buffer) {
-    $lo_FileBuffer_cursors = lrm_o($lo_FileBuffer_cursors, $o_FileBufferCursor);
-  }
-  $o_FileBufferCursor = NULL;
-}
-
-/*
-  SYMBOL: $f_FileBufferCursor_rewind
-    Resets this cursor to the beginning of the file. This is the only operation
-    (other than destroy) which can be performed on an invalid cursor. In any
-    case, the cursor will be valid after this call.
- */
-defun($h_FileBufferCursor_rewind) {
-  $$($o_FileBufferCursor) {
-    $I_FileBufferCursor_line_number = 1;
-    $I_FileBufferCursor_offset = $I_FileBuffer_root_offset;
+    $lo_FileBuffer_cursors = lrm_o($lo_FileBuffer_cursors,
+                                   $o_FileBufferCursor);
   }
 }
 
 /*
-  SYMBOL: $f_FileBufferCursor_eof $y_FileBufferCursor_eof
-    Queries whether this cursor is currently at the end of the file, setting
-    $y_FileBufferCursor_eof according to the result.
- */
-defun($h_FileBufferCursor_eof) {
-  $y_FileBufferCursor_eof =
-    $M_read_cursor_links(!!$I_FileBuffer_next_offset,
-                         $o_FileBufferCursor_buffer);
-}
+  SYMBOL: $c_FileBuffer
+    Manages a single file- or memory-backed, editable buffer. Memory-backed
+    buffers always have their contents stored in memory, but only
+    recently-accessed file-backed buffers keep their contents in memory. If an
+    external operation fails, it rolls the current transaction back.
 
-/*
-  SYMBOL: $f_FileBufferCursor_advance
-    Moves this FileBufferCursor forward one line. The cursor becomes invalid if
-    this moves it past the end of the file.
- */
-defun($h_FileBufferCursor_advance) {
-  if ($M_eof($y_FileBufferCursor_eof,0)) {
-    $I_FileBufferCursor_line_number = 0;
-    return;
-  }
+  SYMBOL: $p_shared_undo_log
+    A FILE* where all undo information for all FileBuffers is kept. The file
+    will be deleted when the program exits. It is opened the first time
+    $c_FileBuffer is called. Its format is described after the OVERVIEW section
+    in the src/file_buffer.c documentation.
 
-  ++$I_FileBufferCursor_line_number;
-  $I_FileBufferCursor_offset =
-    $M_read_cursor_links($I_FileBuffer_next_offset,
-                         $o_FileBufferCursor_buffer);
-}
+  SYMBOL: $s_FileBuffer_filename
+    The name (absolute path) of the file being operated on by the
+    FileBuffer. For memory-backed FileBuffers, it is not necessarily a
+    filename.
 
-/*
-  SYMBOL: $f_FileBufferCursor_sof $y_FileBufferCursor_sof
-    Queries whether this cursor is at the start of the file, setting
-    $y_FileBufferCursor_sof to indicate the result.
- */
-defun($h_FileBufferCursor_sof) {
-  $y_FileBufferCursor_sof =
-    $M_read_cursor_links(!!$I_FileBuffer_prev_offset,
-                         $o_FileBufferCursor_buffer);
-}
+  SYMBOL: $y_FileBuffer_memory_backed
+    If true, this FileBuffer is backed by memory instead of a file.
 
-/*
-  SYMBOL: $f_FileBufferCursor_retreat
-    Moves this cursor backward in the buffer by one line. If the cursor was
-    already at start of file, it becomes invalid.
- */
-defun($h_FileBufferCursor_retreat) {
-  if ($M_sof($y_FileBufferCursor_sof,0)) {
-    $I_FileBufferCursor_line_number = 0;
-    return;
-  }
+  SYMBOL: $aw_FileBuffer_contents
+    The contents of this FileBuffer. This may be NULL, indicating that the
+    contents currently reside on disk. Any operation that needs this value
+    should call $f_FileBuffer_access() to ensure that it is non-NULL and to
+    update the access time.
 
-  --$I_FileBufferCursor_line_number;
-  $I_FileBufferCursor_offset =
-    $M_read_cursor_links($I_FileBuffer_prev_offset,
-                         $o_FileBufferCursor_buffer);
-}
-
-/*
-  SYMBOL: $f_FileBufferCursor_read
-    Reads the contents of the line the cursor currently refers to, setting
-    $w_FileBufferCursor_line.
-
-  SYMBOL: $w_FileBufferCursor_line
-    The current or new contents of the line pointed to by the cursor. Updated
-    by calls to $f_FileBufferCursor_read.
- */
-defun($h_FileBufferCursor_read) {
-  $w_FileBufferCursor_line =
-    $M_read_cursor($w_FileBuffer_entity_contents, $o_FileBufferCursor_buffer);
-}
-
-/*
-  SYMBOL: $f_FileBufferCursor_write
-    Writes the contents of $w_FileBufferCursor_line to the line pointed to by
-    this cursor, replacing its contents.
- */
-defun($h_FileBufferCursor_write) {
-  $M_replace_line(0, $o_FileBufferCursor_buffer);
-}
-
-/*
-  SYMBOL: $f_FileBufferCursor_ins_before
-    Inserts a new line before the line this cursor refers to, whose content
-    will be $w_FileBufferCursor_new_line. This cursor remains here (though its
-    line number will be adjusted as necessary).
-
-  SYMBOL: $w_FileBufferCursor_new_line
-    The contents of the new line to insert before/after the line pointed to by
-    the cursor in $f_FileBufferCursor_ins_before and
-    $f_FileBufferCursor_ins_after.
- */
-defun($h_FileBufferCursor_ins_before) {
-  unsigned after = $I_FileBufferCursor_offset;
-  unsigned before =
-    $M_read_cursor_links($I_FileBuffer_prev_offset,
-                         $o_FileBufferCursor_buffer);
-  $M_insert(0, $o_FileBufferCursor_buffer,
-            $I_FileBuffer_prev_offset = before,
-            $I_FileBuffer_next_offset = after);
-}
-
-/*
-  SYMBOL: $f_FileBufferCursor_ins_after
-    Inserts a new line after the line this cursor referst to, whose content
-    will be $w_FileBufferCursor_new_line. This cursor remains here.
- */
-defun($h_FileBufferCursor_ins_after) {
-  unsigned before = $I_FileBufferCursor_offset;
-  unsigned after =
-    $M_read_cursor_links($I_FileBuffer_next_offset,
-                         $o_FileBufferCursor_buffer);
-  $M_insert(0, $o_FileBufferCursor_buffer,
-            $I_FileBuffer_prev_offset = before,
-            $I_FileBuffer_next_offset = after);
-}
-
-/*
-  SYMBOL: $f_FileBufferCursor_del
-    Deletes the line pointed to by this cursor. The cursor will be shunted or
-    invalidated according to $v_FileBufferCursor_shunt_mode.
- */
-defun($h_FileBufferCursor_del) {
-  $M_delete(0, $o_FileBufferCursor_buffer);
-}
-
-/*
-  NOTES: FileBuffer Working File Format
-
-  Unlike many editors, Soliloquy's file buffer does not keep the contents of
-  the file it is operating on, nor its undo states, in memory, but rather
-  journals them to a working file. (Obviously, this is still stored in memory
-  for memory-backed "files".)
-
-  At a high level, a FileBuffer is structured into a chain of entities,
-  identified by their byte offset into the working file. An entity is
-  essentially a single line, plus its undo/redo history. An entity records the
-  following data:
-  - The byte offset of the previous and next entities in the chain
-  - The byte offset of the undo and redo entities for this entity
-  - The serial numbers of the undo and redo states
-  - The content of the entity
-
-  The working file is stored in plain-text, one entity per line. The first line
-  contains file identification; the second contains a single integer, the byte
-  offset of the root entity (logical first line of the FileBuffer).
-
-  All integers in the working file are stored as 8-hexit hexadecimal numbers,
-  padded at left by zeroes. Each entity consists of a number of fields
-  separated by commas; entities are terminated by newline characters. The
-  fields are as follows:
-    int: previous entity
-    int: next entity
-    int: previous undo state
-    int: previous undo serial number
-    int: next redo state
-    int: next redo serial number
-    characters to newline: line body
-
-  Changing the contents of a line is performed as follows:
-  - A new entity is written with the new contents of the line, and the same
-    previous/next entries as the original.
-  - The new entity's "previous undo" is set to the old entity.
-  - The old entity's "next redo" is set to the new entity.
-  - The next link of the previous, and the previous link of the next, are made
-    to point to the new entity.
-  - The next and previous links of the old entity are nulled.
-
-  Deleting a line comprises the following operations:
-  - A parent entity is selected. This is the previous entity if present, the
-    next otherwise.
-  - A new entity identical to the parent is created, except the next or
-    previous link which would point to the entity being removed instead mirror
-    the corresponding links from the entity being removed.
-  - The undo/redo values are set for the new and old entities as described for
-    "changing the contents of a line".
-  - The next or previous link of the old entity and the entity being deleted
-    that does not refer to the opposite of the two is nulled.
-  - The appropriate next/previous links of the surrounding entities are updated
-    to point to the new entity.
-
-  Inserting a line is similar:
-  - A parent entity is selected, as for deleting a line.
-  - A copy of the parent, plus the new entity, are created, so that they form
-    a chain in the appropriate order, and reference the two entities they sit
-    between.
-  - Undo/redo information is recorded in the parent entity.
-  - The entities outside the chain are linked to the new chain.
-
-  Undo and redo operations work by simply re-linking the existing entity chains
-  using the undo/redo lists. Each chain which is not the current state in an
-  undo or redo list is terminated by NULL next/previous entries, allowing to
-  determine where the ends of each edit are.
-
-  Note that any operations that would require modifying the link of a previous
-  entity (not the previous link itself) where the previous entity is NULL must
-  instead modify the pointer to the root entity at the begining of the file.
-
-  Note that there is some redudancy in this format, specifically with regard to
-  line contents; each line insertion ends up duplicating the contents of the
-  line preceeding or proceding it. However, it is felt that the extra space
-  usage is preferable to the overhead of an extra level of indirection which
-  would be incurred by pointing to a shared content line.
- */
-
-static size_t sizeloc_discard;
-/*
-  SYMBOL: $f_FileBuffer
-    Tracks the contents and undo/redo of a "file buffer", which may be based in
-    memory. The constructor will roll the current transaction back if
-    construction fails, after calling $f_FileBuffer_destroy().
-
-  SYMBOL: $w_FileBuffer_name
-    The base filename for the file buffer, or logical name if
-    $y_FileBuffer_is_memory_based.
-
-  SYMBOL: $y_FileBuffer_is_memory_based
-    If true, the file represented by this FileBuffer is stored in memory
-    instead of on-disk.
-
-  SYMBOL: $p_FileBuffer_file
-    A FILE* which backs this FileBuffer.
-
-  SYMBOL: $p_FileBuffer_filebacking
-    Pointer set by open_wmemstream to be freed when the FileBuffer is
-    destroyed.
-
-  SYMBOL: $lo_FileBuffer_cursors
-    A list of FileBufferCursors currently referring into this FileBuffer.
-
-  SYMBOL: $I_FileBuffer_root_offset
-    The current offset within the file of the zeroth entity of the file.
-
-  SYMBOL: $o_FileBuffer_end_cursor
-    The FileBufferCursor pointing to the end of the file. This should never be
-    modified externally; instead, clone it with object_clone().
-
-  SYMBOL: $I_FileBuffer_root_pointer_offset
-    The byte offset within the backing file of the pointer to the root entity.
-
-  SYMBOL: $I_FileBuffer_curr_offset
-    In operations which read or write FileBuffer entities, the byte offset of
-    the entity in question.
-
-  SYMBOL: $I_FileBuffer_next_offset $I_FileBuffer_prev_offset
-    Reflects the next/previous entity links when reading an entity, or the
-    values to write when writing an entity.
-
-  SYMBOL: $I_FileBuffer_undo_offset $I_FileBuffer_redo_offset
-    Reflects the undo/redo entity links when reading an entity, or the values
-    to write when writing an entity.
-
-  SYMBOL: $I_FileBuffer_undo_serial_number $I_FileBuffer_redo_serial_number
-    The serial number of the undo/redo states for an entity, used when reading
-    or writing an entity. These are only considered relevant of the
-    corresponding offset is non-NULL.
-
-  SYMBOL: $I_FileBuffer_edit_serial_number
-    The serial number of the current edit operation, for purposes of tracking
-    undo states. Edits with the same serial number will be undone or redone as
-    a unit.
-
-  SYMBOL: $w_FileBuffer_entity_contents
-    Reflects the string contents of an entity when reading or writing an
-    entity.
+  SYMBOL: $ao_FileBuffer_meta
+    Arbitrary data to associate with each line. This array is transient; it is
+    released whenever $aw_FileBuffer_contents is. When re-loaded, its objects
+    are empty.
  */
 defun($h_FileBuffer) {
-  $I_FileBuffer_edit_serial_number = 0;
-
-  if ($y_FileBuffer_is_memory_based) {
-    /* Do this later 
-    $p_FileBuffer_file = open_memstream((char**)&$p_FileBuffer_filebacking,
-                                         &sizeloc_discard);
-    */
-    $p_FileBuffer_file = fopen("sol.out", "w+");
-  } else {
-    fprintf(stderr, "File-based FileBuffers not yet supported.\n");
-    exit(1);
-  }
-
-  // We have control over the context usage below, so we can rely on being
-  // within our own context.
-  tx_push_handler($m_destroy);
-
-  if (!$p_FileBuffer_file)
-    tx_rollback_errno($u_FileBuffer);
-
-  // Write header identifying file type, which also means that 0 is never a
-  // valid offset.
-  if (-1 == fputws(L"Soliloquy Autosave / Edit Log\n", $p_FileBuffer))
-    tx_rollback_errno($u_FileBuffer);
-
-  $I_FileBuffer_root_pointer_offset = ftell($p_FileBuffer_file);
-  $m_write_root_pointer();
-  $I_FileBuffer_root_offset = ftell($p_FileBuffer_file);
-  $m_write_root_pointer();
-  $M_write_entity(0,0,
-                  $I_FileBuffer_curr_offset = $I_FileBuffer_root_offset,
-                  $I_FileBuffer_next_offset = 0,
-                  $I_FileBuffer_prev_offset = 0,
-                  $I_FileBuffer_undo_offset = 0,
-                  $I_FileBuffer_redo_offset = 0,
-                  $w_FileBuffer_entity_contents = L"");
-  $o_FileBuffer_end_cursor =
-    $c_FileBufferCursor($v_FileBufferCursor_shunt_mode =
-                          $u_shunt_downward,
-                        $o_FileBufferCursor_buffer = $o_FileBuffer);
-  tx_pop_handler();
-}
-
-/*
-  SYMBOL: $f_FileBuffer_destroy
-    Frees the resources used by this FileBuffer.
- */
-defun($h_FileBuffer_destroy) {
-  if ($p_FileBuffer_file)
-    fclose($p_FileBuffer_file);
-  if ($p_FileBuffer_filebacking)
-    free($p_FileBuffer_filebacking);
-}
-
-/*
-  SYMBOL: $f_FileBuffer_read_entity_links
-    Attempts to read the entity at $I_FileBuffer_curr_offset into the entity
-    symbols, except for the contents. $w_FileBuffer_entity_contents is set to
-    NULL. The file is left pointing at the start of the contents. If anything
-    goes wrong, the current transaction is rolled back.
- */
-defun($h_FileBuffer_read_entity_links) {
-  if (-1 == fseek($p_FileBuffer_file, $I_FileBuffer_curr_offset, SEEK_SET))
-    tx_rollback_errno($u_FileBuffer);
-
-  // Read the links in
-  int ret;
-  if (6 !=
-      (ret=fscanf($p_FileBuffer_file, "%x,%x,%x,%x,%x,%x,",
-                  &$I_FileBuffer_prev_offset,
-                  &$I_FileBuffer_next_offset,
-                  &$I_FileBuffer_undo_offset,
-                  &$I_FileBuffer_undo_serial_number,
-                  &$I_FileBuffer_redo_offset,
-                  &$I_FileBuffer_redo_serial_number)))
-    // Something went wrong
-    tx_rollback_merrno($u_FileBuffer, ret, "Corrupted working file");
-
-  $w_FileBuffer_entity_contents = NULL;  
-}
-
-/*
-  SYMBOL: $f_FileBuffer_read_entity
-    Attempts to read the entity at $I_FileBuffer_curr_offset into the entity
-    symbols. Rolls the current transaction back if this fails for any reason.
- */
-defun($h_FileBuffer_read_entity) {
-  $m_read_entity_links();
-
-  // Count the number of characters in the entity
-  unsigned size = 0;
-  long contents_start = ftell($p_FileBuffer_file);
-  wint_t curr;
-  do {
-    curr = fgetwc($p_FileBuffer_file);
-    ++size;
-  } while (curr != WEOF && curr != L'\n');
-
-  if (curr == WEOF)
-    tx_rollback_merrno($u_FileBuffer,
-                       ferror($p_FileBuffer_file)? -1:0,
-                       "Truncated working file");
-
-  // Size includes the term NUL at this point, since the terminating \n was
-  // also counted in the loop above.
-  mwstring dst = gcalloc(size);
-  $w_FileBuffer_entity_contents = dst;
-  if (-1 == fseek($p_FileBuffer_file, contents_start, SEEK_SET))
-    tx_rollback_errno($u_FileBuffer);
-
-  for (unsigned i = 0; i < size-1; ++i) {
-    curr = fgetwc($p_FileBuffer_file);
-    if (curr == WEOF)
-      tx_rollback_merrno($u_FileBuffer,
-                         ferror($p_FileBuffer_file)? -1:0,
-                         "Truncated working file");
-
-    dst[i] = curr;
-  }
-}
-
-/*
-  SYMBOL: $f_FileBuffer_write_entity
-    Writes an entity to the offset specified by $I_FileBuffer_curr_offset. All
-    of the I symbols set by $f_FileBuffer_read_entity must be set
-    appropriately. An offset of 0 means the end of the file; $I_FileBuffer_curr
-    offset will be set to the offset of the new entity. If
-    $w_FileBuffer_entity_contents is non-NULL, it will be written as well. Note
-    that it only makes sense to do this when appending
-    ($I_FileBuffer_curr_offset == 0), since the string length is not fixed.  If
-    anything goes wrong, the current transaction is rolled back. Note that this
-    could result in partial changes being written to the file, though the only
-    non-permanent failure in this case is running out of disk space, so calls
-    to this function should be ordered to eliminate or minimise the chance of
-    actual inconsistency.
- */
-defun($h_FileBuffer_write_entity) {
-  int ret;
-  if ($I_FileBuffer_curr_offset) {
-    ret = fseek($p_FileBuffer_file, $I_FileBuffer_curr_offset, SEEK_SET);
-  } else {
-    ret = fseek($p_FileBuffer_file, 0, SEEK_END);
-  }
-
-  if (-1 == ret)
-    tx_rollback_errno($u_FileBuffer);
-
-  $I_FileBuffer_curr_offset = ret;
-
-  if (fprintf($p_FileBuffer_file, "%08X,%08X,%08X,%08X,%08X,%08X,",
-              $I_FileBuffer_prev_offset,
-              $I_FileBuffer_next_offset,
-              $I_FileBuffer_undo_offset,
-              $I_FileBuffer_undo_serial_number,
-              $I_FileBuffer_redo_offset,
-              $I_FileBuffer_redo_serial_number)
-      < 0)
-    tx_rollback_errno($u_FileBuffer);
-
-  if ($w_FileBuffer_entity_contents)
-    if (-1 == fputws($w_FileBuffer_entity_contents, $p_FileBuffer_file) ||
-        -1 == fputwc(L'\n', $p_FileBuffer_file))
+  if (!$p_shared_undo_log) {
+    //$p_shared_undo_log = tmpfile();
+    $p_shared_undo_log = fopen("sol.out", "w+b");
+    if (!$p_shared_undo_log)
       tx_rollback_errno($u_FileBuffer);
+
+    if (-1 == fputws(L"Soliloquy Undo Journal\n", $p_shared_undo_log)) {
+      int old_errno = errno;
+      fclose($p_shared_undo_log);
+      $p_shared_undo_log = NULL;
+
+      errno = old_errno;
+      tx_rollback_errno($u_FileBuffer);
+    }
+  }
 }
 
 /*
-  SYMBOL: $f_FileBuffer_write_root_pointer
-    Creates or updates the root pointer within the file, and commits the new
-    value of $I_FileBuffer_root_offset. If anything goes wrong, the current
-    transaction is rolled back.
+  SYMBOL: $f_FileBuffer_access
+    Ensures that $aw_FileBuffer_contents is loaded, and checks for changes to
+    the source file.
  */
-defun($h_FileBuffer_write_root_pointer) {
-  if (-1 == fseek($p_FileBuffer_file,
-                  $I_FileBuffer_root_pointer_offset, SEEK_SET))
-    tx_rollback_errno($u_FileBuffer);
+defun($h_FileBuffer_access) {
+  if (!$aw_FileBuffer_contents)
+    $m_reload();
 
-  if (-1 == fprintf($p_FileBuffer_file, "%08X\n", $I_FileBuffer_root_offset))
-    tx_rollback_errno($u_FileBuffer);
-
-  tx_write_through($I_FileBuffer_root_offset);
+  //TODO: Maintain access time; check for changes in source file
 }
 
 /*
-  SYMBOL: $f_FileBuffer_next_undo
-    Increments the undo serial number for this FileBuffer. New modifications
-    will form a separate undo group.
+  SYMBOL: $f_FileBuffer_reload
+    Reloads this FileBuffer, so that $aw_FileBuffer_contents and
+    $ao_FileBuffer_meta are non-NULL. This should not be called directly; use
+    $f_FileBuffer_access() instead. It is provided as a separate function for
+    hooking purposes only.
  */
-defun($h_FileBuffer_next_undo) {
-  ++$I_FileBuffer_edit_serial_number;
-}
-
-/*
-  SYMBOL: $f_FileBuffer_read_cursor
-    Called within the context of a FileBufferCursor. Calls
-    $f_FileBuffer_read_entity at the cursor's current position.
- */
-defun($h_FileBuffer_read_cursor) {
-  $I_FileBuffer_curr_offset = $I_FileBufferCursor_offset;
-  $m_read_entity();
-}
-
-/*
-  SYMBOL: $f_FileBuffer_read_cursor_links
-    Called within the context of a FileBufferCursor. Calls
-    $f_FileBuffer_read_entity_links at the cursor's current position.
- */
-defun($h_FileBuffer_read_cursor_links) {
-  $I_FileBuffer_curr_offset = $I_FileBufferCursor_offset;
-  $m_read_entity_links();
-}
-
-/*
-  SYMBOL: $f_FileBuffer_replace_line
-    Called within the context of a FileBufferCursor. Replaces the contents of
-    the line at $I_FileBufferCursor_offset with $w_FileBufferCursor_line.
- */
-defun($h_FileBuffer_replace_line) {
-  unsigned old_line_offset = $I_FileBufferCursor_offset;
-  $I_FileBuffer_curr_offset = old_line_offset;
-  $m_read_entity();
-
-  unsigned prev_line = $I_FileBuffer_prev_offset;
-  unsigned next_line = $I_FileBuffer_next_offset;
-
-  // Write the new entity
-  $I_FileBuffer_curr_offset = 0;
-  $I_FileBuffer_undo_offset = old_line_offset;
-  $I_FileBuffer_redo_offset = 0;
-  $I_FileBuffer_redo_serial_number = 0;
-  $I_FileBuffer_undo_serial_number = $I_FileBuffer_edit_serial_number;
-  $w_FileBuffer_entity_contents = $w_FileBufferCursor_line;
-  $m_write_entity();
-
-  unsigned new_offset = $I_FileBuffer_curr_offset;
-
-  //Link previous and next lines to the new entity
-  $I_FileBuffer_curr_offset = prev_line;
-  $m_read_entity_links();
-  $I_FileBuffer_next_offset = new_offset;
-  $m_write_entity();
-
-  $I_FileBuffer_curr_offset = next_line;
-  $m_read_entity_links();
-  $I_FileBuffer_prev_offset = new_offset;
-  $m_write_entity();
-
-  //If this was the root, update the root pointer
-  if (old_line_offset == $I_FileBuffer_root_offset) {
-    $I_FileBuffer_root_offset = new_offset;
-    $m_write_root_pointer();
+defun($h_FileBuffer_reload) {
+  if (!$aw_FileBuffer_contents) {
+    if ($y_FileBuffer_memory_backed) {
+      $aw_FileBuffer_contents = dynar_new_w();
+    } else {
+      $v_rollback_type = $u_FileBuffer;
+      $s_rollback_reason = "File-backed FileBuffer not yet supported";
+      tx_rollback();
+    }
   }
 
-  //Unlink the old line, and set its redo pointer
-  $I_FileBuffer_curr_offset = old_line_offset;
-  $m_read_entity_links();
-  $I_FileBuffer_prev_offset = $I_FileBuffer_next_offset = 0;
-  $I_FileBuffer_redo_offset = new_offset;
-  $I_FileBuffer_redo_serial_number = $I_FileBuffer_edit_serial_number;
-  $m_write_entity();
+  if (!$ao_FileBuffer_meta) {
+    $ao_FileBuffer_meta = dynar_new_o();
+    dynar_expand_by_o($ao_FileBuffer_meta, $aw_FileBuffer_contents->len);
+    for (unsigned i = 0; i < $aw_FileBuffer_contents->len; ++i)
+      $ao_FileBuffer_meta->v[i] = object_new(NULL);
+  }
+}
+
+/*
+  SYMBOL: $f_FileBuffer_release
+    Releases $ao_FileBuffer_meta and $aw_FileBuffer_contents for this
+    FileBuffer.
+ */
+defun($h_FileBuffer_release) {
+  $ao_FileBuffer_meta = NULL;
+  $aw_FileBuffer_contents = NULL;
 }
