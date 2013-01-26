@@ -516,11 +516,6 @@ struct symbol_header {
   // since there is no portable way to determine where the data would be, since
   // different symbol payload types may have differing alignment.)
   void* payload;
-  // If non-NULL, the value in this symbol is non-persistent, and so must be
-  // cloned when performing a transaction fork.
-  // The function pointed to performs this clone; src and dst are pointers to
-  // the symbol's value.
-  void (*ephemeral_clone)(void* dst, const void* src);
 };
 
 struct hook_point_entry {
