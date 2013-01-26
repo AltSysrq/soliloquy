@@ -127,8 +127,18 @@ static bool search(list_lp llst, qchar key) {
       if (key == kb->trigger &&
           (!kb->mode || kb->mode == $v_Terminal_key_mode)) {
         $y_key_dispatch_continue = false;
-        if (kb->function)
+        if (kb->function) {
+          __label__ function_done;
+          void on_rollback(void) {
+            // Handle the error message better later
+            fprintf(stderr, "Error: %s\n", $s_rollback_reason);
+            goto function_done;
+          }
+          tx_start(on_rollback);
           kb->function();
+          tx_commit();
+          function_done:;
+        }
         if (kb->newmode)
           $v_Terminal_key_mode = kb->newmode;
 
