@@ -481,3 +481,51 @@ defun($h_FileBuffer_read_entity) {
     dst[i] = curr;
   }
 }
+
+/*
+  SYMBOL: $f_FileBuffer_write_entity
+    Writes an entity to the offset specified by $I_FileBuffer_curr_offset. All
+    of the I symbols set by $f_FileBuffer_read_entity must be set
+    appropriately. An offset of 0 means the end of the file. If
+    $w_FileBuffer_entity_contents is non-NULL, it will be written as well. Note
+    that it only makes sense to do this when appending
+    ($I_FileBuffer_curr_offset == 0), since the string length is not fixed.
+ */
+defun($h_FileBuffer_write_entity) {
+  int ret;
+  if ($I_FileBuffer_curr_offset) {
+    ret = fseek($p_FileBuffer_file, $I_FileBuffer_curr_offset, SEEK_SET);
+  } else {
+    ret = fseek($p_FileBuffer_file, 0, SEEK_END);
+  }
+
+  if (-1 == ret) {
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = strerror(errno);
+    tx_rollback();
+  }
+
+  $I_FileBuffer_curr_offset = ret;
+
+  if (fprintf($p_FileBuffer_file, "%08X,%08X,%08X,%08X,%08X,%08X,",
+              $I_FileBuffer_prev_offset,
+              $I_FileBuffer_next_offset,
+              $I_FileBuffer_undo_offset,
+              $I_FileBuffer_undo_serial_number,
+              $I_FileBuffer_redo_offset,
+              $I_FileBuffer_redo_serial_number)
+      < 0) {
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = strerror(errno);
+    tx_rollback();
+  }
+
+  if ($w_FileBuffer_entity_contents) {
+    if (-1 == fputws($w_FileBuffer_entity_contents, $p_FileBuffer_file) ||
+        -1 == fputwc(L'\n', $p_FileBuffer_file)) {
+      $v_rollback_type = $u_FileBuffer;
+      $s_rollback_reason = strerror(errno);
+      tx_rollback();
+    }
+  }
+}
