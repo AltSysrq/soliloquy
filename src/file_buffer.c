@@ -39,10 +39,18 @@
     the physically preceding record).
 
     Following the undo record header are zero or more edit records, one per
-    line. Each edit record begins with either a '+' (insertion) or a '-', and
-    is followed by the text of the line affected. Edits are always written from
-    the perspective of performing them; the contents of the lines in both
-    directions are recorded to allow both undo and redo to operate.
+    line. Each edit record begins with either a '+' (insertion) or '-'
+    (deletion), and is followed by the text of the line affected. Edits are
+    always written from the perspective of performing them; the contents of the
+    lines in both directions are recorded to allow both undo and redo to
+    operate.
+
+    A line which looks like an undo record, except that it begins with an '&',
+    specifies a sub-undo record. When a sub-undo record is to be undone, the
+    previous undo record it points to must also be undone. Similarly, when
+    re-doing an undo record, any following sub-undo records must be
+    re-done. Sub-undo records allow for efficiently recording sparse, possibly
+    non-sorted edits to the file as a single unit.
  */
 
 /*
