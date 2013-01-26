@@ -684,7 +684,21 @@ void tx_commit(void) {
   tx_current = tx_current->next;
 }
 
+/*
+  SYMBOL: $v_rollback_type
+    Indicates the reason rollback occurred. This is automatically propagated
+    across transaction boundaries by tx_rollback().
+
+  SYMBOL: $s_rollback_reason
+    Indicates the human-readable reason rollback occurred. This is
+    automatically propagated across transaction boundaries by tx_rollback().
+ */
+
 void tx_rollback(void) {
+  // Write reasons through
+  tx_write_through($v_rollback_type);
+  tx_write_through($s_rollback_reason);
+
   // Run rollback handlers
   while (tx_current->rollback_handlers) {
     void (*h)(void) = tx_current->rollback_handlers->car;

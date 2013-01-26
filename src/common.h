@@ -493,7 +493,7 @@ void tx_pop_handler(void);
  * This should be used for values which reflect properties of the outside
  * world, such as details within files.
  */
-#define tx_write_through(sym) tx_write_through_impl(&_GLUE(sym,$head))
+#define tx_write_through(sym) tx_write_through_impl(&_GLUE(sym,$base))
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Mostly internal details below. You need not concern yourself with these.///
