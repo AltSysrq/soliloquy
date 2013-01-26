@@ -312,3 +312,42 @@ necessary.
 dynar_erase_C(dynar,offset,count) deletes _count_ elements from _dynar_
 beginning at _offset_, moving elements downward as necessary to fill the
 resulting hole.
+
+Transactions
+------------
+Soliloquy supports an error handling mechanism called _transactions_. Before
+going further, it should be mentioned that, while they are similar to
+exceptions from C++/Java, they should not be used as such. In most cases, you
+should stick to Design-by-Contract and use variables to indicate
+conditions. Transactions should only be used to deal with issues that would
+otherwise add much burden to intermediate code, and where the only reasonable
+response to an error is to "pretend it never happened".
+
+A transaction represents an attempted computation. Each transaction maintains
+the state of the (internal) world as it was when the transaction was
+started. (The "state of the world" here only considers symbols and objects.) A
+transaction will eventually be either committed or rolled back. On commit, the
+old state of the world is simply discarded. On rollback, the old state of the
+world is restored, and control *immediately* jumps to some point defined by the
+initiator of the transaction.
+
+Since transactions cannot, obviously, encompas the state of the _external_
+world, it is sometimes necessary to preserve values across transactions, or to
+run code to undo externally-visible effects. The former can be accomplished
+with the tx_write_through() macro. Calling this with the name of a symbol will
+write the current value of that symbol through to all transaction backups.
+
+The latter is supported via the tx_push_handler() and tx_pop_handler()
+functions in common.h. See their documentation for more details.
+
+Note that ephemeral types, such as dynars, mutable strings, and generic
+pointers are *not* affected by transactions. While it would be possible to
+automatically copy them when they are activated, this has a number of problems:
+- Obviously, it incurrs a tonne of copying, most of which isn't necessary.
+- It is possible to access --- and thus change --- symbols' values within
+  objects without eviscerating them. Without adding even more support (and thus
+  copying) for this case, we would end up with a (surprising) quirk in the
+  transaction system.
+
+Therefore, ephemeral types simply work with transactions the same way they do
+as with object contexts: Only the pointer is affected.
