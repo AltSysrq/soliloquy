@@ -376,8 +376,11 @@ defun($h_FileBuffer) {
     exit(1);
   }
 
+  // We have control over the context usage below, so we can rely on being
+  // within our own context.
+  tx_push_handler($m_destroy);
+
   if (!$p_FileBuffer_file) {
-    $m_destroy();
     $v_rollback_type = $u_FileBuffer;
     $s_rollback_reason = strerror(errno);
     tx_rollback();
@@ -385,7 +388,11 @@ defun($h_FileBuffer) {
 
   // Write header identifying file type, which also means that 0 is never a
   // valid offset.
-  fputws(L"Soliloquy Autosave / Edit Log\n", $p_FileBuffer);
+  if (-1 == fputws(L"Soliloquy Autosave / Edit Log\n", $p_FileBuffer)) {
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = strerror(errno);
+    tx_rollback();
+  }
 
   $I_FileBuffer_root_pointer_offset = ftell($p_FileBuffer_file);
   $m_write_root_pointer();
@@ -402,6 +409,7 @@ defun($h_FileBuffer) {
     $c_FileBufferCursor($v_FileBufferCursor_shunt_mode =
                           $u_shunt_downward,
                         $o_FileBufferCursor_buffer = $o_FileBuffer);
+  tx_pop_handler();
 }
 
 /*
