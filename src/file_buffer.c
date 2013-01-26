@@ -591,6 +591,7 @@ defun($h_FileBuffer_replace_line) {
   $I_FileBuffer_curr_offset = 0;
   $I_FileBuffer_undo_offset = old_line_offset;
   $I_FileBuffer_redo_offset = 0;
+  $I_FileBuffer_redo_serial_number = 0;
   $I_FileBuffer_undo_serial_number = $I_FileBuffer_edit_serial_number;
   $w_FileBuffer_entity_contents = $w_FileBufferCursor_line;
   $m_write_entity();
@@ -614,9 +615,11 @@ defun($h_FileBuffer_replace_line) {
     $m_write_root_pointer();
   }
 
-  //Unlink the old line
+  //Unlink the old line, and set its redo pointer
   $I_FileBuffer_curr_offset = old_line_offset;
   $m_read_entity_links();
   $I_FileBuffer_prev_offset = $I_FileBuffer_next_offset = 0;
+  $I_FileBuffer_redo_offset = new_offset;
+  $I_FileBuffer_redo_serial_number = $I_FileBuffer_edit_serial_number;
   $m_write_entity();
 }
