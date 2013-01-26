@@ -105,7 +105,7 @@ defun($h_FileBufferCursor_rewind) {
  */
 defun($h_FileBufferCursor_eof) {
   $y_FileBufferCursor_eof =
-    $M_next_offset(!!$I_FileBuffer_next_offset,
+    $M_read_cursor(!!$I_FileBuffer_next_offset,
                    $o_FileBufferCursor_buffer);
 }
 
@@ -122,8 +122,8 @@ defun($h_FileBufferCursor_advance) {
 
   ++$I_FileBufferCursor_line_number;
   $I_FileBufferCursor_offset =
-    $M_links($I_FileBuffer_next_offset,
-             $o_FileBufferCursor_buffer);
+    $M_read_cursor($I_FileBuffer_next_offset,
+                   $o_FileBufferCursor_buffer);
 }
 
 /*
@@ -133,8 +133,8 @@ defun($h_FileBufferCursor_advance) {
  */
 defun($h_FileBufferCursor_sof) {
   $y_FileBufferCursor_sof =
-    $M_links(!!$I_FileBuffer_prev_offset,
-             $o_FileBufferCursor_buffer);
+    $M_read_cursor(!!$I_FileBuffer_prev_offset,
+                   $o_FileBufferCursor_buffer);
 }
 
 /*
@@ -150,8 +150,8 @@ defun($h_FileBufferCursor_retreat) {
 
   --$I_FileBufferCursor_line_number;
   $I_FileBufferCursor_offset =
-    $M_links($I_FileBuffer_prev_offset,
-             $o_FileBufferCursor_buffer);
+    $M_read_cursor($I_FileBuffer_prev_offset,
+                   $o_FileBufferCursor_buffer);
 }
 
 /*
@@ -165,7 +165,7 @@ defun($h_FileBufferCursor_retreat) {
  */
 defun($h_FileBufferCursor_read) {
   $w_FileBufferCursor_line =
-    $M_read($w_FileBuffer_entity_contents, $o_FileBufferCursor_buffer);
+    $M_read_cursor($w_FileBuffer_entity_contents, $o_FileBufferCursor_buffer);
 }
 
 /*
@@ -174,7 +174,7 @@ defun($h_FileBufferCursor_read) {
     this cursor, replacing its contents.
  */
 defun($h_FileBufferCursor_write) {
-  $M_write(0, $o_FileBufferCursor_buffer);
+  $M_replace_line(0, $o_FileBufferCursor_buffer);
 }
 
 /*
@@ -191,8 +191,8 @@ defun($h_FileBufferCursor_write) {
 defun($h_FileBufferCursor_ins_before) {
   unsigned after = $I_FileBufferCursor_offset;
   unsigned before =
-    $M_links($I_FileBuffer_prev_offset,
-             $o_FileBufferCursor_buffer);
+    $M_read_cursor($I_FileBuffer_prev_offset,
+                   $o_FileBufferCursor_buffer);
   $M_insert(0, $o_FileBufferCursor_buffer,
             $I_FileBuffer_prev_offset = before,
             $I_FileBuffer_next_offset = after);
@@ -206,8 +206,8 @@ defun($h_FileBufferCursor_ins_before) {
 defun($h_FileBufferCursor_ins_after) {
   unsigned before = $I_FileBufferCursor_offset;
   unsigned after =
-    $M_links($I_FileBuffer_next_offset,
-             $o_FileBufferCursor_buffer);
+    $M_read_cursor($I_FileBuffer_next_offset,
+                   $o_FileBufferCursor_buffer);
   $M_insert(0, $o_FileBufferCursor_buffer,
             $I_FileBuffer_prev_offset = before,
             $I_FileBuffer_next_offset = after);
@@ -538,4 +538,14 @@ defun($h_FileBuffer_write_root_pointer) {
  */
 defun($h_FileBuffer_next_undo) {
   ++$I_FileBuffer_edit_serial_number;
+}
+
+/*
+  SYMBOL: $f_FileBuffer_read_cursor
+    Called within the context of a FileBufferCursor. Calls
+    $f_FileBuffer_read_entity at the cursor's current position.
+ */
+defun($f_FileBuffer_read_cursor) {
+  $I_FileBuffer_curr_offset = $I_FileBufferCursor_offset;
+  $m_read_entity();
 }
