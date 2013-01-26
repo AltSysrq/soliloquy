@@ -461,6 +461,22 @@ void tx_commit(void);
 void tx_rollback(void) __attribute__((noreturn));
 
 /**
+ * Convenience for setting $v_rollback_type to the given identity,
+ * $s_rollback_reason to either strerror(errno) (if chk==-1) or otherwise (if
+ * chk!=-1), then calling tx_rollback().
+ */
+void tx_rollback_merrno(identity, int chk, string otherwise)
+__attribute__((noreturn));
+
+/**
+ * Like tx_rollback_merrno(), but always uses strerror(errno).
+ */
+static inline void tx_rollback_errno(identity id) __attribute__((noreturn));
+static inline void tx_rollback_errno(identity id) {
+  tx_rollback_merrno(id, -1, NULL);
+}
+
+/**
  * Pushes a rollback handler for the current transaction. If rollback occurs
  * while this is pushed, the given function will be called before rollback.
  *

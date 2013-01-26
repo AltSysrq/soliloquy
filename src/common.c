@@ -36,6 +36,7 @@
 #include "common.slc"
 
 #include <assert.h>
+#include <errno.h>
 
 // Formerly known as $$ao_evisceration_stack
 // (This comment necessary for the dynar_o template)
@@ -740,6 +741,12 @@ void tx_rollback(void) {
 
   //Should never get here
   abort();
+}
+
+void tx_rollback_merrno(identity id, int chk, string otherwise) {
+  $v_rollback_type = id;
+  $s_rollback_reason = (chk == -1? strerror(errno) : otherwise);
+  tx_rollback();
 }
 
 void tx_push_handler(void (*handler)(void)) {

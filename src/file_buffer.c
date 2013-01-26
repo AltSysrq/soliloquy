@@ -380,19 +380,13 @@ defun($h_FileBuffer) {
   // within our own context.
   tx_push_handler($m_destroy);
 
-  if (!$p_FileBuffer_file) {
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = strerror(errno);
-    tx_rollback();
-  }
+  if (!$p_FileBuffer_file)
+    tx_rollback_errno($u_FileBuffer);
 
   // Write header identifying file type, which also means that 0 is never a
   // valid offset.
-  if (-1 == fputws(L"Soliloquy Autosave / Edit Log\n", $p_FileBuffer)) {
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = strerror(errno);
-    tx_rollback();
-  }
+  if (-1 == fputws(L"Soliloquy Autosave / Edit Log\n", $p_FileBuffer))
+    tx_rollback_errno($u_FileBuffer);
 
   $I_FileBuffer_root_pointer_offset = ftell($p_FileBuffer_file);
   $m_write_root_pointer();
@@ -429,11 +423,8 @@ defun($h_FileBuffer_destroy) {
     symbols. Rolls the current transaction back if this fails for any reason.
  */
 defun($h_FileBuffer_read_entity) {
-  if (-1 == fseek($p_FileBuffer_file, $I_FileBuffer_curr_offset, SEEK_SET)) {
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = strerror(errno);
-    tx_rollback();
-  }
+  if (-1 == fseek($p_FileBuffer_file, $I_FileBuffer_curr_offset, SEEK_SET))
+    tx_rollback_errno($u_FileBuffer);
 
   // Read the links in
   int ret;
@@ -444,13 +435,9 @@ defun($h_FileBuffer_read_entity) {
                   &$I_FileBuffer_undo_offset,
                   &$I_FileBuffer_undo_serial_number,
                   &$I_FileBuffer_redo_offset,
-                  &$I_FileBuffer_redo_serial_number))) {
+                  &$I_FileBuffer_redo_serial_number)))
     // Something went wrong
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason =
-      (ret == -1? strerror(errno) : "Corrupted working file");
-    tx_rollback();
-  }
+    tx_rollback_merrno($u_FileBuffer, ret, "Corrupted working file");
 
   // Count the number of characters in the entity
   unsigned size = 0;
@@ -461,33 +448,24 @@ defun($h_FileBuffer_read_entity) {
     ++size;
   } while (curr != WEOF && curr != L'\n');
 
-  if (curr == WEOF) {
-    // Unexpected end of file or error
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = ferror($p_FileBuffer_file)?
-      strerror(errno) : "Truncated working file";
-    tx_rollback();
-  }
+  if (curr == WEOF)
+    tx_rollback_merrno($u_FileBuffer,
+                       ferror($p_FileBuffer_file)? -1:0,
+                       "Truncated working file");
 
   // Size includes the term NUL at this point, since the terminating \n was
   // also counted in the loop above.
   mwstring dst = gcalloc(size);
   $w_FileBuffer_entity_contents = dst;
-  if (-1 == fseek($p_FileBuffer_file, contents_start, SEEK_SET)) {
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = strerror(errno);
-    tx_rollback();
-  }
+  if (-1 == fseek($p_FileBuffer_file, contents_start, SEEK_SET))
+    tx_rollback_errno($u_FileBuffer);
 
   for (unsigned i = 0; i < size-1; ++i) {
     curr = fgetwc($p_FileBuffer_file);
-    if (curr == WEOF) {
-      // Error (or someone truncated the file)
-      $v_rollback_type = $u_FileBuffer;
-      $s_rollback_reason = ferror($p_FileBuffer_file)?
-        strerror(errno) : "Truncated working file";
-      tx_rollback();
-    }
+    if (curr == WEOF)
+      tx_rollback_merrno($u_FileBuffer,
+                         ferror($p_FileBuffer_file)? -1:0,
+                         "Truncated working file");
 
     dst[i] = curr;
   }
@@ -515,11 +493,8 @@ defun($h_FileBuffer_write_entity) {
     ret = fseek($p_FileBuffer_file, 0, SEEK_END);
   }
 
-  if (-1 == ret) {
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = strerror(errno);
-    tx_rollback();
-  }
+  if (-1 == ret)
+    tx_rollback_errno($u_FileBuffer);
 
   $I_FileBuffer_curr_offset = ret;
 
@@ -530,20 +505,13 @@ defun($h_FileBuffer_write_entity) {
               $I_FileBuffer_undo_serial_number,
               $I_FileBuffer_redo_offset,
               $I_FileBuffer_redo_serial_number)
-      < 0) {
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = strerror(errno);
-    tx_rollback();
-  }
+      < 0)
+    tx_rollback_errno($u_FileBuffer);
 
-  if ($w_FileBuffer_entity_contents) {
+  if ($w_FileBuffer_entity_contents)
     if (-1 == fputws($w_FileBuffer_entity_contents, $p_FileBuffer_file) ||
-        -1 == fputwc(L'\n', $p_FileBuffer_file)) {
-      $v_rollback_type = $u_FileBuffer;
-      $s_rollback_reason = strerror(errno);
-      tx_rollback();
-    }
-  }
+        -1 == fputwc(L'\n', $p_FileBuffer_file))
+      tx_rollback_errno($u_FileBuffer);
 }
 
 /*
@@ -554,17 +522,11 @@ defun($h_FileBuffer_write_entity) {
  */
 defun($h_FileBuffer_write_root_pointer) {
   if (-1 == fseek($p_FileBuffer_file,
-                  $I_FileBuffer_root_pointer_offset, SEEK_SET)) {
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = strerror(errno);
-    tx_rollback();
-  }
+                  $I_FileBuffer_root_pointer_offset, SEEK_SET))
+    tx_rollback_errno($u_FileBuffer);
 
-  if (-1 == fprintf($p_FileBuffer_file, "%08X\n", $I_FileBuffer_root_offset)) {
-    $v_rollback_type = $u_FileBuffer;
-    $s_rollback_reason = strerror(errno);
-    tx_rollback();
-  }
+  if (-1 == fprintf($p_FileBuffer_file, "%08X\n", $I_FileBuffer_root_offset))
+    tx_rollback_errno($u_FileBuffer);
 
   tx_write_through($I_FileBuffer_root_offset);
 }
