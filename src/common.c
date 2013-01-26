@@ -124,6 +124,8 @@ static inline unsigned collision_increment(unsigned previnc) {
 #define INIT_HASHTABLE_SIZE 8
 #define INIT_DATA_SIZE (8*sizeof(void*))
 
+static unsigned current_tx_id(void);
+
 object object_new(object parent) {
   struct object_implant_hashtable* implants =
     gcalloc(sizeof(struct object_implant_hashtable) +
@@ -137,6 +139,7 @@ object object_new(object parent) {
   this->data_size = INIT_DATA_SIZE;
   this->implants = implants;
   this->evisceration_count = 0;
+  this->tx_id = current_tx_id();
   return this;
 }
 
@@ -155,7 +158,7 @@ object object_clone(object that) {
   // original object
   this->evisceration_count = 0;
   // Similarly, it is not affected by the current transaction
-  this->tx_id = 0;
+  this->tx_id = current_tx_id();
   this->tx_backup = NULL;
   return this;
 }
@@ -615,6 +618,13 @@ typedef struct transaction {
 
 static unsigned next_tx_id;
 static transaction* tx_current;
+
+static unsigned current_tx_id() {
+  if (!tx_current)
+    return 0;
+  else
+    return tx_current->id;
+}
 
 static void tx_fork_object(object this) {
   if (!tx_current || this->tx_id == tx_current->id) return;
