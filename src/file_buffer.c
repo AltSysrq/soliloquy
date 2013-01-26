@@ -490,6 +490,11 @@ defun($h_FileBuffer_read_entity) {
     $w_FileBuffer_entity_contents is non-NULL, it will be written as well. Note
     that it only makes sense to do this when appending
     ($I_FileBuffer_curr_offset == 0), since the string length is not fixed.
+    If anything goes wrong, the current transaction is rolled back. Note that
+    this could result in partial changes being written to the file, though the
+    only non-permanent failure in this case is running out of disk space, so
+    calls to this function should be ordered to eliminate or minimise the
+    chance of actual inconsistency.
  */
 defun($h_FileBuffer_write_entity) {
   int ret;
