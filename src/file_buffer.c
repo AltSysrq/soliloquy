@@ -18,6 +18,7 @@
 */
 #include "file_buffer.slc"
 #include <errno.h>
+#include <time.h>
 
 /*
   TITLE: (Textual) File Buffer
@@ -67,6 +68,12 @@
   SYMBOL: $I_FileBufferCursor_line_number
     The current 0-based line number this cursor refers to. This ranges from
     zero to the length of the file in lines, inclusive.
+
+  SYMBOL: $I_FileBufferCursor_window
+    If non-zero, defines a window size for this cursor. Any edits which occur
+    between $I_FileBufferCursor_line_number, inclusive, and
+    $I_FileBufferCursor_line_number+$I_FileBufferCursor_window, exclusive, will
+    cause $m_window_changed() to be called on the cursor.
  */
 defun($h_FileBufferCursor) {
   $$($o_FileBufferCursor_buffer) {
@@ -86,6 +93,28 @@ defun($h_FileBufferCursor_destroy) {
 }
 
 /*
+  SYMBOL: $f_FileBufferCursor_shunt
+    Called when the FileBufferCursor must be moved due to insertions or
+    deletions within the FileBuffer. The line number shall be altered by an
+    amount specified in $i_FileBufferCursor_shunt_distance.
+
+  SYMBOL: $i_FileBufferCursor_shunt_distance
+    The line number delta to use in $f_FileBufferCursor_shunt.
+ */
+defun($h_FileBufferCursor_shunt) {
+  $I_FileBufferCursor_line_number += $i_FileBufferCursor_shunt_distance;
+}
+
+/*
+  SYMBOL: $f_FileBufferCursor_window_changed
+    Called when the cursor has a notification window (see
+    $I_FileBufferCursor_window) and the region defined thereby was changed. The
+    default does nothing; it only exists so that there is something to hook
+    onto with the base FileBufferCursor class.
+ */
+defun($h_FileBufferCursor_window_changed) {}
+
+/*
   SYMBOL: $c_FileBuffer
     Manages a single file- or memory-backed, editable buffer. Memory-backed
     buffers always have their contents stored in memory, but only
@@ -98,7 +127,7 @@ defun($h_FileBufferCursor_destroy) {
     $c_FileBuffer is called. Its format is described after the OVERVIEW section
     in the src/file_buffer.c documentation.
 
-  SYMBOL: $s_FileBuffer_filename
+  SYMBOL: $w_FileBuffer_filename
     The name (absolute path) of the file being operated on by the
     FileBuffer. For memory-backed FileBuffers, it is not necessarily a
     filename.
@@ -116,6 +145,9 @@ defun($h_FileBufferCursor_destroy) {
     Arbitrary data to associate with each line. This array is transient; it is
     released whenever $aw_FileBuffer_contents is. When re-loaded, its objects
     are empty.
+
+  SYMBOL: $lo_FileBuffer_cursors
+    A list of all FileBufferCursors currently associated with this FileBuffer.
  */
 defun($h_FileBuffer) {
   if (!$p_shared_undo_log) {
@@ -181,4 +213,157 @@ defun($h_FileBuffer_reload) {
 defun($h_FileBuffer_release) {
   $ao_FileBuffer_meta = NULL;
   $aw_FileBuffer_contents = NULL;
+}
+
+STATIC_INIT_TO($w_prev_undo_name, L"")
+/*
+  SYMBOL: $f_FileBuffer_edit
+    Edits the buffer by performing $I_FileBuffer_ndeletions deletions starting
+    at $I_FileBuffer_edit_line, then inserting the contents of
+    $lw_FileBuffer_replacements before the first line unaffected by
+    deletion. Inserted and replaced lines have their meta objects reset to
+    empty objects. $y_FileBuffer_continue_undo will be set to false after this
+    call. $f_FileBuffer_access will be called automatically.
+
+  SYMBOL: $I_FileBuffer_edit_line
+    The line at which edits occur for this FileBuffer.
+
+  SYMBOL: $y_FileBuffer_continue_undo
+    If true when $f_FileBuffer_edit is called, the new undo record will instead
+    be a sub-record of the previous record. This is set to false after each
+    call to $f_FileBuffer_edit.
+
+  SYMBOL: $I_FileBuffer_ndeletions
+    The number of lines to delete in a call to $f_FileBuffer_edit.
+
+  SYMBOL: $lw_FileBuffer_replacements
+    The lines to insert in a call to $f_FileBuffer_edit.
+
+  SYMBOL: $I_FileBuffer_undo_offset
+    The offset of the most recent undo state for this FileBuffer, or 0 if there
+    is no undo information.
+
+  SYMBOL: $w_prev_undo_name
+    The last filename written in an undo record header.
+ */
+defun($h_FileBuffer_edit) {
+  $m_access();
+
+  wchar_t undo_type =
+    ($y_FileBuffer_continue_undo? L'&' : L'@');
+  $y_FileBuffer_continue_undo = false;
+
+  unsigned ndeletions = $I_FileBuffer_ndeletions;
+  unsigned ninsertions = llen_w($lw_FileBuffer_replacements);
+  unsigned nreplacements =
+    ndeletions > ninsertions? ninsertions : ndeletions;
+  list_w insertions = $lw_FileBuffer_replacements;
+
+  unsigned long long now = time(0);
+  unsigned prev_undo = $I_FileBuffer_undo_offset;
+
+  //Seek to the end of the file
+  $I_FileBuffer_undo_offset = fseek($p_shared_undo_log, 0, SEEK_END);
+  if (!~$I_FileBuffer_undo_offset)
+    // Seek failed for some reason
+    tx_rollback_errno($u_FileBuffer);
+
+  //Write the header for this undo record
+  if (-1 ==
+      fwprintf($p_shared_undo_log, L"%lc%X,%X,%llX:%ls\n",
+               undo_type,
+               prev_undo,
+               $I_FileBuffer_edit_line,
+               now,
+               wcscmp($w_prev_undo_name, $w_FileBuffer_filename)?
+               $w_FileBuffer_filename : L""))
+    tx_rollback_errno($u_FileBuffer);
+
+  //Whether we like it or not, this is now unconditionally the new undo offset
+  tx_write_through($I_FileBuffer_undo_offset);
+  $w_prev_undo_name = $w_FileBuffer_filename;
+  tx_write_through($w_prev_undo_name);
+
+  //Write deletions
+  for (unsigned i = 0; i < $I_FileBuffer_ndeletions; ++i)
+    if (-1 == fwprintf($p_shared_undo_log, L"-%ls\n",
+                       $aw_FileBuffer_contents->v[i + $I_FileBuffer_edit_line]))
+      tx_rollback_errno($u_FileBuffer);
+
+  //Write insertions
+  for (list_w curr = insertions; curr; curr = curr->cdr)
+    if (-1 == fwprintf($p_shared_undo_log, L"+%ls\n", curr->car))
+      tx_rollback_errno($u_FileBuffer);
+
+  //Make the changes
+  for (unsigned i = 0;
+       insertions && i < ndeletions;
+       ++i, insertions = insertions->cdr) {
+    unsigned line = i + $I_FileBuffer_edit_line;
+    $aw_FileBuffer_contents->v[line] = insertions->car;
+    $ao_FileBuffer_meta->v[line] = object_new(NULL);
+  }
+
+  if (insertions) {
+    unsigned line = $I_FileBuffer_edit_line + ndeletions;
+    unsigned cnt = ninsertions - ndeletions;
+    wstring tail[cnt];
+    object meta[cnt];
+    unsigned ix = 0;
+    each_w(insertions, lambdav((wstring s), tail[ix++] = s));
+    for (unsigned i = 0; i < cnt; ++i)
+      meta[i] = object_new(NULL);
+
+    dynar_ins_w($aw_FileBuffer_contents, line, tail, cnt);
+    dynar_ins_o($ao_FileBuffer_meta, line, meta, cnt);
+  } else if (ndeletions > ninsertions) {
+    unsigned line = $I_FileBuffer_edit_line + ninsertions;
+    unsigned cnt = ndeletions - ninsertions;
+
+    dynar_erase_w($aw_FileBuffer_contents, line, cnt);
+    dynar_erase_o($ao_FileBuffer_meta, line, cnt);
+  }
+
+  // Update cursors as necessary
+  for (list_o curr = $lo_FileBuffer_cursors; curr; curr = curr->cdr) {
+    object cursor = curr->car;
+    unsigned where = $(cursor, $I_FileBufferCursor_line_number);
+    unsigned window = $(cursor, $I_FileBufferCursor_window);
+
+    if (where >= $I_FileBuffer_edit_line + nreplacements) {
+      if (ninsertions > ndeletions) {
+        // Need to shunt downward by the number of new lines.
+        $M_shunt(0, cursor,
+                 $i_FileBufferCursor_shunt_distance =
+                   +1 * (signed)(ninsertions - ndeletions));
+
+      } else if (ndeletions > ninsertions) {
+        // Need to shunt upward by the number of deletions.
+        $M_shunt(0, cursor,
+                 $i_FileBufferCursor_shunt_distance =
+                   -1 * (signed)(ndeletions - ninsertions));
+      }
+
+      where = $(cursor, $I_FileBufferCursor_line_number);
+      window = $(cursor, $I_FileBufferCursor_window);
+    }
+
+    /* If the cursor has a notification window, and that window overlaps any
+     * area that has changed, we must notify the cursor. The region is from
+     * where (inclusive) to where+window (exclusive). If window==0, there is no
+     * region.
+     */
+    if (window) {
+      unsigned region_begin = where;
+      unsigned region_end = where+window;
+      unsigned changed_begin = $I_FileBuffer_edit_line;
+      unsigned changed_end = changed_begin + ninsertions + 1;
+      if ((region_begin >= changed_begin && region_begin < changed_end) ||
+          (region_end > changed_begin && region_end <= changed_end) ||
+          (changed_begin >= region_begin && changed_begin < region_end) ||
+          (changed_end > region_begin && changed_end <= region_end)) {
+        $M_window_changed(0, cursor);
+      }
+    }
+  }
 }
