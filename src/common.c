@@ -127,6 +127,19 @@ static inline unsigned collision_increment(unsigned previnc) {
 
 static unsigned current_tx_id(void);
 
+// Writes all currently-owned symbols back into the given object.
+static void object_writeback(object this) {
+  for (unsigned i = 0; i < this->implants->table_size; ++i) {
+    if (this->implants->entries[i].sym &&
+        this->implants->entries[i].sym->owner_stack &&
+        this->implants->entries[i].sym->owner_stack->owner == this) {
+      memcpy(this->data + this->implants->entries[i].offset,
+             this->implants->entries[i].sym->payload,
+             this->implants->entries[i].sym->size);
+    }
+  }
+}
+
 object object_new(object parent) {
   struct object_implant_hashtable* implants =
     gcalloc(sizeof(struct object_implant_hashtable) +
@@ -145,6 +158,8 @@ object object_new(object parent) {
 }
 
 object object_clone(object that) {
+  object_writeback(that);
+
   object this = newdup(that);
   this->data = gcalloc(this->data_size);
   memcpy(this->data, that->data, this->data_size);
@@ -629,19 +644,6 @@ static unsigned current_tx_id() {
 
 static void tx_fork_object(object this) {
   if (!tx_current || this->tx_id == tx_current->id) return;
-
-  // Write all current values back into the object
-  for (unsigned i = 0; i < this->implants->table_size; ++i) {
-    if (this->implants->entries[i].sym) {
-      if (this->implants->entries[i].sym->owner_stack &&
-          this->implants->entries[i].sym->owner_stack->owner ==
-            this) {
-        memcpy(this->data + this->implants->entries[i].offset,
-               this->implants->entries[i].sym->payload,
-               this->implants->entries[i].sym->size);
-      }
-    }
-  }
 
   object new = object_clone(this);
   // Populate data destroyed by object_clone
