@@ -338,10 +338,19 @@ defun($h_FileBuffer_edit) {
                    +1 * (signed)(ninsertions - ndeletions));
 
       } else if (ndeletions > ninsertions) {
-        // Need to shunt upward by the number of deletions.
+        // There are two cases here.
+        // If the cursor was in the region that was deleted, it should just be
+        // shunted to the first line not deleted. Otherwise, it should be
+        // shunted back by the relative number of lines deleted.
+        unsigned dist;
+        if (where < $I_FileBuffer_edit_line + ndeletions)
+          dist = where - $I_FileBuffer_edit_line;
+        else
+          dist = ndeletions - ninsertions;
+
         $M_shunt(0, cursor,
                  $i_FileBufferCursor_shunt_distance =
-                   -1 * (signed)(ndeletions - ninsertions));
+                   -1 * (signed)dist);
       }
 
       where = $(cursor, $I_FileBufferCursor_line_number);
