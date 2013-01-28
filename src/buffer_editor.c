@@ -171,7 +171,15 @@ defun($h_BufferLineEditor) {
 }
 
 /*
-  SYMBOL: $o_BufferLineEditor_destroy
+  SYMBOL: $f_BufferLineEditor_abort
+    Destroys this BufferLineEditor.
+ */
+defun($h_BufferLineEditor_abort) {
+  $m_destroy();
+}
+
+/*
+  SYMBOL: $f_BufferLineEditor_destroy
     Releases the resources used by this BufferLineEditor.
  */
 defun($h_BufferLineEditor_destroy) {
