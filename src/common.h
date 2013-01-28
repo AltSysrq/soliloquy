@@ -416,6 +416,7 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
 #define subclass(parent,child)                                  \
   member_of_domain(_GLUE(parent,$domain),_GLUE(child,$domain))  \
   static void _GLUE(ANONYMOUS,_supercon)(void) {                \
+    implant(_GLUE(parent,$this));                               \
     _GLUE(parent,$this) = _GLUE(child,$this);                   \
     _GLUE(parent,$function)();                                  \
   }                                                             \
