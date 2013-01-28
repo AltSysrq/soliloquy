@@ -130,12 +130,12 @@ defun($h_BufferEditor_get_echo_area_meta) {
              ((signed)$($o_BufferLineEditor_cursor,
                         $I_FileBufferCursor_line_number)));
 
-  qstring parts[6] = { lparen, name,
+  qstring parts[6] = { $q_Workspace_echo_area_meta,
+                       lparen, name,
                        wstrtoqstr(linenum),
                        apply_face_str($I_BufferEditor_mark_delta_face,
                                       wstrtoqstr(markline)),
-                       rparen,
-                       $q_Workspace_echo_area_meta };
+                       rparen, };
   $q_Workspace_echo_area_meta = qstrapv(parts, 6);
 }
 
@@ -208,8 +208,8 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
   swprintf(linenum, 16, L":%d", 1+$($o_BufferLineEditor_cursor,
                                     $I_FileBufferCursor_line_number));
 
-  qstring parts[5] = { lparen, name, wstrtoqstr(linenum), rparen,
-                       $q_Workspace_echo_area_meta };
+  qstring parts[5] = { $q_Workspace_echo_area_meta,
+                       lparen, name, wstrtoqstr(linenum), rparen };
   $q_Workspace_echo_area_meta = qstrapv(parts, 5);
 }
 
