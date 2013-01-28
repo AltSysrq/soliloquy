@@ -174,6 +174,8 @@ defun($h_BufferLineEditor) {
                  $m_destroy, $o_BufferLineEditor,
                  NULL);
   }
+
+  $M_update_echo_area(0, $o_Activity_workspace);
 }
 
 /*
