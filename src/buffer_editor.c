@@ -287,7 +287,6 @@ defun($h_BufferEditor_edit_current) {
       text = $aw_FileBuffer_contents->v[where];
     // We need to temporarily NULL our keybindings so that the BufferLineEditor
     // doesn't inherit them.
-    let($llp_Activity_keymap, NULL);
     $c_BufferLineEditor($w_LineEditor_text = text,
                         $y_BufferLineEditor_replace =
                           (where < $aw_FileBuffer_contents->len));
@@ -306,7 +305,6 @@ defun($h_BufferEditor_self_insert) {
     return;
   }
 
-  let($llp_Activity_keymap, NULL);
   object editor = $c_BufferLineEditor();
   $M_self_insert(0, editor);
 }
