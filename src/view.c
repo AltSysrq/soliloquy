@@ -196,13 +196,16 @@ defun($h_View_paint_line) {
   col *= ($i_column_width + $i_line_meta_width);
 
   qchar line[$i_column_width + $i_line_meta_width+1];
+  memset(line, 0, sizeof(line));
 
   object oline =
     $($($o_View_workspace,$o_Workspace_backing),
       $ao_Backing_lines)->v[$i_View_line_to_paint];
-  qstrlcpy(line, $(oline, $q_RenderedLine_meta), $i_line_meta_width+1);
-  qstrlcpy(line+$i_line_meta_width,
-           $(oline, $q_RenderedLine_body), $i_column_width+1);
+  if (oline) {
+    qstrlcpy(line, $(oline, $q_RenderedLine_meta), $i_line_meta_width+1);
+    qstrlcpy(line+$i_line_meta_width,
+             $(oline, $q_RenderedLine_body), $i_column_width+1);
+  }
 
   $$($o_View_terminal) {
     for (unsigned i = 0; i < sizeof(line)/sizeof(qchar)-1; ++i)

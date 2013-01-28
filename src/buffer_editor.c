@@ -120,8 +120,8 @@ defun($h_BufferEditor_get_echo_area_meta) {
 
   wchar_t linenum[16], markline[16];
   markline[0] = 0;
-  swprintf(linenum, 16, L":%d", $($o_BufferLineEditor_cursor,
-                                  $I_FileBufferCursor_line_number));
+  swprintf(linenum, 16, L":%d", 1+$($o_BufferEditor_cursor,
+                                    $I_FileBufferCursor_line_number));
   if ($lo_BufferEditor_marks)
     swprintf(markline, 16, L"%+d",
              ((signed)$($lo_BufferEditor_marks->car,
@@ -185,8 +185,8 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
                              $o_BufferLineEditor_parent),
                  name);
   wchar_t linenum[16];
-  swprintf(linenum, 16, L":%d", $($o_BufferLineEditor_cursor,
-                                  $I_FileBufferCursor_line_number));
+  swprintf(linenum, 16, L":%d", 1+$($o_BufferLineEditor_cursor,
+                                    $I_FileBufferCursor_line_number));
 
   qstring parts[5] = { lparen, name, wstrtoqstr(linenum), rparen,
                        $q_Workspace_echo_area_meta };

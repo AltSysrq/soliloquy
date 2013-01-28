@@ -57,12 +57,14 @@ int main(void) {
       $c_View($o_View_terminal = $$o_term,
               $o_View_workspace =
                 $c_Workspace(
-                  $o_Workspace_backing = $c_PrimesTranscript()));
-    $$($o_Terminal_current_view) {
-      $$($o_View_workspace) {
-        $c_LineEditor($o_Activity_workspace = $o_View_workspace);
-      }
-    }
+                  $o_Workspace_backing =
+                    $c_Transcript(
+                      $o_Backing_default_activity =
+                      $c_BufferEditor(
+                        $o_BufferEditor_buffer =
+                        $c_FileBuffer(
+                          $w_FileBuffer_filename = L"*scratch*",
+                          $y_FileBuffer_memory_backed = true)))));
     $M_redraw(0,$o_Terminal_current_view);
   }
 
