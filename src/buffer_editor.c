@@ -157,6 +157,17 @@ defun($h_BufferLineEditor) {
   $o_BufferLineEditor_cursor = object_clone($o_BufferEditor_cursor);
   $o_BufferLineEditor_parent = $o_BufferEditor;
   $o_BufferLineEditor_buffer = $o_BufferEditor_buffer;
+
+  //We inherit the echo area update hook by cloning the BufferEditor's
+  //cursor. But we need to know if our line gets deleted/modified, in which
+  //case we must cease to exist.
+  $$($o_BufferLineEditor_cursor) {
+    $I_FileBufferCursor_window = 1;
+    add_hook_obj($H_window_changed, HOOK_MAIN,
+                 $u_BufferLineEditor, $u_BufferLineEditor,
+                 $m_destroy, $o_BufferLineEditor,
+                 NULL);
+  }
 }
 
 /*
