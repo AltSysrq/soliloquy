@@ -317,6 +317,8 @@ class_keymap($c_BufferEditor, $lp_BufferEditor_keymap, $llp_Activity_keymap)
 ATSINIT {
   bind_char($lp_BufferEditor_keymap, $u_ground, L'\r', NULL,
             $f_BufferEditor_insert_blank_line_above);
+  bind_char($lp_BufferEditor_keymap, $u_ground, CONTROL_O, NULL,
+            $f_BufferEditor_insert_blank_line_below);
   bind_char($lp_BufferEditor_keymap, $u_ground, CONTROL_E, NULL,
             $f_BufferEditor_edit_current);
 
