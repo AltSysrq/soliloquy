@@ -36,6 +36,7 @@
 defun($h_Activity) {
   $$($o_Activity_workspace) {
     lpush_o($lo_Workspace_activities, $o_Activity);
+    $m_update_echo_area();
   }
 }
 
