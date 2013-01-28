@@ -197,7 +197,7 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
   static qstring lparen = NULL, rparen = NULL;
   if (!lparen) {
     lparen = wstrtoqstr(L"(");
-    rparen = wstrtoqstr(L"]");
+    rparen = wstrtoqstr(L")");
   }
   mqstring name = wstrtoqstr($($o_BufferLineEditor_buffer,
                                $w_FileBuffer_filename));
@@ -282,6 +282,22 @@ defun($h_BufferEditor_edit_current) {
                         $y_BufferLineEditor_replace =
                           (where < $aw_FileBuffer_contents->len));
   }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_self_insert
+    Insert a new line before cursor, invoke an editor on it, call
+    $m_self_insert in its context. As a side-effect, cursor will be shunted
+    downward.
+ */
+defun($h_BufferEditor_self_insert) {
+  if (!is_nc_char($x_Terminal_input_value)) {
+    $y_key_dispatch_continue = true;
+    return;
+  }
+
+  object editor = $c_BufferLineEditor();
+  $M_self_insert(0, editor);
 }
 
 /*
