@@ -228,6 +228,12 @@ defun($h_BufferLineEditor_accept) {
   mwstring line = gcalloc(sizeof(wchar_t)*($az_LineEditor_buffer->len + 1));
   memcpy(line, $az_LineEditor_buffer->v,
          sizeof(wchar_t)*$az_LineEditor_buffer->len);
+  // We no longer care about window notifications (and we're about to trigger
+  // one anyway)
+  $$($o_BufferLineEditor_cursor) {
+    del_hook($H_window_changed, HOOK_MAIN,
+             $u_BufferLineEditor, $o_BufferLineEditor);
+  }
   $M_edit(0, $o_BufferLineEditor_buffer,
           $I_FileBuffer_ndeletions = ($y_BufferLineEditor_replace? 1:0),
           $lw_FileBuffer_replacements = cons_w(line, NULL),
