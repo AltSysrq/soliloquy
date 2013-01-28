@@ -155,7 +155,12 @@ defun($h_BufferEditor_get_echo_area_meta) {
  */
 subclass($c_LineEditor, $c_BufferLineEditor)
 defun($h_BufferLineEditor) {
-  $o_BufferLineEditor_cursor = object_clone($o_BufferEditor_cursor);
+  // Clone won't work here because it doesn't set the new "this" value and
+  // such. For now, just do it by constructing a new object within the
+  // context of the other (which has the effect of passing all parms).
+  //$o_BufferLineEditor_cursor = object_clone($o_BufferEditor_cursor);
+  $o_BufferLineEditor_cursor =
+    within_context($o_BufferEditor_cursor, $c_FileBufferCursor());
   $o_BufferLineEditor_parent = $o_BufferEditor;
   $o_BufferLineEditor_buffer = $o_BufferEditor_buffer;
 
