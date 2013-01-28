@@ -45,6 +45,9 @@ defun($h_Activity) {
     Destroys this Activity, removing it from its Workspace's Activities list.
  */
 defun($h_Activity_destroy) {
+  // Suppress this Activity's echo area hooks
+  let($H_get_echo_area_contents, NULL);
+  let($H_get_echo_area_meta, NULL);
   $$($o_Activity_workspace) {
     $lo_Workspace_activities = lrm_o($lo_Workspace_activities, $o_Activity);
     $m_update_echo_area();
