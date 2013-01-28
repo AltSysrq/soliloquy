@@ -20,6 +20,7 @@
 
 #include "face.h"
 #include "interactive.h"
+#include "key_dispatch.h"
 
 /*
   TITLE: Buffer Editor
@@ -226,4 +227,83 @@ defun($h_BufferLineEditor_accept) {
           $I_FileBuffer_edit_line =
             $($o_BufferLineEditor_cursor, $I_FileBufferCursor_line_number));
   $m_destroy();
+}
+
+/*
+  SYMBOL: $f_BufferEditor_insert_blank_line_above
+    Inserts a blank line above the current line. The cursor will be shunted
+    downward by one line as a result.
+ */
+defun($h_BufferEditor_insert_blank_line_above) {
+  $M_edit(0, $o_BufferEditor_buffer,
+          $I_FileBuffer_ndeletions = 0,
+          $lw_FileBuffer_replacements = cons_w(L"", NULL),
+          $I_FileBuffer_edit_line =
+            $($o_BufferEditor_cursor, $I_FileBufferCursor_line_number));
+}
+
+/*
+  SYMBOL: $f_BufferEditor_insert_blank_line_below
+    Inserts a blank line below the cursor, without advancing. If cursor is at
+    the end of the buffer, a line is inserted before the cursor, then the
+    cursor is retreated one line.
+ */
+defun($h_BufferEditor_insert_blank_line_below) {
+  unsigned where = $($o_BufferEditor_cursor, $I_FileBufferCursor_line_number);
+  $M_access(0, $o_BufferEditor_buffer);
+  if (where < $($o_BufferEditor_buffer, $aw_FileBuffer_contents)->len) {
+    $M_edit(0, $o_BufferEditor_buffer,
+            $I_FileBuffer_ndeletions = 0,
+            $lw_FileBuffer_replacements = cons_w(L"", NULL),
+            $I_FileBuffer_edit_line = 1 + where);
+  } else {
+    $M_edit(0, $o_BufferEditor_buffer,
+            $I_FileBuffer_ndeletions = 0,
+            $lw_FileBuffer_replacements = cons_w(L"", NULL),
+            $I_FileBuffer_edit_line = where);
+    $M_shunt(0, $o_BufferEditor_cursor,
+             $i_FileBufferCursor_shunt_distance = -1);
+  }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_edit_current
+    Opens a BufferLineEditor for the current line.
+ */
+defun($h_BufferEditor_edit_current) {
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    unsigned where = $($o_BufferEditor_cursor,
+                       $I_FileBufferCursor_line_number);
+    wstring text = L"";
+    if (where < $aw_FileBuffer_contents->len)
+      text = $aw_FileBuffer_contents->v[where];
+    $c_BufferLineEditor($w_LineEditor_text = text,
+                        $y_BufferLineEditor_replace =
+                          (where < $aw_FileBuffer_contents->len));
+  }
+}
+
+/*
+  SYMBOL: $lp_BufferEditor_keymap
+    Keybindings specific to BufferEditors.
+ */
+class_keymap($c_BufferEditor, $lp_BufferEditor_keymap, $llp_Activity_keymap)
+ATSINIT {
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'\r', NULL,
+            $f_BufferEditor_insert_blank_line_above);
+  bind_char($lp_BufferEditor_keymap, $u_ground, CONTROL_E, NULL,
+            $f_BufferEditor_edit_current);
+
+  bind_kp($lp_BufferEditor_keymap, $u_ground, KEYBINDING_DEFAULT, NULL,
+          $f_BufferEditor_self_insert);
+
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'j', $v_end_meta,
+            $f_BufferEditor_backward_line);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'k', $v_end_meta,
+            $f_BufferEditor_forward_line);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'l', $v_end_meta,
+            $f_BufferEditor_kill_backward_line);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L';', $v_end_meta,
+            $f_BufferEditor_kill_forward_line);
 }

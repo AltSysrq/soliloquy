@@ -255,12 +255,12 @@ defun($h_FileBuffer_edit) {
 
   // Cap ndeletions if it would run past the end of the buffer
   if ($I_FileBuffer_edit_line + $I_FileBuffer_ndeletions >
-      $az_LineEditor_buffer->len)
+      $aw_FileBuffer_contents->len)
     $I_FileBuffer_ndeletions =
-      $az_LineEditor_buffer->len - $I_FileBuffer_edit_line;
+      $aw_FileBuffer_contents->len - $I_FileBuffer_edit_line;
 
   //Abort if out of range
-  if ($I_FileBuffer_edit_line > $az_LineEditor_buffer->len) {
+  if ($I_FileBuffer_edit_line > $aw_FileBuffer_contents->len) {
     $v_rollback_type = $u_FileBuffer;
     $s_rollback_reason = "$I_FileBuffer_edit_line out of range";
     tx_rollback();

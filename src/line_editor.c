@@ -81,7 +81,7 @@ defun($h_LineEditor) {
     $az_LineEditor_buffer = dynar_new_z();
     dynar_expand_by_z($az_LineEditor_buffer, wcslen($w_LineEditor_text));
     for (unsigned i = 0; $w_LineEditor_text[i]; ++i)
-      $az_LineEditor_buffer->v[i] = (signed)(unsigned)$w_LineEditor_text[i];
+      $az_LineEditor_buffer->v[i] = $w_LineEditor_text[i];
   }
 
   if (-1 == $i_LineEditor_cursor)
