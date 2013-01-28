@@ -275,10 +275,8 @@ defun($h_FileBuffer_edit) {
   unsigned long long now = time(0);
   unsigned prev_undo = $I_FileBuffer_undo_offset;
 
-  //Seek to the end of the file
-  $I_FileBuffer_undo_offset = fseek($p_shared_undo_log, 0, SEEK_END);
+  $I_FileBuffer_undo_offset = ftell($p_shared_undo_log);
   if (!~$I_FileBuffer_undo_offset)
-    // Seek failed for some reason
     tx_rollback_errno($u_FileBuffer);
 
   //Write the header for this undo record
