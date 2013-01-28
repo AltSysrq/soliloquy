@@ -89,6 +89,14 @@ defun($h_LineEditor) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_destroy
+    Forwards call to $f_Activity_destroy.
+ */
+defun($h_LineEditor_destroy) {
+  $f_Activity_destroy();
+}
+
+/*
   SYMBOL: $f_LineEditor_push_undo
     Pushes a copy of the current edit buffer onto the undo stack, and clears
     the redo stack. The current top of the undo stack will be preserved if
