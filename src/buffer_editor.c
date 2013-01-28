@@ -316,6 +316,36 @@ defun($h_BufferEditor_self_insert) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_forward_line
+    Moves the buffer cursor down one line, unless already at the end of the
+    file.
+ */
+defun($h_BufferEditor_forward_line) {
+  $$($o_BufferEditor_cursor) $$($o_BufferEditor_buffer) {
+    $m_access();
+    if ($I_FileBufferCursor_line_number !=
+        $aw_FileBuffer_contents->len)
+      ++$I_FileBufferCursor_line_number;
+  }
+
+  $m_update_echo_area();
+}
+
+/*
+  SYMBOL: $f_BufferEditor_backward_line
+    Moves the buffer cursor up one line, unless already at the end of the
+    file.
+ */
+defun($h_BufferEditor_backward_line) {
+  $$($o_BufferEditor_cursor) {
+    if ($I_FileBufferCursor_line_number)
+      --$I_FileBufferCursor_line_number;
+  }
+
+  $m_update_echo_area();
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
  */
