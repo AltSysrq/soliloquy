@@ -332,7 +332,7 @@ static void process_class(const string& csym) {
          "  `OSYM = object_current();                                      \n"
          "}                                                                \n"
          "ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {               \n"
-         "  add_hook(&`HSYM, HOOK_BEFORE,                                  \n"
+         "  add_hook(&`HSYM, HOOK_BEFORE_EVERYTHING,                       \n"
          "           $u_fundamental_construction, `USYM,                   \n"
          "           _`CSYM$fun_ctor,constraint_before_superconstructor);  \n"
          "}                                                                \n",

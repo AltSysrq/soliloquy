@@ -186,7 +186,6 @@ defun($h_BufferLineEditor) {
 }
 
 advise_before_superconstructor($h_BufferLineEditor) {
-  implant($o_Activity_parent);
   $o_Activity_parent = $o_BufferEditor;
 }
 

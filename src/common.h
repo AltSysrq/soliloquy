@@ -562,11 +562,12 @@ struct hook_point_entry {
   struct hook_point_entry* next;
 };
 
-#define HOOK_BEFORE 0
-#define HOOK_MAIN 1
-#define HOOK_AFTER 2
+#define HOOK_BEFORE_EVERYTHING 0
+#define HOOK_BEFORE 1
+#define HOOK_MAIN 2
+#define HOOK_AFTER 3
 struct hook_point {
-  struct hook_point_entry* entries[3];
+  struct hook_point_entry* entries[4];
 };
 
 enum implantation_type { ImplantSingle, ImplantDomain };
