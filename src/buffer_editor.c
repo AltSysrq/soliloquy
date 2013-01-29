@@ -63,6 +63,9 @@ ATSINIT {
   SYMBOL: $u_shunt_notify
     Identifies the BufferEditor's hook on $H_shunt within a FileBufferCursor to
     refresh the echo area.
+
+  SYMBOL: $lo_BufferEditor_marks
+    The mark stack (of FileBufferCursors) for this BufferEditor.
  */
 subclass($c_Activity, $c_BufferEditor)
 defun($h_BufferEditor) {
@@ -256,6 +259,9 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
 /*
   SYMBOL: $f_BufferLineEditor_accept
     Accepts the new text of the line, and performs the edit within the buffer.
+
+  SYMBOL: $y_BufferLineEditor_replace
+    Whether the BufferLineEditor will replace a line, or insert a new one.
  */
 defun($h_BufferLineEditor_accept) {
   mwstring line = gcalloc(sizeof(wchar_t)*($az_LineEditor_buffer->len + 1));
