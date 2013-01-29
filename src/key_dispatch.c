@@ -161,6 +161,10 @@ static bool search_one(list_lp llst, qchar key) {
           kb->function();
           tx_commit();
           function_done:;
+        } else {
+          // Nothing is being run; move the previous command back to the
+          // current
+          $o_this_command = $o_prev_command;
         }
         if (kb->newmode)
           $v_Terminal_key_mode = kb->newmode;
