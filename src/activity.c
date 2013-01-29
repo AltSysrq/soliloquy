@@ -71,7 +71,7 @@ defun($h_Activity_destroy) {
   if ($o_Activity_parent) {
     object this = $o_Activity;
     $$($o_Activity_parent) {
-      $lo_Workspace_activities = lrm_o($lo_Activity_children, this);
+      $lo_Activity_children = lrm_o($lo_Activity_children, this);
     }
   }
 
