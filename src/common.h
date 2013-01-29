@@ -333,6 +333,19 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
 #define advise_id_after(id, hook) _ADVISE_ID(id, hook, HOOK_AFTER)
 
 /**
+ * Defines advice to run before a class's superconstructor.
+ */
+#define advise_before_superconstructor(hook)            \
+  static void _GLUE(supercon,__LINE__)(void);           \
+  ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {    \
+    add_hook(&hook, priority,                           \
+             (identity)_GLUE(supercon,__LINE__), NULL,  \
+             _GLUE(supercon,__LINE__),                  \
+             constraint_before_superconstructor);       \
+  }                                                     \
+  static void _GLUE(supercon,__LINE__)(void)
+
+/**
  * Usage:
  *   defun($h_some_hook) { (* body *) }
  *
