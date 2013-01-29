@@ -358,13 +358,17 @@ defun($h_BufferEditor_self_insert) {
   SYMBOL: $f_BufferEditor_forward_line
     Moves the buffer cursor down one line, unless already at the end of the
     file.
+
+  SYMBOL: $I_LastCommand_forward_line
+    Variable for accelerate() in $f_BufferEditor_forward_line.
  */
 defun($h_BufferEditor_forward_line) {
   $$($o_BufferEditor_cursor) $$($o_BufferEditor_buffer) {
+    unsigned dist = accelerate_max(&$I_LastCommand_forward_line,
+                                   $aw_FileBuffer_contents->len -
+                                   $I_FileBufferCursor_line_number);
     $m_access();
-    if ($I_FileBufferCursor_line_number !=
-        $aw_FileBuffer_contents->len)
-      ++$I_FileBufferCursor_line_number;
+    $I_FileBufferCursor_line_number += dist;
   }
 
   $m_update_echo_area();
@@ -374,11 +378,15 @@ defun($h_BufferEditor_forward_line) {
   SYMBOL: $f_BufferEditor_backward_line
     Moves the buffer cursor up one line, unless already at the end of the
     file.
+
+  SYMBOL: $I_LastCommand_backward_line
+    Variable for accelerate() in $f_BufferEditor_backward_line.
  */
 defun($h_BufferEditor_backward_line) {
   $$($o_BufferEditor_cursor) {
-    if ($I_FileBufferCursor_line_number)
-      --$I_FileBufferCursor_line_number;
+    unsigned dist = accelerate_max(&$I_LastCommand_backward_line,
+                                   $I_FileBufferCursor_line_number);
+    $I_FileBufferCursor_line_number -= dist;
   }
 
   $m_update_echo_area();
