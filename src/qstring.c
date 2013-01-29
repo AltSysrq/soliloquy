@@ -193,5 +193,7 @@ bool is_word_boundary(qchar a, qchar b) {
   return false;
 }
 
-static qchar zero = 0;
-const qchar*const qempty = &zero;
+static const qchar space[2] = { L' ', 0 };
+const qchar*const qempty = space+1;
+const qchar*const qspace = space;
+

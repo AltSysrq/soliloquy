@@ -192,10 +192,15 @@ bool is_nc_char(qchar ch) __attribute__((pure));
  * that is, it returns true if the second parameter is the beginning of a
  * logical word, given the character that precedes it.
  */
-bool is_word_boundary(qchar,qchar) __attribute__((pure));
+bool is_word_boundary(qchar,qchar x) __attribute__((pure));
 
 /**
  * The empty qstring.
  */
 extern const qchar*const qempty;
+
+/**
+ * A string consisting of only a single space
+ */
+extern const qchar*const qspace;
 #endif /* QSTRING_H_ */

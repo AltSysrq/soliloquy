@@ -163,9 +163,14 @@ defun($h_IActiveActivity) {
     Adds the prompt for this IActiveActivity to the meta string.
  */
 defun($h_IActiveActivity_get_echo_area_meta) {
+  if ($lo_echo_area_activities) {
+    object next = $lo_echo_area_activities->car;
+    let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
+    $M_get_echo_area_meta(0, next);
+  }
   qchar separator[2] = {L':', 0};
   $q_Workspace_echo_area_meta = qstrap3(
-    $q_Workspace_echo_area_meta, separator, $q_IActiveActivity_name);
+    $q_IActiveActivity_name, separator, $q_Workspace_echo_area_meta);
 }
 
 /*

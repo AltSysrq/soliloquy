@@ -48,6 +48,11 @@
 #define _GLUE(x,y) __GLUE(x,y)
 
 /**
+ * Returns the length of an automatic array.
+ */
+#define lenof(x) (sizeof(x)/sizeof(x[0]))
+
+/**
  * Causes a global variable to be initialised before main() is run, but after
  * symbols have been constructed.
  *

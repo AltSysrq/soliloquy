@@ -50,8 +50,15 @@
     is to set $q_Workspace_echo_area_contents to any non-NULL value.
 
   SYMBOL: $m_get_echo_area_meta
-    Appends the metadata string for the current activity to
-    $q_Workspace_echo_area_meta.
+    Sets $q_Workspace_echo_area_meta to the metadata describing the Activity
+    stack. $lo_echo_area_activities will be set to the list of remaining
+    activities in the stack; it is the callee's responsibility to embed their
+    information as well. On the initial call, $q_Workspace_echo_area_meta is
+    the empty string.
+
+  SYMBOL: $lo_echo_area_activities
+    Within a call to $m_get_echo_area_meta, the list of activities below the
+    current in the activity stack.
 
   SYMBOL: $m_is_echo_enabled
     Method on Activity to set $y_Workspace_is_echo_enabled to indicate whether
@@ -81,8 +88,10 @@ defun($h_Workspace_draw_echo_area) {
   if (!$q_Workspace_echo_area_contents)
     $q_Workspace_echo_area_contents = qempty;
 
-  for (list_o curr = $lo_Workspace_activities; curr; curr = curr->cdr)
-    $M_get_echo_area_meta(0, curr->car);
+  if ($lo_Workspace_activities) {
+    let($lo_echo_area_activities, $lo_Workspace_activities->cdr);
+    $M_get_echo_area_meta(0, $lo_Workspace_activities->car);
+  }
 
   qchar str[$i_Terminal_cols+1];
   memset(str, 0, sizeof(str));

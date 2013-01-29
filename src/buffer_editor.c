@@ -110,6 +110,12 @@ defun($h_BufferEditor_get_face) {
     delta, if applicable) to $q_Workspace_echo_area_meta.
  */
 defun($h_BufferEditor_get_echo_area_meta) {
+  if ($lo_echo_area_activities) {
+    object next = $lo_echo_area_activities->car;
+    let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
+    $M_get_echo_area_meta(0, next);
+  }
+  
   static qstring lparen = NULL, rparen = NULL;
   if (!lparen) {
     lparen = wstrtoqstr(L"[");
@@ -130,13 +136,14 @@ defun($h_BufferEditor_get_echo_area_meta) {
              ((signed)$($o_BufferLineEditor_cursor,
                         $I_FileBufferCursor_line_number)));
 
-  qstring parts[6] = { $q_Workspace_echo_area_meta,
-                       lparen, name,
-                       wstrtoqstr(linenum),
-                       apply_face_str($I_BufferEditor_mark_delta_face,
-                                      wstrtoqstr(markline)),
-                       rparen, };
-  $q_Workspace_echo_area_meta = qstrapv(parts, 6);
+  qstring parts[] = { lparen, name,
+                      wstrtoqstr(linenum),
+                      apply_face_str($I_BufferEditor_mark_delta_face,
+                                     wstrtoqstr(markline)),
+                      rparen,
+                      $lo_echo_area_activities? qspace : qempty,
+                      $q_Workspace_echo_area_meta };
+  $q_Workspace_echo_area_meta = qstrapv(parts, lenof(parts));
 }
 
 /*
@@ -206,18 +213,40 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
     lparen = wstrtoqstr(L"(");
     rparen = wstrtoqstr(L")");
   }
-  mqstring name = wstrtoqstr($($o_BufferLineEditor_buffer,
-                               $w_FileBuffer_filename));
-  apply_face_str($M_get_face($I_BufferEditor_face,
-                             $o_BufferLineEditor_parent),
-                 name);
-  wchar_t linenum[16];
-  swprintf(linenum, 16, L":%d", 1+$($o_BufferLineEditor_cursor,
-                                    $I_FileBufferCursor_line_number));
 
-  qstring parts[5] = { $q_Workspace_echo_area_meta,
-                       lparen, name, wstrtoqstr(linenum), rparen };
-  $q_Workspace_echo_area_meta = qstrapv(parts, 5);
+  object next = NULL;
+  if ($lo_echo_area_activities) {
+    next = $lo_echo_area_activities->car;
+    let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
+    $M_get_echo_area_meta(0, next);
+  }
+
+  wchar_t linenum[16] = {0};
+  // Only indicate line number if we are not directly on top of our parent, or
+  // if the line numbers diverge
+  if (next != $o_BufferLineEditor_parent ||
+      $($o_BufferLineEditor_cursor, $I_FileBufferCursor_line_number) !=
+      $($($o_BufferLineEditor_parent, $o_BufferEditor_cursor),
+        $I_FileBufferCursor_line_number))
+    swprintf(linenum, 16, L":%d", 1+$($o_BufferLineEditor_cursor,
+                                      $I_FileBufferCursor_line_number));
+
+  if (next != $o_BufferLineEditor_parent) {
+    // Not directly on parent, must use explicit syntax
+    mqstring name = wstrtoqstr($($o_BufferLineEditor_buffer,
+                                 $w_FileBuffer_filename));
+    apply_face_str($M_get_face($I_BufferEditor_face,
+                               $o_BufferLineEditor_parent),
+                   name);
+    qstring parts[] = { lparen, name, wstrtoqstr(linenum), rparen,
+                        qspace, $q_Workspace_echo_area_meta };
+    $q_Workspace_echo_area_meta = qstrapv(parts, lenof(parts));
+  } else {
+    // On top of parent, use concise syntax
+    qstring parts[] = { lparen, $q_Workspace_echo_area_meta,
+                        wstrtoqstr(linenum), rparen };
+    $q_Workspace_echo_area_meta = qstrapv(parts, lenof(parts));
+  }
 }
 
 /*
