@@ -185,6 +185,11 @@ defun($h_BufferLineEditor) {
   $M_update_echo_area(0, $o_Activity_workspace);
 }
 
+advise_before_superconstructor($h_BufferLineEditor) {
+  implant($o_Activity_parent);
+  $o_Activity_parent = $o_BufferEditor;
+}
+
 /*
   SYMBOL: $f_BufferLineEditor_abort
     Destroys this BufferLineEditor.

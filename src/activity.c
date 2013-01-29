@@ -32,12 +32,26 @@
 
   SYMBOL: $o_Activity_workspace
     The workspace on which this Activity is located.
+
+  SYMBOL: $o_Activity_parent
+    The logical parent of this Activity. If the parent is destroyed, so will
+    this one.
+
+  SYMBOL: $lo_Activity_children
+    The logical children of this Activity.
  */
 defun($h_Activity) {
   $llp_Activity_keymap = NULL;
   $$($o_Activity_workspace) {
     lpush_o($lo_Workspace_activities, $o_Activity);
     $m_update_echo_area();
+  }
+
+  if ($o_Activity_parent) {
+    object this = $o_Activity;
+    $$($o_Activity_parent) {
+      lpush_o($lo_Activity_children, this);
+    }
   }
 }
 
@@ -53,6 +67,16 @@ defun($h_Activity_destroy) {
     $lo_Workspace_activities = lrm_o($lo_Workspace_activities, $o_Activity);
     $m_update_echo_area();
   }
+
+  if ($o_Activity_parent) {
+    object this = $o_Activity;
+    $$($o_Activity_parent) {
+      $lo_Workspace_activities = lrm_o($lo_Activity_children, this);
+    }
+  }
+
+  for (list_o curr = $lo_Activity_children; curr; curr = curr->cdr)
+    $M_destroy(0, curr->car);
 }
 
 /*

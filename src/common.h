@@ -338,7 +338,7 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
 #define advise_before_superconstructor(hook)            \
   static void _GLUE(supercon,__LINE__)(void);           \
   ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {    \
-    add_hook(&hook, priority,                           \
+    add_hook(&hook, HOOK_BEFORE,                        \
              (identity)_GLUE(supercon,__LINE__), NULL,  \
              _GLUE(supercon,__LINE__),                  \
              constraint_before_superconstructor);       \

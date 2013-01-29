@@ -132,7 +132,11 @@ defun($h_invoke_interactive) {
   object activity = object_new(factory);
   $$(workspace) {
     $$(activity) {
+      implant($d_Activity);
       $o_Activity_workspace = workspace;
+      //$o_Activity here still refers to whatever activity is present, since
+      //the new activity object is still bare.
+      $o_Activity_parent = $o_Activity;
       invoke_hook($H_IArg_activate);
 
       // Set continuation up
