@@ -35,8 +35,9 @@
 */
 STATIC_INIT_TO($v_Terminal_key_mode, $u_ground)
 
-static bool search(list_lp, qchar);
+static bool search_one(list_lp, qchar);
 static bool search_all(qchar);
+static bool search(list_lp, qchar);
 
 /*
   SYMBOL: $u_key_dispatch
@@ -50,8 +51,7 @@ static bool search_all(qchar);
  */
 advise_id($u_key_dispatch, $h_Terminal_getch) {
   if (!search_all($x_Terminal_input_value))
-    if (!search_all(KEYBINDING_DEFAULT))
-      $f_key_undefined();
+    $f_key_undefined();
 }
 
 /*
@@ -112,6 +112,10 @@ static bool search_all(qchar key) {
   return false;
 }
 
+static bool search(list_lp list, qchar key) {
+  return search_one(list,key) || search_one(list,KEYBINDING_DEFAULT);
+}
+
 /*
   SYMBOL: $y_key_dispatch_continue
     If set to be true by a keybinding function, searching will continue as if
@@ -120,7 +124,7 @@ static bool search_all(qchar key) {
     switches should not be combined with functions which may potentially set
     this to true.
  */
-static bool search(list_lp llst, qchar key) {
+static bool search_one(list_lp llst, qchar key) {
   for (list_lp llcurr = llst; llcurr; llcurr = llcurr->cdr) {
     for (list_p lcurr = llcurr->car; lcurr; lcurr = lcurr->cdr) {
       const keybinding* kb = lcurr->car;

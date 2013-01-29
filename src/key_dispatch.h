@@ -38,11 +38,11 @@
  * two-dimensionality of the list is only to ease management of keymaps; they
  * are effectively flattened when searched.
  *
- * Searching is performed in two passes. On the first pass, the exact keystroke
- * ($x_Terminal_input_value) is compared against keybindings' triggers,
- * respecting mode. If no such keybinding is found, the search is repeated
- * searching as if KEYBINDING_DEFAULT had been typed. If that search is also
- * unsuccessful, $f_key_undefined() is called.
+ * Searching is performed in two passes for each level of searching. On the
+ * first pass, the exact keystroke ($x_Terminal_input_value) is compared
+ * against keybindings' triggers, respecting mode. If no such keybinding is
+ * found, the search is repeated searching as if KEYBINDING_DEFAULT had been
+ * typed. If that search is also unsuccessful, $f_key_undefined() is called.
  *
  * Handler functions are called within the context of the object whose keymap
  * it was found within, as well as within the contexts of the objects searched
