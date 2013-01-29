@@ -238,23 +238,34 @@ defun($h_LineEditor_delete_forward_char) {
 /*
   SYMBOL: $f_LineEditor_move_forward_char
     Moves the cursor one character to the right.
+
+  SYMBOL: $I_LastCommand_forward_char
+    The distance to move on the next LineEditor_move_forward_char. Zero means 1
+    (as does 1).
  */
 defun($h_LineEditor_move_forward_char) {
-  if ($i_LineEditor_cursor != $az_LineEditor_buffer->len) {
-    ++$i_LineEditor_cursor;
-    $m_changed();
-  }
+  unsigned dist = accelerate_max(
+    &$I_LastCommand_forward_char,
+    $az_LineEditor_buffer->len - $i_LineEditor_cursor);
+
+  $i_LineEditor_cursor += dist;
+  $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_move_backward_char
     Moves the cursor one character to the left.
+
+  SYMBOL: $I_LastCommand_backward_char
+    accelerate() value for $f_LineEditor_move_backward_char.
  */
 defun($h_LineEditor_move_backward_char) {
-  if ($i_LineEditor_cursor != 0) {
-    --$i_LineEditor_cursor;
-    $m_changed();
-  }
+  unsigned dist = accelerate_max(
+    &$I_LastCommand_backward_char,
+    $i_LineEditor_cursor);
+
+  $i_LineEditor_cursor -= dist;
+  $m_changed();
 }
 
 /*

@@ -234,3 +234,20 @@ ATSTART(ANONYMOUS, STATIC_INITIALISATION_PRIORITY) {
   bind_kp($lp_WCharIActive_keymap, $u_ground, KEYBINDING_DEFAULT, NULL,
           $f_WCharIActive_char);
 }
+
+unsigned accelerate(unsigned* var) {
+  unsigned speed;
+  $$($o_prev_command) {
+    speed = *var;
+  }
+  $$($o_this_command) {
+    *var = speed+1;
+  }
+
+  return speed ?: 1;
+}
+
+unsigned accelerate_max(unsigned* var, unsigned max) {
+  unsigned speed = accelerate(var);
+  return speed > max? max : speed;
+}

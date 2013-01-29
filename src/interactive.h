@@ -75,6 +75,20 @@ void invoke_interactive(object iactive);
       interactive_##type(&sym, prompt);         \
     })
 
+/**
+ * On successive calls with the same pointer, returns the sequence 1, 1, 2, 3,
+ * 4, ... . This uses $o_this_command and $o_prev_command to track position in
+ * the sequence, so the pointer should point to a variable implanted in
+ * $c_LastCommand.
+ */
+unsigned accelerate(unsigned*);
+
+/**
+ * Calls accelerate() with the same pointer, but limits the return value to the
+ * given maximum (inclusive).
+ */
+unsigned accelerate_max(unsigned*, unsigned);
+
 void interactive_I(unsigned*, wstring);
 void interactive_w(wstring*, wstring);
 void interactive_i(signed*, wstring);
