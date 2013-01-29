@@ -35,6 +35,23 @@
 */
 STATIC_INIT_TO($v_Terminal_key_mode, $u_ground)
 
+/*
+  SYMBOL: $c_LastCommand
+    Used to contain booleans indicating the type of the most recent keyboard
+    command run. The only two relevant instances are $o_this_command and
+    $o_prev_command.
+
+  SYMBOL: $o_this_command
+    An instance of $c_LastCommand which is reinitialised on every
+    keystroke. Commands that need to remember that they were run should set
+    variables within when the are run.
+
+  SYMBOL: $o_prev_command
+    The $o_this_command from the previous keystroke.
+ */
+STATIC_INIT_TO($o_this_command, $c_LastCommand())
+STATIC_INIT_TO($o_prev_command, $c_LastCommand())
+
 static bool search_one(list_lp, qchar);
 static bool search_all(qchar);
 static bool search(list_lp, qchar);
@@ -50,6 +67,8 @@ static bool search(list_lp, qchar);
     Called when a key is pressed which does not have any known mapping.
  */
 advise_id($u_key_dispatch, $h_Terminal_getch) {
+  $o_prev_command = $o_this_command;
+  $o_this_command = $c_LastCommand();
   if (!search_all($x_Terminal_input_value))
     $f_key_undefined();
 }
