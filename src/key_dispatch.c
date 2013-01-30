@@ -151,16 +151,22 @@ static bool search_one(list_lp llst, qchar key) {
           (!kb->mode || kb->mode == $v_Terminal_key_mode)) {
         $y_key_dispatch_continue = false;
         if (kb->function) {
-          __label__ function_done;
+          __label__ error;
           void on_rollback(void) {
-            // Handle the error message better later
-            fprintf(stderr, "Error: %s\n", $s_rollback_reason);
-            goto function_done;
+            goto error;
           }
           tx_start(on_rollback);
           kb->function();
           tx_commit();
-          function_done:;
+          if (false) {
+            error:;
+            unsigned len = mbstowcs(NULL, $s_rollback_reason, 0);
+            wchar_t str[len+1];
+            str[len] = 0;
+            mbstowcs(str, $s_rollback_reason, len);
+            let($w_message_text, str);
+            $f_message_error();
+          }
         } else {
           // Nothing is being run; move the previous command back to the
           // current

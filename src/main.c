@@ -38,12 +38,13 @@ ATSTART(wait_for_debugging, 101) {
 #endif
 
 class_keymap($c_Terminal, $$lp_main_keymap, $llp_Terminal_keymap)
+class_keymap($c_Workspace, $$lp_main_keymap2, $llp_Workspace_keymap)
 
 int main(void) {
   setlocale(LC_ALL, "");
 
   bind_char($$lp_main_keymap, $u_extended, CONTROL_C, NULL, $$f_quit);
-  bind_char($$lp_main_keymap, $u_extended, CONTROL_X, $u_ground, $$f_die);
+  bind_char($$lp_main_keymap2, $u_extended, CONTROL_X, $u_ground, $$f_die);
 
   if (!($$o_term = $c_Terminal($s_Terminal_type = getenv("TERM"),
                                $p_Terminal_input = stdin,
