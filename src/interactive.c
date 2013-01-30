@@ -236,7 +236,7 @@ ATSTART(ANONYMOUS, STATIC_INITIALISATION_PRIORITY) {
 }
 
 unsigned accelerate(unsigned* var) {
-  unsigned speed;
+  unsigned speed = 0;
   $$($o_prev_command) {
     speed = *var;
   }
