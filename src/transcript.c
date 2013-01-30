@@ -110,19 +110,19 @@ defun($h_Transcript_append) {
 }
 
 /*
-  SYMBOL: $i_Transcript_even_group_meta_highlight_face
+  SYMBOL: $I_Transcript_even_group_meta_highlight_face
     The face to apply to the line metadata of every line of even output groups
     in Transcripts. This should be a highlighting (ie, uniform colour
     alteration).
 
-  SYMBOL: $i_Transcript_odd_group_meta_highlight_face
+  SYMBOL: $I_Transcript_odd_group_meta_highlight_face
     The face to apply to the line metadata of every line of odd output groups
     in Transcripts. This should be a highlighting (ie, uniform colour
     alteration).
  */
-STATIC_INIT_TO($i_Transcript_even_group_meta_highlight_face,
+STATIC_INIT_TO($I_Transcript_even_group_meta_highlight_face,
                mkface("!fb!bb"))
-STATIC_INIT_TO($i_Transcript_odd_group_meta_highlight_face,
+STATIC_INIT_TO($I_Transcript_odd_group_meta_highlight_face,
                mkface("!fr!br"));
 /*
   SYMBOL: $f_Transcript_group
@@ -134,9 +134,9 @@ STATIC_INIT_TO($i_Transcript_odd_group_meta_highlight_face,
 defun($h_Transcript_group) {
   face group_face;
   if ($y_Transcript_next_group_colour) {
-    group_face = $i_Transcript_even_group_meta_highlight_face;
+    group_face = $I_Transcript_even_group_meta_highlight_face;
   } else {
-    group_face = $i_Transcript_odd_group_meta_highlight_face;
+    group_face = $I_Transcript_odd_group_meta_highlight_face;
   }
   $y_Transcript_next_group_colour = !$y_Transcript_next_group_colour;
 
