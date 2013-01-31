@@ -43,7 +43,7 @@
 defun($h_Activity) {
   $llp_Activity_keymap = NULL;
   $$($o_Activity_workspace) {
-    lpush_o($lo_Workspace_activities, $o_Activity);
+    $m_push_activity();
     $m_update_echo_area();
   }
 

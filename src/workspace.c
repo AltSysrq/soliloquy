@@ -128,3 +128,27 @@ defun($h_Workspace_destroy_pin) {
   $f_Workspace_remove_pin();
   $m_destroy();
 }
+
+static list_o push_activity(list_o list) {
+  // Push here if the list is empty, this activity is "on top", or the topmost
+  // activity is not on top.
+  if (!list || $y_Activity_on_top ||
+      !$(list->car, $y_Activity_on_top))
+    return cons_o($o_Activity, list);
+
+  //Otherwise, the new activity must go under the topmost
+  return cons_o(list->car, push_activity(list->cdr));
+}
+
+/*
+  SYMBOL: $f_Workspace_push_activity
+    Pushes the activity which is the given context onto this Workspace's
+    Activity list, respecing $y_Activity_on_top.
+
+  SYMBOL: $y_Activity_on_top
+    Activities with this bool set will always be before those for which it is
+    clear in $lo_Workspace_activities.
+ */
+defun($h_Workspace_push_activity) {
+  $lo_Workspace_activities = push_activity($lo_Workspace_activities);
+}

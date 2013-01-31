@@ -55,6 +55,10 @@ defun($h_Interruption) {
   $m_update_echo_area();
 }
 
+advise_before_superconstructor($h_Interruption) {
+  $y_Activity_on_top = true;
+}
+
 /*
   SYMBOL: $f_Interruption_key
     Registers a keystroke, destroying the Interruption if it has reached its
