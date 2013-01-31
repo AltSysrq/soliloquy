@@ -157,6 +157,26 @@ struct undefined_struct;
 typedef struct undefined_struct* identity;
 struct hook_point;
 
+/**
+ * Converts the given narrow string into a wide string, by allocating the wide
+ * string with gcalloc().
+ *
+ * If an invalid encoding is encountered, the string is interpreted as
+ * ISO8859-1 instead of using the current locale (ie, the narrow characters are
+ * simply bitcast up to wchar_ts).
+ */
+mwstring cstrtowstr(string);
+
+/**
+ * Converts the given wide string into a narrow string, by allocating the
+ * narrow string with gcalloc().
+ *
+ * If, for some reason, the given wstring is not encodable according to the
+ * current locale, ISO-8859-1 will be used as fallback, with poorly-defined
+ * results for characters outside of Latin-1.
+ */
+mstring wstrtocstr(wstring);
+
 /// OBJECTS/CONTEXTS
 /**
  * Creates a new object with no implants. If a parent is specified, any

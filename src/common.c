@@ -49,6 +49,37 @@ const char* gcstrdup(const char* str) {
   return dst;
 }
 
+mwstring cstrtowstr(string str) {
+  size_t sz = mbstowcs(NULL, str, 0);
+  if (!~sz) {
+    // Invalid byte string, fall back to ISO-8859-1
+    sz = strlen(str);
+    mwstring ret = gcalloc((sz+1)*sizeof(wchar_t));
+    for (unsigned i = 0; i < sz; ++i)
+      ret[i] = ((wchar_t)str[i]) & (wchar_t)0xFF;
+    return ret;
+  } else {
+    mwstring ret = gcalloc((sz+1)*sizeof(wchar_t));
+    mbstowcs(ret, str, sz);
+    return ret;
+  }
+}
+
+mstring wstrtocstr(wstring str) {
+  size_t sz = wcstombs(NULL, str, 0);
+  if (!~sz) {
+    sz = wcslen(str);
+    mstring ret = gcalloc(sz+1);
+    for (unsigned i = 0; i < sz; ++i)
+      ret[i] = str[i];
+    return ret;
+  } else {
+    mstring ret = gcalloc(sz+1);
+    wcstombs(ret, str, sz);
+    return ret;
+  }
+}
+
 /**
  * Objects are stored in two parts: A hashtable of entries, and a data section
  * storing the values of the implanted symbols at the time of the last
