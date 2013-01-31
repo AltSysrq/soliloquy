@@ -95,36 +95,34 @@ advise_id($u_key_dispatch, $h_Terminal_getch) {
     Activity.
  */
 static bool search_all(qchar key) {
-  if (!search($llp_Terminal_keymap, key)) {
-    $$($o_Terminal_current_view) {
-      if (!search($llp_View_keymap, key)) {
-        $$($o_View_workspace) {
-          if (!search($llp_Workspace_keymap, key)) {
-            bool found;
-            $$($o_Workspace_backing) {
-              found = search($llp_Backing_keymap, key);
-            }
-            if (!found) {
-              for (list_o curr = $lo_Workspace_activities; curr;
-                   curr = curr->cdr) {
-                $$(curr->car) {
-                  if (search($llp_Activity_keymap, key))
-                    return true;
+  $$($($($o_Terminal_current_view,$o_View_workspace),$o_Workspace_backing)) {
+    if (!search($llp_Terminal_keymap, key)) {
+      $$($o_Terminal_current_view) {
+        if (!search($llp_View_keymap, key)) {
+          $$($o_View_workspace) {
+            if (!search($llp_Workspace_keymap, key)) {
+              if (!search($llp_Backing_keymap, key)) {
+                for (list_o curr = $lo_Workspace_activities; curr;
+                     curr = curr->cdr) {
+                  $$(curr->car) {
+                    if (search($llp_Activity_keymap, key))
+                      return true;
+                  }
                 }
+              } else {
+                return true;
               }
             } else {
               return true;
             }
-          } else {
-            return true;
           }
+        } else {
+          return true;
         }
-      } else {
-        return true;
       }
+    } else {
+      return true;
     }
-  } else {
-    return true;
   }
 
   // If we get here, the keybinding was not found.
