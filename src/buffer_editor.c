@@ -393,6 +393,52 @@ defun($h_BufferEditor_backward_line) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_kill_forward_line
+    Kills the line in front of the cursor, saving it to the kill ring.
+ */
+defun($h_BufferEditor_kill_forward_line) {
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    $$($o_BufferEditor_cursor) {
+      if ($I_FileBufferCursor_line_number != $aw_FileBuffer_contents->len) {
+        $F_l_kill(0,0,
+                  $lw_kill = cons_w(
+                    $aw_FileBuffer_contents->v[$I_FileBufferCursor_line_number],
+                    NULL),
+                  $v_kill_direction = $u_forward);
+        $M_edit(0,0,
+                $I_FileBuffer_ndeletions = 1,
+                $lw_FileBuffer_replacements = NULL,
+                $I_FileBuffer_edit_line = $I_FileBufferCursor_line_number);
+      }
+    }
+  }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_kill_backward_line
+    Kills the line behind the cursor, saving it to the kill ring.
+ */
+defun($h_BufferEditor_kill_backward_line) {
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    $$($o_BufferEditor_cursor) {
+      if ($I_FileBufferCursor_line_number) {
+        $F_l_kill(0,0,
+                  $lw_kill = cons_w(
+                    $aw_FileBuffer_contents->v[$I_FileBufferCursor_line_number-1],
+                    NULL),
+                  $v_kill_direction = $u_backward);
+        $M_edit(0,0,
+                $I_FileBuffer_ndeletions = 1,
+                $lw_FileBuffer_replacements = NULL,
+                $I_FileBuffer_edit_line = $I_FileBufferCursor_line_number-1);
+      }
+    }
+  }
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
  */
