@@ -439,6 +439,34 @@ defun($h_BufferEditor_kill_backward_line) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_home
+    Moves the cursor back to the first line.
+ */
+defun($h_BufferEditor_home) {
+  $$($o_BufferEditor_cursor) {
+    let($i_FileBufferCursor_shunt_distance,
+        -(signed)$I_FileBufferCursor_line_number);
+    $m_shunt();
+  }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_end
+    Moves the cursor forward to one line after the last line.
+ */
+defun($h_BufferEditor_end) {
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    $$($o_BufferEditor_cursor) {
+      let($i_FileBufferCursor_shunt_distance,
+          $aw_FileBuffer_contents->len -
+            $I_FileBufferCursor_line_number);
+      $m_shunt();
+    }
+  }
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
  */
@@ -462,4 +490,8 @@ ATSINIT {
             $f_BufferEditor_kill_backward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L';', $v_end_meta,
             $f_BufferEditor_kill_forward_line);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'h', $v_end_meta,
+            $f_BufferEditor_home);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'n', $v_end_meta,
+            $f_BufferEditor_end);
 }
