@@ -191,9 +191,45 @@ defun($h_FileBuffer_reload) {
     if ($y_FileBuffer_memory_backed) {
       $aw_FileBuffer_contents = dynar_new_w();
     } else {
-      $v_rollback_type = $u_FileBuffer;
-      $s_rollback_reason = "File-backed FileBuffer not yet supported";
-      tx_rollback();
+      // Re-read the file. If the buffer is currently modified, read from the
+      // autosave file instead, since it contains the actual current contents.
+      wstring wfilename = $w_FileBuffer_filename;
+      if ($y_FileBuffer_modified)
+        wfilename = wstrap(wfilename, L"#");
+      string filename = wstrtocstr(wfilename);
+
+      FILE* input = fopen(filename, "r");
+      mstring line = NULL;
+      size_t line_len = 0;
+      if (!input)
+        tx_rollback_errno($u_FileBuffer);
+
+      $aw_FileBuffer_contents = dynar_new_w();
+
+      /* Reading the file in as a narrow string, then converting the lines to
+       * wstrings, has the advantage that we can fall back to ISO-8859-1 if
+       * decoding fails, whereas using, eg, fgetwc, we simply get an error and
+       * have no good way to fall back. The disadvantage is that this can't
+       * handle files encoded in encodings like UCS-4 or UTF-16, since the NUL
+       * "characters" will prematurely terminate the string. To handle such
+       * encodings, a subclass of FileBuffer will be needed which implements
+       * reload differently.
+       */
+      while (-1 != getline(&line, &line_len, input)) {
+        dynar_push_w($aw_FileBuffer_contents,
+                     cstrtowstr(line));
+      }
+
+      if (line)
+        free(line);
+
+      if (ferror(input)) {
+        int err = errno;
+        fclose(input);
+        errno = err;
+        tx_rollback_errno($u_FileBuffer);
+      }
+      fclose(input);
     }
   }
 
@@ -211,6 +247,25 @@ defun($h_FileBuffer_reload) {
     FileBuffer.
  */
 defun($h_FileBuffer_release) {
+  if ($y_FileBuffer_modified && !$y_FileBuffer_memory_backed) {
+    //Need to write to autosave file first
+    wstring filename = wstrap($w_FileBuffer_filename, L"#");
+    FILE* output = fopen(wstrtocstr(filename), "w");
+    if (!output)
+      tx_rollback_errno($u_FileBuffer);
+
+    for (unsigned i = 0; i < $aw_FileBuffer_contents->len; ++i) {
+      if (-1 == fwprintf(output, L"%ls\n", $ao_FileBuffer_meta->v[i])) {
+        int err = errno;
+        fclose(output);
+        errno = err;
+        tx_rollback_errno($u_FileBuffer);
+      }
+    }
+
+    fclose(output);
+  }
+
   $ao_FileBuffer_meta = NULL;
   $aw_FileBuffer_contents = NULL;
 }
