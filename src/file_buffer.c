@@ -135,6 +135,10 @@ defun($h_FileBufferCursor_window_changed) {}
   SYMBOL: $y_FileBuffer_memory_backed
     If true, this FileBuffer is backed by memory instead of a file.
 
+  SYMBOL: $y_FileBuffer_modified
+    If true, this FileBuffer has been modified relative to the latest on-disk
+    version.
+
   SYMBOL: $aw_FileBuffer_contents
     The contents of this FileBuffer. This may be NULL, indicating that the
     contents currently reside on disk. Any operation that needs this value

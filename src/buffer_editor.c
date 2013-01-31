@@ -507,7 +507,7 @@ defun($h_BufferEditor_show_forward_line) {
 }
 
 /*
-  SYMBOL: $f_BufferEditor_format $o_BufferEditor_format
+  SYMBOL: $f_BufferEditor_format $o_BufferEditor_format $I_BufferEditor_index
     Converts the line at $I_BufferEditor_index into a RenderedLine stored in
     $o_BufferEditor_format. This will be called within the context of the
     FileBuffer.
