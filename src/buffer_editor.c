@@ -467,6 +467,59 @@ defun($h_BufferEditor_end) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_show_forward_line
+    Show the line(s) below the cursor in the current Transcript.
+
+  SYMBOL: $I_LastCommand_show_forward_line
+    Param to accelerate() for $f_BufferEditor_show_forward_line.
+
+  SYMBOL: $I_LastCommand_show_forward_line_off
+    The offset from previous calls to $f_BufferEditor_show_forward_line.
+ */
+defun($h_BufferEditor_show_forward_line) {
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    $$($o_BufferEditor_cursor) {
+      unsigned offset = $($o_prev_command, $I_LastCommand_show_forward_line_off);
+      unsigned cnt = accelerate_max(&$I_LastCommand_show_forward_line,
+                                    $aw_FileBuffer_contents->len -
+                                      $I_FileBufferCursor_line_number -
+                                      offset);
+
+      $$($o_this_command) {
+        $I_LastCommand_show_forward_line_off = offset+cnt;
+      }
+
+      list_o output = NULL;
+      for (unsigned i = 0; i < cnt; ++i) {
+        $I_BufferEditor_index =
+          $I_FileBufferCursor_line_number + offset + cnt - i - 1;
+        output = cons_o(
+          $M_format($o_BufferEditor_format,0),
+          output);
+      }
+
+      if ($o_Transcript)
+        $M_group(0, $o_Transcript,
+                 $lo_Transcript_output = output);
+    }
+  }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_format $o_BufferEditor_format
+    Converts the line at $I_BufferEditor_index into a RenderedLine stored in
+    $o_BufferEditor_format. This will be called within the context of the
+    FileBuffer.
+ */
+defun($h_BufferEditor_format) {
+  $o_BufferEditor_format = $c_RenderedLine(
+    $q_RenderedLine_body = wstrtoqstr($aw_FileBuffer_contents->v[
+                                        $I_BufferEditor_index]),
+    $q_RenderedLine_meta = gcalloc(sizeof(qchar) * (1+$i_line_meta_width)));
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
  */
@@ -494,4 +547,6 @@ ATSINIT {
             $f_BufferEditor_home);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'n', $v_end_meta,
             $f_BufferEditor_end);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'f', $v_end_meta,
+            $f_BufferEditor_show_forward_line);
 }
