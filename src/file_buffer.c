@@ -152,6 +152,9 @@ defun($h_FileBufferCursor_window_changed) {}
 
   SYMBOL: $lo_FileBuffer_cursors
     A list of all FileBufferCursors currently associated with this FileBuffer.
+
+  SYMBOL: $lo_buffers
+    A list of all FileBuffer-like objects in existence.
  */
 defun($h_FileBuffer) {
   if (!$p_shared_undo_log) {
@@ -169,6 +172,22 @@ defun($h_FileBuffer) {
       tx_rollback_errno($u_FileBuffer);
     }
   }
+
+  lpush_o($lo_buffers, $o_FileBuffer);
+}
+
+/*
+  SYMBOL: $f_FileBuffer_destroy
+    Destroys this file buffer, and anything attached to it.
+
+  SYMBOL: $lo_FileBuffer_attachments
+    A list of destroyable objects "attached" to this FileBuffer, which should
+    be destroyed when it is.
+ */
+defun($h_FileBuffer_destroy) {
+  each_o($lo_FileBuffer_attachments,
+         lambdav((object that), $M_destroy(0,that)));
+  $lo_buffers = lrm_o($lo_buffers, $o_FileBuffer);
 }
 
 /*

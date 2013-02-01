@@ -81,6 +81,10 @@ defun($h_BufferEditor) {
                  $f_Workspace_update_echo_area, $o_Activity_workspace,
                  NULL);
   }
+
+  $$($o_BufferEditor_buffer) {
+    lpush_o($lo_FileBuffer_attachments, $o_BufferEditor);
+  }
 }
 
 /*
@@ -91,6 +95,11 @@ defun($h_BufferEditor_destroy) {
   $M_destroy(0, $o_BufferEditor_cursor);
   each_o($lo_BufferEditor_marks,
          lambdav((object o), $M_destroy(0,o)));
+
+  $$($o_BufferEditor_buffer) {
+    $lo_FileBuffer_attachments = lrm_o($lo_FileBuffer_attachments,
+                                       $o_BufferEditor);
+  }
 
   $f_Activity_destroy();
 }
