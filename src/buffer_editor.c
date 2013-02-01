@@ -126,16 +126,11 @@ defun($h_BufferEditor_get_echo_area_contents) {
 
     if ($I_FileBufferCursor_line_number <
         $aw_FileBuffer_contents->len) {
-      object line =
-        $M_format($o_BufferEditor_format, 0,
-                  $I_BufferEditor_index = $I_FileBufferCursor_line_number);
-      qstring orig_meta = $(line, $q_RenderedLine_meta);
-      qstring body = $(line, $q_RenderedLine_body);
-      mqstring meta = gcalloc(sizeof(qchar)*(1 + $i_line_meta_width));
-      for (int i = 0; i < $i_line_meta_width; ++i)
-        meta[i] = (orig_meta[i] ?: L' ');
-
-      $q_Workspace_echo_area_contents = qstrap(meta, body);
+      $q_Workspace_echo_area_contents =
+        $M_cvt($q_RenderedLine_cvt,
+               $M_format($o_BufferEditor_format, 0,
+                         $I_BufferEditor_index =
+                           $I_FileBufferCursor_line_number));
     } else {
       $q_Workspace_echo_area_contents = qempty;
     }
