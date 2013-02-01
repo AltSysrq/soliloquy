@@ -591,14 +591,73 @@ defun($h_BufferEditor_show_backward_line) {
     Converts the line at $I_BufferEditor_index into one or more RenderedLines
     prepended to $o_BufferEditor_format. This will be called within the context
     of the FileBuffer.
+
+  SYMBOL: $I_BufferEditor_line_wrap_meta_face
+    Face to apply to metadata for wrapped fragments of lines.
  */
 defun($h_BufferEditor_format) {
-  lpush_o($lo_BufferEditor_format,
-          $c_RenderedLine(
-            $q_RenderedLine_body = wstrtoqstr($aw_FileBuffer_contents->v[
-                                                $I_BufferEditor_index]),
-            $q_RenderedLine_meta = gcalloc(sizeof(qchar) *
-                                           (1+$i_line_meta_width))));
+  // Get the base RenderedLine
+  object base = $c_RenderedLine(
+    $q_RenderedLine_body = wstrtoqstr($aw_FileBuffer_contents->v[
+                                        $I_BufferEditor_index]),
+    $q_RenderedLine_meta = NULL);
+
+  // Apply syntax highlighting, etc
+  $$(base) {
+    $m_prettify();
+  }
+
+  // Split into multiple lines
+  $M_line_wrap_reverse(0,0,
+                       $lq_BufferEditor_wrapped_rev = NULL,
+                       $q_BufferEditor_line_wrap_reverse =
+                         $(base, $q_RenderedLine_body));
+
+  qchar awrapped[$i_line_meta_width + 1];
+  for (int i = 0; i < $i_line_meta_width; ++i)
+    awrapped[i] = apply_face($I_BufferEditor_line_wrap_meta_face,
+                             L'/');
+  awrapped[$i_line_meta_width] = 0;
+  qstring wrapped = qstrdup(awrapped);
+
+  // Combine into list
+  for (list_q curr = $lq_BufferEditor_wrapped_rev;
+       curr; curr = curr->cdr) {
+    lpush_o($lo_BufferEditor_format,
+            $c_RenderedLine(
+              $q_RenderedLine_body = curr->car,
+              // For the first line (the last in this list), use the original
+              // metadata; for the others, just indicate it is a line
+              // continuation.
+              $q_RenderedLine_meta =
+                curr->cdr?
+                wrapped :
+                $(base, $q_RenderedLine_meta)));
+  }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_line_wrap_reverse
+    Breaks the input string ($q_BufferEditor_line_wrap_reverse) into lines
+    which fit within $i_column_width, and prepending the fragments to
+    $lq_BufferEditor_wrapped_rev, such that the first fragment is the last in
+    the list. The basic implementation just hard splits the input line every
+    $i_column_width characters.
+
+  SYMBOL: $lq_BufferEditor_wrapped_rev
+    Output from $f_BufferEditor_line_wrap_reverse.
+ */
+defun($h_BufferEditor_line_wrap_reverse) {
+  while (qstrlen($q_BufferEditor_line_wrap_reverse) >
+         (unsigned)$i_column_width) {
+    mqstring new = gcalloc(sizeof(qchar) * (1+$i_column_width));
+    memcpy(new, $q_BufferEditor_line_wrap_reverse,
+           sizeof(qchar)*(1 + $i_column_width));
+    lpush_q($lq_BufferEditor_wrapped_rev, new);
+    $q_BufferEditor_line_wrap_reverse += $i_column_width;
+  }
+
+  lpush_q($lq_BufferEditor_wrapped_rev, $q_BufferEditor_line_wrap_reverse);
 }
 
 /*
