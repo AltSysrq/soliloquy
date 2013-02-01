@@ -188,7 +188,8 @@ defun($h_IActiveActivity_abort) {
 
 /*
   SYMBOL: $c_WCharIArg
-    Activity which reads a single non-control character from the user.
+    Interactive Arguemnt which reads a single non-control character from the
+    user.
  */
 subclass($c_IArg, $c_WCharIArg)
 defun($h_WCharIArg) {
