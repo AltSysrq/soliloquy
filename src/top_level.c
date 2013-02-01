@@ -103,7 +103,7 @@ defun($h_TopLevel_activate) {
 
   list_o curr = lmget_o($lo_TopLevel_editors, $o_TopLevel_curr_buffer);
   if (curr) {
-    lpush_o($lo_Workspace_activities, curr->cdr->car);
+    lpush_o($lo_Workspace_activities, curr->car);
   } else {
     $o_TopLevel_curr_editor =
       $c_BufferEditor($o_BufferEditor_buffer = $o_TopLevel_curr_buffer);
