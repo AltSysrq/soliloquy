@@ -544,6 +544,49 @@ defun($h_BufferEditor_show_forward_line) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_show_backward_line
+    Shows the line(s) before the cursor in the current Transcript.
+
+  SYMBOL: $I_LastCommand_show_backward_line_off
+    The offset from the cursor of the last call to
+    $f_BufferEditor_show_backward_line.
+
+  SYMBOL: $I_LastCommand_show_backward_line
+    Parameter to accelerate() for $f_BufferEditor_show_backward_line.
+ */
+defun($h_BufferEditor_show_backward_line) {
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    $$($o_BufferEditor_cursor) {
+      if (!$I_FileBufferCursor_line_number) return;
+
+      unsigned offset = $($o_prev_command,
+                          $I_LastCommand_show_backward_line_off);
+      unsigned cnt = accelerate_max(&$I_LastCommand_show_backward_line,
+                                    $I_FileBufferCursor_line_number -
+                                    offset);
+
+      $$($o_this_command) {
+        $I_LastCommand_show_backward_line_off = offset+cnt;
+      }
+
+      $lo_BufferEditor_format = NULL;
+      for (unsigned i = 0; i < cnt; ++i) {
+        $I_BufferEditor_index =
+          $I_FileBufferCursor_line_number - offset - cnt + i;
+        $m_format();
+      }
+
+      if ($o_Transcript) {
+        $M_group(0, $o_Transcript,
+                 $lo_Transcript_output = $lo_BufferEditor_format);
+        $lo_BufferEditor_format = NULL;
+      }
+    }
+  }
+}
+
+/*
   SYMBOL: $f_BufferEditor_format $lo_BufferEditor_format $I_BufferEditor_index
     Converts the line at $I_BufferEditor_index into one or more RenderedLines
     prepended to $o_BufferEditor_format. This will be called within the context
@@ -588,4 +631,6 @@ ATSINIT {
             $f_BufferEditor_end);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'f', $v_end_meta,
             $f_BufferEditor_show_forward_line);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'd', $v_end_meta,
+            $f_BufferEditor_show_backward_line);
 }
