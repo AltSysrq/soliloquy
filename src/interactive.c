@@ -236,6 +236,71 @@ ATSTART(ANONYMOUS, STATIC_INITIALISATION_PRIORITY) {
           $f_WCharIActive_char);
 }
 
+/*
+  SYMBOL: $c_WStringIArg
+    Interactive Argument which reads an arbitrary string from the user.
+
+  SYMBOL: $w_WStringIArg_text
+    If non-NULL, the initial text to give to the user.
+
+  SYMBOL: $H_WStringIArg_validate
+    If non-NULL, will be called with $w_WStringIArg_validate set to the string
+    the user wants to use. It may reject the string by setting
+    $w_WStringIArg_why_not to a non-NULL which should tell the user why the
+    input is not acceptable.
+
+  SYMBOL: $w_WStringIArg_why_not
+    May be set by $H_WStringIArg_validate to indicate that and why the user's
+    input (in $w_WStringIArg_validate) is unacceptable.
+ */
+subclass($c_IArg, $c_WStringIArg)
+defun($h_WStringIArg) {
+  $H_IArg_activate = &$h_WStringIActive;
+}
+
+void interactive_w(wstring* dst, wstring prompt) {
+  object iarg = $c_WStringIArg($p_IArg_destination = dst,
+                               $w_IArg_name = prompt);
+  dynar_push_o($ao_Interactive_arguments, iarg);
+}
+
+subclass($c_LineEditor, $c_WStringIActive)
+subclass($c_IActiveActivity, $c_WStringIActive)
+advise_before_superconstructor($h_WStringIActive) {
+  if ($w_WStringIArg_text)
+    $w_LineEditor_text = $w_WStringIArg_text;
+}
+
+/*
+  SYMBOL: $f_WStringIActive_accept
+    Validates the user's input (if applicable), ther writes to the destination
+    and destroys this activity.
+ */
+defun($h_WStringIActive_accept) {
+  $w_WStringIArg_text = $M_get_text($w_LineEditor_text, 0);
+  if ($H_WStringIArg_validate) {
+    $w_WStringIArg_why_not = NULL;
+    $$($o_IArg_context) {
+      invoke_hook($H_WStringIArg_validate);
+    }
+    if ($w_WStringIArg_why_not) {
+      $F_message_error(0,0, $w_message_text = $w_WStringIArg_why_not);
+      return;
+    }
+  }
+
+  $$($o_IArg_context) {
+    wstring* dst = $p_IArg_destination;
+    *dst = $w_WStringIArg_text;
+  }
+  $m_destroy();
+}
+
+/*
+  SYMBOL: $c_WStringIActive
+    IActiveActivity which reads an arbitrary string from the user.
+ */
+
 unsigned accelerate(unsigned* var) {
   unsigned speed = 0;
   $$($o_prev_command) {

@@ -207,6 +207,18 @@ defun($h_LineEditor_get_echo_area_contents) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_get_text
+    Sets $w_LineEditor_text to the current contents of the LineEditor.
+ */
+defun($h_LineEditor_get_text) {
+  mwstring dst =
+    gcalloc(sizeof(wchar_t)*(1 + $az_LineEditor_buffer->len));
+  memcpy(dst, $$az_LineEditor_buffer->v,
+         $az_LineEditor_buffer->len * sizeof(wchar_t));
+  $w_LineEditor_text = dst;
+}
+
+/*
   SYMBOL: $f_LineEditor_delete_backward_char
     Delete the character immediately before the cursor.
  */
