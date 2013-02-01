@@ -54,18 +54,19 @@ int main(void) {
   }
 
   $$($$o_term) {
-    $o_Terminal_current_view =
-      $c_View($o_View_terminal = $$o_term,
-              $o_View_workspace =
-                $c_Workspace(
-                  $o_Workspace_backing =
-                    $c_Transcript(
-                      $o_Backing_default_activity =
-                      $c_BufferEditor(
-                        $o_BufferEditor_buffer =
-                        $c_FileBuffer(
-                          $w_FileBuffer_filename = L"*scratch*",
-                          $y_FileBuffer_memory_backed = true)))));
+    object workspace =
+      $c_Workspace(
+        $o_Workspace_backing =
+          $c_Transcript());
+    $$(workspace) {
+      $o_Terminal_current_view =
+        $c_View($o_View_terminal = $$o_term,
+                $o_View_workspace = workspace);
+      $c_FileBuffer(
+        $w_FileBuffer_filename = L"*scratch*",
+        $y_FileBuffer_memory_backed = true);
+      $c_TopLevel();
+    }
     $M_redraw(0,$o_Terminal_current_view);
   }
 

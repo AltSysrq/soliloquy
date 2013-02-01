@@ -80,6 +80,18 @@ defun($h_Activity_destroy) {
 }
 
 /*
+  SYMBOL: $f_Activity_get_echo_area_meta
+    Forwards the call to the next activity.
+ */
+defun($h_Activity_get_echo_area_meta) {
+  if ($lo_echo_area_activities) {
+    object next = $lo_echo_area_activities->car;
+    let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
+    $M_get_echo_area_meta(0, next);
+  }
+}
+
+/*
   SYMBOL: $lp_Activity_base_keymap
     The basic keymap applied to all Activities.
  */

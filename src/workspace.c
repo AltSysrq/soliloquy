@@ -56,8 +56,8 @@
     The Backing object which stores the contents of this Workspace.
  */
 defun($h_Workspace) {
-  $lo_Workspace_activities =
-    cons_o($($o_Workspace_backing, $o_Backing_default_activity), NULL);
+//  $lo_Workspace_activities =
+//    cons_o($($o_Workspace_backing, $o_Backing_default_activity), NULL);
   $lo_Workspace_pins = NULL;
 
   // Assign a workspace number
