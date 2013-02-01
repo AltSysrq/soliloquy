@@ -128,9 +128,9 @@ defun($h_BufferEditor_get_echo_area_contents) {
         $aw_FileBuffer_contents->len) {
       $q_Workspace_echo_area_contents =
         $M_cvt($q_RenderedLine_cvt,
-               $M_format($o_BufferEditor_format, 0,
+               $M_format($lo_BufferEditor_format, 0,
                          $I_BufferEditor_index =
-                           $I_FileBufferCursor_line_number));
+                           $I_FileBufferCursor_line_number)->car);
     } else {
       $q_Workspace_echo_area_contents = qempty;
     }
@@ -528,33 +528,34 @@ defun($h_BufferEditor_show_forward_line) {
         $I_LastCommand_show_forward_line_off = offset+cnt;
       }
 
-      list_o output = NULL;
+      $lo_BufferEditor_format = NULL;
       for (unsigned i = 0; i < cnt; ++i) {
         $I_BufferEditor_index =
           $I_FileBufferCursor_line_number + offset + cnt - i - 1;
-        output = cons_o(
-          $M_format($o_BufferEditor_format,0),
-          output);
+        $m_format();
       }
 
       if ($o_Transcript)
         $M_group(0, $o_Transcript,
-                 $lo_Transcript_output = output);
+                 $lo_Transcript_output = $lo_BufferEditor_format);
+      $lo_BufferEditor_format = NULL;
     }
   }
 }
 
 /*
-  SYMBOL: $f_BufferEditor_format $o_BufferEditor_format $I_BufferEditor_index
-    Converts the line at $I_BufferEditor_index into a RenderedLine stored in
-    $o_BufferEditor_format. This will be called within the context of the
-    FileBuffer.
+  SYMBOL: $f_BufferEditor_format $lo_BufferEditor_format $I_BufferEditor_index
+    Converts the line at $I_BufferEditor_index into one or more RenderedLines
+    prepended to $o_BufferEditor_format. This will be called within the context
+    of the FileBuffer.
  */
 defun($h_BufferEditor_format) {
-  $o_BufferEditor_format = $c_RenderedLine(
-    $q_RenderedLine_body = wstrtoqstr($aw_FileBuffer_contents->v[
-                                        $I_BufferEditor_index]),
-    $q_RenderedLine_meta = gcalloc(sizeof(qchar) * (1+$i_line_meta_width)));
+  lpush_o($lo_BufferEditor_format,
+          $c_RenderedLine(
+            $q_RenderedLine_body = wstrtoqstr($aw_FileBuffer_contents->v[
+                                                $I_BufferEditor_index]),
+            $q_RenderedLine_meta = gcalloc(sizeof(qchar) *
+                                           (1+$i_line_meta_width))));
 }
 
 /*
