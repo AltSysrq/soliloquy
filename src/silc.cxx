@@ -300,17 +300,21 @@ static void process_function_macro(const string& symF) {
 }
 
 static void process_class(const string& csym) {
-  string fsym, osym, usym, dsym, hsym;
+  // The misym is a special object symbol used to recognised diamond
+  // inheritance.
+  string fsym, osym, usym, dsym, hsym, misym;
   fsym = change_symbol_type_char(csym, 'f');
   osym = change_symbol_type_char(csym, 'o');
   usym = change_symbol_type_char(csym, 'u');
   dsym = change_symbol_type_char(csym, 'd');
   hsym = change_symbol_type_char(csym, 'h');
+  misym = osym + "$diamond";
   process_symbol(fsym);
   process_symbol(osym);
   process_symbol(usym);
   process_symbol(dsym);
   process_symbol(hsym);
+  process_symbol(misym);
   format("#define `CSYM(...) ({                                          \\\n"
          "  object _`CSYM$local_this = object_new(NULL);                 \\\n"
          "  $$(_`CSYM$local_this) {                                      \\\n"
@@ -330,6 +334,11 @@ static void process_class(const string& csym) {
          "static void _`CSYM$fun_ctor(void) {                              \n"
          "  implant(`OSYM); implant(`DSYM); implant(`HSYM);                \n"
          "  `OSYM = object_current();                                      \n"
+         // If the MISYM is already equal to OSYM, this class's constructor
+         // has already run. In this case, abort the whole constructor.
+         "  if (`MISYM == `OSYM) hook_abort();                             \n"
+         "  implant(`MISYM);                                               \n"
+         "  `MISYM = `OSYM;                                                \n"
          "}                                                                \n"
          "ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {               \n"
          "  add_hook(&`HSYM, HOOK_BEFORE_EVERYTHING,                       \n"
@@ -338,7 +347,8 @@ static void process_class(const string& csym) {
          "}                                                                \n",
          "`CSYM", csym.c_str(), "`OSYM", osym.c_str(),
          "`USYM", usym.c_str(), "`DSYM", dsym.c_str(),
-         "`HSYM", hsym.c_str(), "`FSYM", fsym.c_str(), NULL);
+         "`HSYM", hsym.c_str(), "`FSYM", fsym.c_str(),
+         "`MISYM", misym.c_str(), NULL);
 }
 
 static void process_function(const string& sym) {

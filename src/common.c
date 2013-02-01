@@ -37,6 +37,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <setjmp.h>
 
 // Formerly known as $$ao_evisceration_stack
 // (This comment necessary for the dynar_o template)
@@ -594,8 +595,21 @@ void del_hook(struct hook_point* point,
   del_hook_impl(point, priority, id, context);
 }
 
+static sigjmp_buf hook_abort_point;
+void hook_abort(void) {
+  siglongjmp(hook_abort_point, 1);
+}
+
 void invoke_hook(struct hook_point* ppoint) {
   if (!ppoint) return;
+
+  sigjmp_buf old_point;
+  // POSIX defines jmp_buf to be an array, so we don't explicitly reference the
+  // jmp_buf in this call
+  memcpy(old_point, hook_abort_point, sizeof(hook_abort_point));
+  int aborted = sigsetjmp(hook_abort_point, 1);
+  memcpy(hook_abort_point, old_point, sizeof(hook_abort_point));
+  if (aborted) return;
 
   // Make a copy so that concurrent modifications do not interfere with this
   // invocation of the hook.

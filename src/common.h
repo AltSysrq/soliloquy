@@ -550,6 +550,20 @@ void tx_pop_handler(void);
  */
 #define tx_write_through(sym) tx_write_through_impl(&_GLUE(sym,$base))
 
+/**
+ * Aborts the currently-executing hook ponit. This function does not return,
+ * nor does it gracefully unwind the stack. ONLY USE THIS IF YOU KNOW WHAT YOU
+ * ARE DOING.
+ * In particular:
+ * - The current context, if any, will NOT be exited (ie, you can't call this
+ *   within a $$ or within_context block).
+ * - let() bindings will NOT revert.
+ * - The hook that invokes this MUST NOT have a bound object.
+ *
+ * The effects of calling this in inappropriate circumstances are undefined.
+ */
+void hook_abort(void) __attribute__((noreturn));
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Mostly internal details below. You need not concern yourself with these.///
 ///////////////////////////////////////////////////////////////////////////////
