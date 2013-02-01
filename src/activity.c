@@ -92,6 +92,33 @@ defun($h_Activity_get_echo_area_meta) {
 }
 
 /*
+  SYMBOL: $f_Activity_suspend
+    Removes this activity from its workspace after calling $m_suspend() on all
+    its children.
+ */
+defun($h_Activity_suspend) {
+  each_o($lo_Activity_children, lambdav((object o), $M_suspend(0,o)));
+
+  $$($o_Activity_workspace) {
+    $lo_Workspace_activities = lrm_o($lo_Workspace_activities,
+                                     $o_Activity);
+  }
+}
+
+/*
+  SYMBOL: $f_Activity_resume
+    Pushes this Activity back onto its workspace, then calls $m_resume() on all
+    its children.
+ */
+defun($h_Activity_resume) {
+  $$($o_Activity_workspace) {
+    lpush_o($lo_Workspace_activities, $o_Activity);
+  }
+
+  each_o($lo_Activity_children, lambdav((object o), $M_resume(0,o)));
+}
+
+/*
   SYMBOL: $lp_Activity_base_keymap
     The basic keymap applied to all Activities.
  */
