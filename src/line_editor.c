@@ -213,7 +213,7 @@ defun($h_LineEditor_get_echo_area_contents) {
 defun($h_LineEditor_get_text) {
   mwstring dst =
     gcalloc(sizeof(wchar_t)*(1 + $az_LineEditor_buffer->len));
-  memcpy(dst, $$az_LineEditor_buffer->v,
+  memcpy(dst, $az_LineEditor_buffer->v,
          $az_LineEditor_buffer->len * sizeof(wchar_t));
   $w_LineEditor_text = dst;
 }

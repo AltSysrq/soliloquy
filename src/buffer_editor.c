@@ -373,10 +373,10 @@ defun($h_BufferEditor_self_insert) {
  */
 defun($h_BufferEditor_forward_line) {
   $$($o_BufferEditor_cursor) $$($o_BufferEditor_buffer) {
+    $m_access();
     unsigned dist = accelerate_max(&$I_LastCommand_forward_line,
                                    $aw_FileBuffer_contents->len -
                                    $I_FileBufferCursor_line_number);
-    $m_access();
     $I_FileBufferCursor_line_number += dist;
   }
 

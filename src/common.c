@@ -607,9 +607,7 @@ void invoke_hook(struct hook_point* ppoint) {
   // POSIX defines jmp_buf to be an array, so we don't explicitly reference the
   // jmp_buf in this call
   memcpy(old_point, hook_abort_point, sizeof(hook_abort_point));
-  int aborted = sigsetjmp(hook_abort_point, 1);
-  memcpy(hook_abort_point, old_point, sizeof(hook_abort_point));
-  if (aborted) return;
+  if (sigsetjmp(hook_abort_point, 1)) goto end;
 
   // Make a copy so that concurrent modifications do not interfere with this
   // invocation of the hook.
@@ -620,6 +618,9 @@ void invoke_hook(struct hook_point* ppoint) {
     for (struct hook_point_entry* curr = point.entries[priority];
          curr; curr = curr->next)
       within_context(curr->context, curr->fun());
+
+  end:
+  memcpy(hook_abort_point, old_point, sizeof(hook_abort_point));
 }
 
 hook_constraint constraint_after_superconstructor(

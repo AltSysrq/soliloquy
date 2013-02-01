@@ -111,4 +111,47 @@ defun($h_TopLevel_activate) {
                                    $o_TopLevel_curr_buffer,
                                    $o_TopLevel_curr_editor);
   }
+
+  $m_update_echo_area();
+}
+
+/*
+  SYMBOL: $f_TopLevel_visit_file $f_TopLevel_visit_file_i
+    Opens a file whose name is obtained from the user (stored in
+    $w_TopLevel_filename). If a buffer for that file already exists, it is
+    activated instead.
+
+  SYMBOL: $w_TopLevel_filename
+    The file to visit in a call to $f_TopLevel_visit_file
+ */
+interactive($h_TopLevel_visit_file_i,
+            $h_TopLevel_visit_file,
+            i_(w, $w_TopLevel_filename, L"Visit File")) {
+  // See if there is already such a buffer
+  list_o lexisting =
+    find_where_o(
+      $lo_buffers,
+      lambda((object o),
+             (bool)!wcscmp($w_TopLevel_filename,
+                           $(o, $w_FileBuffer_filename))));
+  $o_TopLevel_curr_buffer =
+    lexisting? lexisting->car : NULL;
+
+  if (!$o_TopLevel_curr_buffer) {
+    $o_TopLevel_curr_buffer =
+      $c_FileBuffer($w_FileBuffer_filename = $w_TopLevel_filename,
+                    $y_FileBuffer_memory_backed = false);
+  }
+
+  $m_activate();
+}
+
+/*
+  SYMBOL: $lp_TopLevel_keymap
+    Keybindings specific to the TopLevel Activity.
+ */
+class_keymap($c_TopLevel, $lp_TopLevel_keymap, $llp_Activity_keymap)
+ATSINIT {
+  bind_char($lp_TopLevel_keymap, $u_extended, CONTROL_F, $u_ground,
+            $m_visit_file_i);
 }
