@@ -564,6 +564,18 @@ void tx_pop_handler(void);
  */
 void hook_abort(void) __attribute__((noreturn));
 
+/**
+ * Invokes all hooks bound to the given hook point. The hook point is not
+ * sensitive to concurrent modifications; it is copied before any hooks are
+ * executed.
+ *
+ * If it is NULL, no action is taken.
+ *
+ * The execution of a hook can be (gracelessly) terminated by calling
+ * hook_abort. There is almost never a good reason to do this.
+ */
+void invoke_hook(struct hook_point*);
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Mostly internal details below. You need not concern yourself with these.///
 ///////////////////////////////////////////////////////////////////////////////
@@ -621,8 +633,6 @@ static inline void reembowel_if_not_null(object* that) {
 void object_implant(struct symbol_header*, enum implantation_type);
 void object_get_implanted_value(void* dst, object,
                                 struct symbol_header* sym);
-
-void invoke_hook(struct hook_point*);
 
 void add_symbol_to_domain(struct symbol_header*, struct symbol_domain**,
                           enum implantation_type);
