@@ -35,11 +35,6 @@
     The current activity stack for this Workspace. The current activity is the
     entry on the top of the stack.
 
-  SYMBOL: $o_Backing_default_activity
-    The default activity for a given Backing. If this is not set for a
-    particular Backing, you won't be able to do much with a Workspace backed by
-    it.
-
   SYMBOL: $lo_Workspace_pins
     A list of Clips which are pinned to this Workspace.
 
@@ -56,8 +51,6 @@
     The Backing object which stores the contents of this Workspace.
  */
 defun($h_Workspace) {
-//  $lo_Workspace_activities =
-//    cons_o($($o_Workspace_backing, $o_Backing_default_activity), NULL);
   $lo_Workspace_pins = NULL;
 
   // Assign a workspace number
