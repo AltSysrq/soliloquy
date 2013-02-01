@@ -117,6 +117,40 @@ defun($h_BufferEditor_get_face) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_get_echo_area_contents
+    Sets $q_Workspace_echo_area_contents to the string under the cursor.
+ */
+defun($h_BufferEditor_get_echo_area_contents) {
+  $$($o_BufferEditor_buffer) $$($o_BufferEditor_cursor) {
+    $m_access();
+
+    if ($I_FileBufferCursor_line_number <
+        $aw_FileBuffer_contents->len) {
+      object line =
+        $M_format($o_BufferEditor_format, 0,
+                  $I_BufferEditor_index = $I_FileBufferCursor_line_number);
+      qstring orig_meta = $(line, $q_RenderedLine_meta);
+      qstring body = $(line, $q_RenderedLine_body);
+      mqstring meta = gcalloc(sizeof(qchar)*(1 + $i_line_meta_width));
+      for (int i = 0; i < $i_line_meta_width; ++i)
+        meta[i] = (orig_meta[i] ?: L' ');
+
+      $q_Workspace_echo_area_contents = qstrap(meta, body);
+    } else {
+      $q_Workspace_echo_area_contents = qempty;
+    }
+  }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_is_echo_enabled
+    Sets $y_Workspace_is_echo_enabled according to $v_Workspace_echo_mode.
+ */
+defun($h_BufferEditor_is_echo_enabled) {
+  $y_Workspace_is_echo_enabled = ($v_Workspace_echo_mode == $u_echo_on);
+}
+
+/*
   SYMBOL: $f_BufferEditor_get_echo_area_meta
     Adds the name of the buffer being edited and its line number (and mark
     delta, if applicable) to $q_Workspace_echo_area_meta.
