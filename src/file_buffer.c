@@ -239,6 +239,10 @@ defun($h_FileBuffer_reload) {
        * reload differently.
        */
       while (-1 != getline(&line, &line_len, input)) {
+        // Delete the trailing newline character
+        for (unsigned i = 0; line[i]; ++i)
+          if (line[i] == L'\n')
+            line[i] = 0;
         dynar_push_w($aw_FileBuffer_contents,
                      cstrtowstr(line));
       }
