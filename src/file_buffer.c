@@ -178,6 +178,25 @@ defun($h_FileBuffer) {
     }
   }
 
+  // See whether we can access the file and write to the file. If it doesn't
+  // exist, that's OK; we just consider it already modified.
+  if (!$y_FileBuffer_memory_backed) {
+    string filename = wstrtocstr($w_FileBuffer_filename);
+    if (-1 == access(filename, F_OK)) {
+      // Doesn't exist, that's fine
+      $y_FileBuffer_modified = true;
+      // Seed the initial buffer contents
+      let($y_FileBuffer_memory_backed, true);
+      $m_access();
+    } else if (-1 == access(filename, R_OK)) {
+      // Not readable, not OK
+      tx_rollback_errno($u_FileBuffer);
+    } else if (-1 == access(filename, W_OK)) {
+      // Read-only
+      $y_FileBuffer_readonly = true;
+    }
+  }
+
   lpush_o($lo_buffers, $o_FileBuffer);
 }
 
