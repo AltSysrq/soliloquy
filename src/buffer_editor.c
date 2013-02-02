@@ -667,6 +667,15 @@ defun($h_BufferEditor_line_wrap_reverse) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_save
+    Saves the contents of the buffer to the current filename.
+ */
+defun($h_BufferEditor_save) {
+  $M_save(0, $o_BufferEditor_buffer);
+  $m_update_echo_area();
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
  */
@@ -678,6 +687,9 @@ ATSINIT {
             $f_BufferEditor_insert_blank_line_below);
   bind_char($lp_BufferEditor_keymap, $u_ground, CONTROL_E, NULL,
             $f_BufferEditor_edit_current);
+
+  bind_char($lp_BufferEditor_keymap, $u_extended, CONTROL_S, $u_ground,
+            $f_BufferEditor_save);
 
   bind_kp($lp_BufferEditor_keymap, $u_ground, KEYBINDING_DEFAULT, NULL,
           $f_BufferEditor_self_insert);

@@ -282,13 +282,15 @@ defun($h_FileBuffer_reload) {
  */
 defun($h_FileBuffer_write_autosave) {
   if ($y_FileBuffer_modified && !$y_FileBuffer_memory_backed) {
+    $m_access();
+
     wstring filename = wstrap($w_FileBuffer_filename, L"#");
     FILE* output = fopen(wstrtocstr(filename), "w");
     if (!output)
       tx_rollback_errno($u_FileBuffer);
 
     for (unsigned i = 0; i < $aw_FileBuffer_contents->len; ++i) {
-      if (-1 == fwprintf(output, L"%ls\n", $ao_FileBuffer_meta->v[i])) {
+      if (-1 == fwprintf(output, L"%ls\n", $aw_FileBuffer_contents->v[i])) {
         int err = errno;
         fclose(output);
         errno = err;
