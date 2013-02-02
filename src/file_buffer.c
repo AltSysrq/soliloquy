@@ -269,13 +269,14 @@ defun($h_FileBuffer_reload) {
 }
 
 /*
-  SYMBOL: $f_FileBuffer_release
-    Releases $ao_FileBuffer_meta and $aw_FileBuffer_contents for this
-    FileBuffer.
+  SYMBOL: $f_FileBuffer_write_autosave
+    If this FileBuffer is modified and not memory backed, writes the current
+    contents of the buffer to "NAME#", where "NAME" is the base filename. The
+    transaction is rolled back if this fails. There is no effect if this buffer
+    is memory backed or if it has not been modified.
  */
-defun($h_FileBuffer_release) {
+defun($h_FileBuffer_write_autosave) {
   if ($y_FileBuffer_modified && !$y_FileBuffer_memory_backed) {
-    //Need to write to autosave file first
     wstring filename = wstrap($w_FileBuffer_filename, L"#");
     FILE* output = fopen(wstrtocstr(filename), "w");
     if (!output)
@@ -292,6 +293,19 @@ defun($h_FileBuffer_release) {
 
     fclose(output);
   }
+}
+
+/*
+  SYMBOL: $f_FileBuffer_release
+    Releases $ao_FileBuffer_meta and $aw_FileBuffer_contents for this
+    FileBuffer.
+ */
+defun($h_FileBuffer_release) {
+  //Can't release a memory-backed buffer
+  if ($y_FileBuffer_memory_backed) return;
+
+  //Need to write to autosave file first, if applicable
+  $m_write_autosave();
 
   $ao_FileBuffer_meta = NULL;
   $aw_FileBuffer_contents = NULL;
