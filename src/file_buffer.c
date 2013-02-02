@@ -297,6 +297,21 @@ defun($h_FileBuffer_release) {
   $aw_FileBuffer_contents = NULL;
 }
 
+/*
+  SYMBOL: $f_FileBuffer_require_writable
+    Rolls the current transaction back if this FileBuffer is readonly.
+
+  SYMBOL: $y_FileBuffer_readonly
+    If true, edits are not permitted to this FileBuffer.
+ */
+defun($h_FileBuffer_require_writable) {
+  if ($y_FileBuffer_readonly) {
+    $v_rollback_type = $u_FileBuffer;
+    $s_rollback_reason = "Buffer is read-only";
+    tx_rollback();
+  }
+}
+
 STATIC_INIT_TO($w_prev_undo_name, L"")
 /*
   SYMBOL: $f_FileBuffer_edit
@@ -329,6 +344,7 @@ STATIC_INIT_TO($w_prev_undo_name, L"")
     The last filename written in an undo record header.
  */
 defun($h_FileBuffer_edit) {
+  $m_require_writable();
   $m_access();
 
   wchar_t undo_type =
@@ -396,6 +412,8 @@ defun($h_FileBuffer_edit) {
     $aw_FileBuffer_contents->v[line] = insertions->car;
     $ao_FileBuffer_meta->v[line] = object_new(NULL);
   }
+
+  $y_FileBuffer_modified = true;
 
   if (insertions) {
     unsigned line = $I_FileBuffer_edit_line + ndeletions;
