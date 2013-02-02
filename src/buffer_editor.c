@@ -112,8 +112,14 @@ defun($h_BufferEditor_destroy) {
     The current face to apply to the buffer's name.
  */
 defun($h_BufferEditor_get_face) {
-  //TODO
-  $I_BufferEditor_face = $I_BufferEditor_unmodified_face;
+  $$($o_BufferEditor_buffer) {
+    if ($y_FileBuffer_modified)
+      $I_BufferEditor_face = $I_BufferEditor_modified_face;
+    else if ($y_FileBuffer_readonly)
+      $I_BufferEditor_face = $I_BufferEditor_readonly_face;
+    else
+      $I_BufferEditor_face = $I_BufferEditor_unmodified_face;
+  }
 }
 
 /*
