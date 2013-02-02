@@ -20,6 +20,11 @@
 #include <errno.h>
 #include <time.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 /*
   TITLE: (Textual) File Buffer
   OVERVIEW: Efficiently manages the lines of text in a file, including undo
@@ -324,6 +329,96 @@ defun($h_FileBuffer_require_writable) {
     $s_rollback_reason = "Buffer is read-only";
     tx_rollback();
   }
+}
+
+STATIC_INIT_TO($I_FileBuffer_default_file_mode, 0644);
+/*
+  SYMBOL: $f_FileBuffer_save
+    Saves the current contents of the buffer to the buffer's filename. This has
+    no effect if the buffer is unmodified, or if it is memory-backed. Saving
+    the file is a three-step process:
+    - The autosave file is written (to "NAME#").
+    - The autosave file is given the same attributes as the current file (if it
+      exists); otherwise, the attributes are derived from
+      $I_FileBuffer_default_file_mode.
+    - Unless $y_FileBuffer_suppress_fsync_on_save, fsync() is called on the
+      autosave file.
+    - The current file (if it exists) is renamed to "NAME~", with the same
+      attributes, overwriting that file if it already exists. This step is not
+      performed if $y_FileBuffer_suppress_backup is true.
+    - The autosave file is renamed onto the base file. This is guaranteed by
+      POSIX to be atomic.
+    - The buffer is set to unmodified.
+
+  SYMBOL: $y_FileBuffer_suppress_backup
+    When saving a FileBuffer, don't rename the original file to a backup
+    first.
+
+  SYMBOL: $y_FileBuffer_suppress_fsync_on_save
+    When saving a FileBuffer, don't call fsync() on the output file. This means
+    that if your system dies (eg, power failure, kernel panic), you might lose
+    the contents of the file, but you will get somewhat better speed and lower
+    power consumption. See also $y_FileBuffer_suppress_fsync_on_autosave.
+
+  SYMBOL: $I_FileBuffer_default_file_mode
+    The file mode to apply to newly-created files.
+ */
+defun($h_FileBuffer_save) {
+  if (!$y_FileBuffer_modified || $y_FileBuffer_memory_backed)
+    return;
+
+  wstring wbasename = $w_FileBuffer_filename;
+  wstring wbakname = wstrap(wbasename, L"~");
+  wstring wasname = wstrap(wbasename, L"#");
+  string basename = wstrtocstr(wbasename);
+  string bakname = wstrtocstr(wbakname);
+  string asname = wstrtocstr(wasname);
+
+  $m_write_autosave();
+
+  // Set permissions on autosave file
+  mode_t mode;
+  struct stat orig_info;
+  bool orig_exists;
+
+  if (-1 != stat(basename, &orig_info)) {
+    mode = orig_info.st_mode;
+    orig_exists = true;
+  } else if (errno == ENOENT) {
+    // The original file does not yet exist; use the default mode
+    mode = $I_FileBuffer_default_file_mode;
+    orig_exists = false;
+  } else {
+    // Something else went wrong.
+    tx_rollback_errno($u_FileBuffer);
+  }
+
+  if (-1 == chmod(asname, mode))
+    tx_rollback_errno($u_FileBuffer);
+
+  // fsync() the autosave file if requested
+  if (!$y_FileBuffer_suppress_fsync_on_save) {
+    int fd = open(asname, O_WRONLY);
+    // We shouldn't ever get -1 from the call to open(), but handle that case
+    // gracefully.
+    if (-1 != fd) {
+      fsync(fd);
+      close(fd);
+    }
+  }
+
+  // Move original file to the backup filename
+  if (!$y_FileBuffer_suppress_backup && orig_exists) {
+    if (-1 == rename(basename, bakname))
+      tx_rollback_errno($u_FileBuffer);
+  }
+
+  // Move the autosave file to the basename
+  if (-1 == rename(asname, basename))
+    tx_rollback_errno($u_FileBuffer);
+
+  $y_FileBuffer_modified = false;
+  tx_write_through($y_FileBuffer_modified);
 }
 
 STATIC_INIT_TO($w_prev_undo_name, L"")
