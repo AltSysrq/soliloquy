@@ -259,17 +259,27 @@ defun($h_BufferLineEditor_destroy) {
     $q_Workspace_echo_area_meta.
  */
 defun($h_BufferLineEditor_get_echo_area_meta) {
-  static qstring lparen = NULL, rparen = NULL;
-  if (!lparen) {
-    lparen = wstrtoqstr(L"(");
-    rparen = wstrtoqstr(L")");
-  }
+  static qchar lparen[2] = { L'(', 0 }, rparen[2] = { L')', 0 };
+
+  qstring inner = qempty;
 
   object next = NULL;
   if ($lo_echo_area_activities) {
     next = $lo_echo_area_activities->car;
-    let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
-    $M_get_echo_area_meta(0, next);
+    if (next != $o_BufferLineEditor_parent) {
+      let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
+      $M_get_echo_area_meta(0, next);
+    } else {
+      list_o remaining = $lo_echo_area_activities->cdr;
+      let($lo_echo_area_activities, NULL);
+      inner = $M_get_echo_area_meta($q_Workspace_echo_area_meta, next);
+
+      $q_Workspace_echo_area_meta = qempty;
+      if (remaining) {
+        let($lo_echo_area_activities, remaining->cdr);
+        $M_get_echo_area_meta(0, remaining->car);
+      }
+    }
   }
 
   wchar_t linenum[16] = {0};
@@ -294,8 +304,9 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
     $q_Workspace_echo_area_meta = qstrapv(parts, lenof(parts));
   } else {
     // On top of parent, use concise syntax
-    qstring parts[] = { lparen, $q_Workspace_echo_area_meta,
-                        wstrtoqstr(linenum), rparen };
+    qstring parts[] = { lparen, inner,
+                        wstrtoqstr(linenum), rparen, qspace,
+                        $q_Workspace_echo_area_meta };
     $q_Workspace_echo_area_meta = qstrapv(parts, lenof(parts));
   }
 }
