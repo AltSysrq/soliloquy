@@ -319,6 +319,60 @@ defun($h_LineEditor_move_backward_word) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_kill_forward_word
+    Deletes characters between the cursor and the next word boundary, and adds
+    the killed text to the character-oriented kill ring.
+ */
+defun($h_LineEditor_kill_forward_word) {
+  if ($i_LineEditor_cursor == $az_LineEditor_buffer->len)
+    //Already at the end
+    return;
+
+  int begin = $i_LineEditor_cursor;
+  $m_move_forward_word();
+  if (begin == $i_LineEditor_cursor) return;
+
+  int end = $i_LineEditor_cursor;
+  mwstring text = gcalloc(sizeof(wchar_t)*(end-begin+1));
+  memcpy(text,
+         $az_LineEditor_buffer->v + begin,
+         (end-begin)*(sizeof(wchar_t)));
+
+  $F_c_kill(0,0, $w_kill = text, $v_kill_direction = $u_forward);
+
+  $m_push_undo();
+  dynar_erase_z($az_LineEditor_buffer, begin, end-begin);
+  $i_LineEditor_cursor = begin;
+  $m_changed();
+}
+
+/*
+  SYMBOL: $f_LineEditor_kill_backward_word
+    Deletes characters between the cursor and the previous word boundary, and
+    adds the killed text to the character-oriented kill ring.
+ */
+defun($h_LineEditor_kill_backward_word) {
+  if ($i_LineEditor_cursor == 0)
+    return;
+
+  int end = $i_LineEditor_cursor;
+  $m_move_backward_word();
+  if (end == $i_LineEditor_cursor) return;
+  int begin = $i_LineEditor_cursor;
+
+  mwstring text = gcalloc(sizeof(wchar_t)*(end-begin+1));
+  memcpy(text,
+         $az_LineEditor_buffer->v + begin,
+         (end-begin)*(sizeof(wchar_t)));
+
+  $F_c_kill(0,0, $w_kill = text, $v_kill_direction = $u_backward);
+
+  $m_push_undo();
+  dynar_erase_z($az_LineEditor_buffer, begin, end-begin);
+  $m_changed();
+}
+
+/*
   SYMBOL: $f_LineEditor_home
     Moves cursor to the first non-whitespace character, or to column zero if it
     was already there.
@@ -446,6 +500,10 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $f_LineEditor_delete_backward_char);
   bind_char($lp_LineEditor_keybindings, $u_meta, L';', $v_end_meta,
             $f_LineEditor_delete_forward_char);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'o', $v_end_meta,
+            $f_LineEditor_kill_backward_word);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'p', $v_end_meta,
+            $f_LineEditor_kill_forward_word);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'h', $v_end_meta,
             $f_LineEditor_home);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'n', $v_end_meta,
