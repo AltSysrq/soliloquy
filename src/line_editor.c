@@ -319,31 +319,64 @@ defun($h_LineEditor_move_backward_word) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_kill
+    Kills text between $i_LineEditor_kill and $i_LineEditor_cursor, including
+    the lower bound and excluding the upper bound, placing the text on the kill
+    ring. The cursor is moved to the lower bound.
+ */
+defun($h_LineEditor_kill) {
+  if ($i_LineEditor_cursor == $i_LineEditor_kill) return;
+  if ($i_LineEditor_cursor > $i_LineEditor_kill) {
+    int tmp = $i_LineEditor_kill;
+    $i_LineEditor_kill = $i_LineEditor_cursor;
+    $i_LineEditor_cursor = tmp;
+
+    // Cursor was ahead of the killed region, so killing backwards
+    $v_kill_direction = $u_backward;
+  } else {
+    //Cursor was behind the killed region, so killing forwards
+    $v_kill_direction = $u_forward;
+  }
+
+  int begin = $i_LineEditor_cursor;
+  int end = $i_LineEditor_kill;
+  mwstring text = gcalloc(sizeof(wchar_t)*(end-begin+1));
+  memcpy(text,
+         $az_LineEditor_buffer->v + begin,
+         (end-begin)*sizeof(wchar_t));
+
+  $F_c_kill(0,0, $w_kill = text);
+
+  $m_push_undo();
+  dynar_erase_z($az_LineEditor_buffer, begin, end-begin);
+  $m_changed();
+}
+
+/*
+  SYMBOL: $f_LineEditor_move_and_kill_between
+    Saves $i_LineEditor_cursor into $i_LineEditor_kill, then calls
+    $p_LineEditor_move_and_kill_between, which must be of type
+      void (*)(void)
+    afterward, it calls $m_kill().
+
+  SYMBOL: $p_LineEditor_move_and_kill_between
+    A pointer of type void (*)(void) which performs some kind of cursor
+    movement within this LineEditor.
+ */
+defun($h_LineEditor_move_and_kill_between) {
+  $i_LineEditor_kill = $i_LineEditor_cursor;
+  ((void (*)(void))$p_LineEditor_move_and_kill_between)();
+  $m_kill();
+}
+
+/*
   SYMBOL: $f_LineEditor_kill_forward_word
     Deletes characters between the cursor and the next word boundary, and adds
     the killed text to the character-oriented kill ring.
  */
 defun($h_LineEditor_kill_forward_word) {
-  if ($i_LineEditor_cursor == $az_LineEditor_buffer->len)
-    //Already at the end
-    return;
-
-  int begin = $i_LineEditor_cursor;
-  $m_move_forward_word();
-  if (begin == $i_LineEditor_cursor) return;
-
-  int end = $i_LineEditor_cursor;
-  mwstring text = gcalloc(sizeof(wchar_t)*(end-begin+1));
-  memcpy(text,
-         $az_LineEditor_buffer->v + begin,
-         (end-begin)*(sizeof(wchar_t)));
-
-  $F_c_kill(0,0, $w_kill = text, $v_kill_direction = $u_forward);
-
-  $m_push_undo();
-  dynar_erase_z($az_LineEditor_buffer, begin, end-begin);
-  $i_LineEditor_cursor = begin;
-  $m_changed();
+  $p_LineEditor_move_and_kill_between = $m_move_forward_word;
+  $m_move_and_kill_between();
 }
 
 /*
@@ -352,24 +385,8 @@ defun($h_LineEditor_kill_forward_word) {
     adds the killed text to the character-oriented kill ring.
  */
 defun($h_LineEditor_kill_backward_word) {
-  if ($i_LineEditor_cursor == 0)
-    return;
-
-  int end = $i_LineEditor_cursor;
-  $m_move_backward_word();
-  if (end == $i_LineEditor_cursor) return;
-  int begin = $i_LineEditor_cursor;
-
-  mwstring text = gcalloc(sizeof(wchar_t)*(end-begin+1));
-  memcpy(text,
-         $az_LineEditor_buffer->v + begin,
-         (end-begin)*(sizeof(wchar_t)));
-
-  $F_c_kill(0,0, $w_kill = text, $v_kill_direction = $u_backward);
-
-  $m_push_undo();
-  dynar_erase_z($az_LineEditor_buffer, begin, end-begin);
-  $m_changed();
+  $p_LineEditor_move_and_kill_between = $m_move_backward_word;
+  $m_move_and_kill_between();
 }
 
 /*
