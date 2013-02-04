@@ -229,6 +229,8 @@ defun($h_key_undefined) {
     wkeyname = str;
   } else if ($x_Terminal_input_value == L' ') {
     wkeyname = L"SPC";
+  } else if ($x_Terminal_input_value == 0x7F) {
+    wkeyname = L"^?";
   } else {
     static wchar_t str[2] = L"X";
     str[0] = $x_Terminal_input_value;
