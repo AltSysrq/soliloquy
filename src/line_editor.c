@@ -496,35 +496,35 @@ interactive($h_LineEditor_seek_backward_to_word_i,
 class_keymap($c_LineEditor, $lp_LineEditor_keybindings, $llp_Activity_keymap)
 ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
   bind_kp($lp_LineEditor_keybindings, $u_ground, KEYBINDING_DEFAULT, NULL,
-          $f_LineEditor_self_insert);
+          $m_self_insert);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'j', $v_end_meta,
-            $f_LineEditor_move_backward_char);
+            $m_move_backward_char);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'k', $v_end_meta,
-            $f_LineEditor_move_forward_char);
+            $m_move_forward_char);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'u', $v_end_meta,
-            $f_LineEditor_move_backward_word);
+            $m_move_backward_word);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'i', $v_end_meta,
-            $f_LineEditor_move_forward_word);
+            $m_move_forward_word);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'J', $v_end_meta,
-            $f_LineEditor_seek_backward_to_char_i);
+            $m_seek_backward_to_char_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'K', $v_end_meta,
-            $f_LineEditor_seek_forward_to_char_i);
+            $m_seek_forward_to_char_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'U', $v_end_meta,
-            $f_LineEditor_seek_backward_to_word_i);
+            $m_seek_backward_to_word_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'I', $v_end_meta,
-            $f_LineEditor_seek_forward_to_word_i);
+            $m_seek_forward_to_word_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'l', $v_end_meta,
-            $f_LineEditor_delete_backward_char);
+            $m_delete_backward_char);
   bind_char($lp_LineEditor_keybindings, $u_meta, L';', $v_end_meta,
-            $f_LineEditor_delete_forward_char);
+            $m_delete_forward_char);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'o', $v_end_meta,
-            $f_LineEditor_kill_backward_word);
+            $m_kill_backward_word);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'p', $v_end_meta,
-            $f_LineEditor_kill_forward_word);
+            $m_kill_forward_word);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'h', $v_end_meta,
-            $f_LineEditor_home);
+            $m_home);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'n', $v_end_meta,
-            $f_LineEditor_end);
+            $m_end);
   bind_char($lp_LineEditor_keybindings, $u_ground, L'\r', NULL,
             $m_accept);
 }
