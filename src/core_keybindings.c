@@ -44,8 +44,11 @@
     seting it to NULL will give somewhat vi-like behaviour (though you'll need
     to arrange to exit $u_meta mode somehow).
  */
-ATSTART(setup_core_keybindings, STATIC_INITIALISATION_PRIORITY) {
+ATSTART(setup_v_end_meta, STATIC_INITIALISATION_PRIORITY-1) {
   $v_end_meta = $u_ground;
+}
+
+ATSTART(setup_core_keybindings, STATIC_INITIALISATION_PRIORITY) {
   bind_char($$lp_core_keybindings, $u_ground, L'\033', $u_meta, NULL);
   bind_char($$lp_core_keybindings, $u_ground, CONTROL_X, $u_extended, NULL);
   bind_char($$lp_core_keybindings, $u_extended, L'\033', $u_extended_meta,NULL);
