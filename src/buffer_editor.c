@@ -61,8 +61,8 @@ ATSINIT {
     BufferEditor_buffer.
 
   SYMBOL: $u_shunt_notify
-    Identifies the BufferEditor's hook on $H_shunt within a FileBufferCursor to
-    refresh the echo area.
+    Identifies by class the BufferEditor's hook on $H_shunt within a
+    FileBufferCursor to refresh the echo area.
 
   SYMBOL: $lo_BufferEditor_marks
     The mark stack (of FileBufferCursors) for this BufferEditor.

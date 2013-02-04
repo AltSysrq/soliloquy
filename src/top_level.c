@@ -39,11 +39,11 @@ defun($h_TopLevel) {
   implant($h_BufferEditor);
   implant($h_BufferEditor_destroy);
   add_hook_obj(&$h_BufferEditor, HOOK_AFTER,
-               $u_registration, $u_BufferEditor,
+               $u_BufferEditor, $u_registration,
                $m_register_buffer, $o_TopLevel,
                NULL);
   add_hook_obj(&$h_BufferEditor_destroy, HOOK_BEFORE,
-               $u_registration, $u_BufferEditor,
+               $u_BufferEditor, $u_registration,
                $m_deregister_buffer, $o_TopLevel,
                NULL);
                
