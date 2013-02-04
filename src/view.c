@@ -18,6 +18,7 @@
 */
 #include "view.slc"
 #include "key_dispatch.h"
+#include "face.h"
 
 /*
   TITLE: Terminal/Workspace View Management
@@ -171,7 +172,17 @@ defun($h_View_backing_changed) {
        $i_View_line_to_paint < $i_View_cut_in_workspace;
        ++$i_View_line_to_paint)
     $F_View_paint_line(0,$o_View_terminal);
+
+  $i_View_line_to_paint = $i_View_cut_in_workspace - $i_View_rows;
+  if ($i_View_line_to_paint > 0)
+    $F_View_paint_line(0,$o_View_terminal);
 }
+
+/*
+  SYMBOL: $I_View_cut_face
+    Face to apply to the first line ahead of cut.
+ */
+STATIC_INIT_TO($I_View_cut_face, mkface("+X"));
 
 /*
   SYMBOL: $f_View_paint_line
@@ -208,6 +219,11 @@ defun($h_View_paint_line) {
     qstrlcpy(line, $(oline, $q_RenderedLine_meta), $i_line_meta_width+1);
     qstrlcpy(line+$i_line_meta_width,
              $(oline, $q_RenderedLine_body), $i_column_width+1);
+
+    if ($i_View_line_to_paint ==
+        $i_View_cut_in_workspace - $i_View_rows)
+      for (unsigned i = 0; i < lenof(line); ++i)
+        line[i] = apply_face($I_View_cut_face, line[i]);
   }
 
   $$($o_View_terminal) {
