@@ -418,6 +418,24 @@ defun($h_LineEditor_end) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_kill_to_bol
+    Kills all text between the cursor and the beginning of the line.
+ */
+defun($h_LineEditor_kill_to_bol) {
+  $p_LineEditor_move_and_kill_between = $m_home;
+  $m_move_and_kill_between();
+}
+
+/*
+  SYMBOL: $f_LineEditor_kill_to_eol
+    Kills all text between the cursor and the end of the line.
+ */
+defun($h_LineEditor_kill_to_eol) {
+  $p_LineEditor_move_and_kill_between = $m_end;
+  $m_move_and_kill_between();
+}
+
+/*
   SYMBOL: $h_LineEditor_seek_forward_to_char $h_LineEditor_seek_forward_to_char_i
     Moves point forward by characters until the end of the buffer or
     $z_LineEditor_seek_dst is encountered.
@@ -441,6 +459,19 @@ interactive($h_LineEditor_seek_forward_to_char_i,
 }
 
 /*
+  SYMBOL: $f_LineEditor_seek_and_kill_forward_to_char
+  SYMBOL: $f_LineEditor_seek_and_kill_forward_to_char_i
+    Kills text between the cursor and the targetted character in
+    $z_LineEditor_seek_dst.
+ */
+interactive($h_LineEditor_seek_and_kill_forward_to_char_i,
+            $h_LineEditor_seek_and_kill_forward_to_char,
+            i_(z, $z_LineEditor_seek_dst, L"Seek-Kill")) {
+  $p_LineEditor_move_and_kill_between = $m_seek_forward_to_char;
+  $m_move_and_kill_between();
+}
+
+/*
   SYMBOL: $h_LineEditor_seek_backward_to_char $h_LineEditor_seek_backward_to_char_i
     Moves point backward by characters until the beginning of the buffer or
     $z_LineEditor_seek_dst is encountered.
@@ -460,6 +491,19 @@ interactive($h_LineEditor_seek_backward_to_char_i,
 }
 
 /*
+  SYMBOL: $f_LineEditor_seek_and_kill_backward_to_char
+  SYMBOL: $f_LineEditor_seek_and_kill_backward_to_char_i
+    Kills text between the cursor and the targetted character in
+    $z_LineEditor_seek_dst.
+ */
+interactive($h_LineEditor_seek_and_kill_backward_to_char_i,
+            $h_LineEditor_seek_and_kill_backward_to_char,
+            i_(z, $z_LineEditor_seek_dst, L"Seek-Kill")) {
+  $p_LineEditor_move_and_kill_between = $m_seek_backward_to_char;
+  $m_move_and_kill_between();
+}
+
+/*
   SYMBOL: $h_LineEditor_seek_forward_to_word_i $h_LineEditor_seek_forward_to_word
     Moves point forward by words until the end of the buffer or
     $z_LineEditor_seek_dst is encountered.
@@ -475,6 +519,19 @@ interactive($h_LineEditor_seek_forward_to_word_i,
 }
 
 /*
+  SYMBOL: $f_LineEditor_seek_and_kill_forward_to_word
+  SYMBOL: $f_LineEditor_seek_and_kill_forward_to_word_i
+    Kills text between the cursor and the next word beginning with
+    $z_LineEditor_seek_dst.
+ */
+interactive($h_LineEditor_seek_and_kill_forward_to_word_i,
+            $h_LineEditor_seek_and_kill_forward_to_word,
+            i_(z, $z_LineEditor_seek_dst, L"Seek-Kill")) {
+  $p_LineEditor_move_and_kill_between = $m_seek_forward_to_word;
+  $m_move_and_kill_between();
+}
+
+/*
   SYMBOL: $h_LineEditor_seek_backward_to_word_i $h_LineEditor_seek_backward_to_word
     Moves point backward by words until the end of the buffer or
     $z_LineEditor_seek_dst is encountered.
@@ -487,6 +544,19 @@ interactive($h_LineEditor_seek_backward_to_word_i,
   } while ($i_LineEditor_cursor &&
            $z_LineEditor_seek_dst !=
              $az_LineEditor_buffer->v[$i_LineEditor_cursor]);
+}
+
+/*
+  SYMBOL: $f_LineEditor_seek_and_kill_backward_to_word_i
+  SYMBOL: $f_LineEditor_seek_and_kill_backward_to_word
+    Kills text between the cursor and the previous word beginning with
+    $z_LineEditor_seek_dst.
+ */
+interactive($h_LineEditor_seek_and_kill_backward_to_word_i,
+            $h_LineEditor_seek_and_kill_backward_to_word,
+            i_(z, $z_LineEditor_seek_dst, L"Seek-Kill")) {
+  $p_LineEditor_move_and_kill_between = $m_seek_backward_to_word;
+  $m_move_and_kill_between();
 }
 
 /*
@@ -517,14 +587,26 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $m_delete_backward_char);
   bind_char($lp_LineEditor_keybindings, $u_meta, L';', $v_end_meta,
             $m_delete_forward_char);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'L', $v_end_meta,
+            $m_seek_and_kill_backward_to_char_i);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L':', $v_end_meta,
+            $m_seek_and_kill_forward_to_char_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'o', $v_end_meta,
             $m_kill_backward_word);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'p', $v_end_meta,
             $m_kill_forward_word);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'O', $v_end_meta,
+            $m_seek_and_kill_backward_to_word_i);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'P', $v_end_meta,
+            $m_seek_and_kill_forward_to_word_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'h', $v_end_meta,
             $m_home);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'H', $v_end_meta,
+            $m_kill_to_bol);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'n', $v_end_meta,
             $m_end);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'N', $v_end_meta,
+            $m_kill_to_eol);
   bind_char($lp_LineEditor_keybindings, $u_ground, L'\r', NULL,
             $m_accept);
 }
