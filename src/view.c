@@ -130,7 +130,10 @@ defun($h_View_destroy) {
 defun($h_View_redraw) {
   int end = $i_View_cut_in_workspace;
   int begin = end - $i_View_rows;
-  if (begin < 0) begin = 0;
+  if (begin < 0) {
+    begin = 0;
+    end = $i_View_rows;
+  }
 
   for ($i_View_line_to_paint = begin;
        $i_View_line_to_paint < end;
@@ -174,8 +177,10 @@ defun($h_View_backing_changed) {
     $F_View_paint_line(0,$o_View_terminal);
 
   $i_View_line_to_paint = $i_View_cut_in_workspace - $i_View_rows;
-  if ($i_View_line_to_paint > 0)
-    $F_View_paint_line(0,$o_View_terminal);
+  if ($i_View_line_to_paint < 0)
+    $i_View_line_to_paint = $i_View_cut_in_workspace;
+
+  $F_View_paint_line(0,$o_View_terminal);
 }
 
 /*
@@ -212,19 +217,24 @@ defun($h_View_paint_line) {
   qchar line[$i_column_width + $i_line_meta_width+1];
   memset(line, 0, sizeof(line));
 
-  object oline =
-    $($($o_View_workspace,$o_Workspace_backing),
-      $ao_Backing_lines)->v[$i_View_line_to_paint];
+  object oline = NULL;
+  $$($($o_View_workspace, $o_Workspace_backing)) {
+    if ($i_View_line_to_paint >= 0 &&
+        $i_View_line_to_paint < $ao_Backing_lines->len)
+      oline = $ao_Backing_lines->v[$i_View_line_to_paint];
+  }
+
   if (oline) {
     qstrlcpy(line, $(oline, $q_RenderedLine_meta), $i_line_meta_width+1);
     qstrlcpy(line+$i_line_meta_width,
              $(oline, $q_RenderedLine_body), $i_column_width+1);
-
-    if ($i_View_line_to_paint ==
-        $i_View_cut_in_workspace - $i_View_rows)
-      for (unsigned i = 0; i < lenof(line); ++i)
-        line[i] = apply_face($I_View_cut_face, line[i]);
   }
+
+  if ($i_View_line_to_paint ==
+      $i_View_cut_in_workspace - $i_View_rows ||
+      $i_View_line_to_paint == $i_View_cut_in_workspace)
+    for (unsigned i = 0; i < lenof(line); ++i)
+      line[i] = apply_face($I_View_cut_face, line[i]);
 
   $$($o_View_terminal) {
     for (unsigned i = 0; i < sizeof(line)/sizeof(qchar)-1; ++i)
