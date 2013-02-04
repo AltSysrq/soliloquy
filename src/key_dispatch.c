@@ -17,6 +17,7 @@
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "key_dispatch.slc"
+#include "inc_ncurses.h"
 
 //class $c_Terminal $c_View $c_Workspace $c_Backing $c_Activity
 
@@ -191,4 +192,60 @@ keybinding* mk_keybinding(qchar qch, identity mode, identity newmode,
     .function = fun,
   };
   return newdup(&kb);
+}
+
+/*
+  SYMBOL: $lp_mode_names
+    A indentity-wstring map which names the values stored in
+    $v_Terminal_key_mode.
+ */
+ATSINIT {
+  $lp_mode_names =
+    lmput_p(
+      lmput_p(
+        lmput_p(
+          $lp_mode_names,
+          $u_meta, L"M-"),
+        $u_extended, L"^X "),
+      $u_extended_meta, L"^X M-");
+}
+
+defun($h_key_undefined) {
+  list_p lprefix = lmget_p($lp_mode_names,
+                           $v_Terminal_key_mode);
+  wstring prefix = (lprefix? lprefix->car : L"");
+
+  wstring keyname;
+
+  if ($x_Terminal_input_value & (1<<31)) {
+    keyname = cstrtowstr(key_name($x_Terminal_input_value &~ (1<<31)));
+  } else if ($x_Terminal_input_value == CONTROL_SPACE) {
+    keyname = L"^SPC";
+  } else if ($x_Terminal_input_value == L'\r') {
+    keyname = L"RET";
+  } else if ($x_Terminal_input_value < L' ') {
+    static wchar_t str[3] = L"^X";
+    str[1] = $x_Terminal_input_value + L'@';
+    keyname = str;
+  } else if ($x_Terminal_input_value == L' ') {
+    keyname = L"SPC";
+  } else {
+    static wchar_t str[2] = L"X";
+    str[0] = $x_Terminal_input_value;
+    keyname = str;
+  }
+
+  static wchar_t message[256];
+  swprintf(message, lenof(message), L"Undefined: %ls%ls",
+           prefix, keyname);
+
+  $$($o_Terminal_current_view) {
+    $$($o_View_workspace) {
+      $$($o_Workspace_backing) {
+        $F_message_error(0,0, $w_message_text = message);
+      }
+    }
+  }
+
+  $v_Terminal_key_mode = $u_ground;
 }
