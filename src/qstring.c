@@ -188,6 +188,11 @@ bool is_word_boundary(qchar a, qchar b) {
   if (iswalnum(b)) {
     if (!iswalnum(a)) return true;
     if (iswupper(b) && !iswupper(a)) return true;
+  /* We get less efficient, but much more intuitive and predictable behaviour
+   * if we also consider alnum followed by non-alnum to be a boundary.
+   */
+  } else if (iswalnum(a) && !iswalnum(b)) {
+    return true;
   }
 
   return false;
