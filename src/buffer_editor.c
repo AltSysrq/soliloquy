@@ -322,6 +322,8 @@ defun($h_BufferLineEditor_accept) {
   mwstring line = gcalloc(sizeof(wchar_t)*($az_LineEditor_buffer->len + 1));
   memcpy(line, $az_LineEditor_buffer->v,
          sizeof(wchar_t)*$az_LineEditor_buffer->len);
+  unsigned line_number = $($o_BufferLineEditor_cursor, $I_FileBufferCursor_line_number);
+
   // We no longer care about window notifications (and we're about to trigger
   // one anyway)
   $$($o_BufferLineEditor_cursor) {
@@ -331,8 +333,12 @@ defun($h_BufferLineEditor_accept) {
   $M_edit(0, $o_BufferLineEditor_buffer,
           $I_FileBuffer_ndeletions = ($y_BufferLineEditor_replace? 1:0),
           $lw_FileBuffer_replacements = cons_w(line, NULL),
-          $I_FileBuffer_edit_line =
-            $($o_BufferLineEditor_cursor, $I_FileBufferCursor_line_number));
+          $I_FileBuffer_edit_line = line_number);
+  // If echo is on, output the new line to the Transcript
+  if (($v_LineEditor_echo_mode ?: $v_Workspace_echo_mode) == $u_echo_on) {
+    $M_echo_line(0, $o_BufferLineEditor_parent,
+                 $I_BufferEditor_index = line_number);
+  }
   $m_destroy();
 }
 
@@ -600,6 +606,25 @@ defun($h_BufferEditor_show_backward_line) {
         $lo_BufferEditor_format = NULL;
       }
     }
+  }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_echo_line
+    Echos a single line to the Transcript (if any), as an append (versus an
+    output group). The line to output is indicated by $I_BufferEditor_index.
+ */
+defun($h_BufferEditor_echo_line) {
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+
+    $lo_BufferEditor_format = NULL;
+    $m_format();
+
+    if ($o_Transcript)
+      $M_append(0, $o_Transcript,
+                $lo_Transcript_output = $lo_BufferEditor_format);
+    $lo_BufferEditor_format = NULL;
   }
 }
 
