@@ -23,3 +23,51 @@ which will include:
 - Fast line editing
 - Multiple buffers
 - Infinite undo
+
+"Primary Keys" Meta Keymap
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Left hand:
+----------------
++----------+----------+----------+----------+----------+
+| Q        | W        | E        | R        | T        |
+| Exchg    | Set mark | View page| View page| Permute  |
+| mark/cur |          | up       | down     | chars    |
+|          |          |          |          | Transpose|
+| Pop mark | Push mark| To TOF   | To EOF   | units    |
++----------+----------+----------+----------+----------+-+
+  | A        | S        | D        | F        | G        |
+  | Show open| Shw close| Show prev| Show next| Show sur-|
+  | block    | block    | line(s)  | line(s)  | ounding  |
+  |          |          |          |          | Ask how  |
+  | x 5      | x 5      | x 5      | x 5      | many     |
+  +----------+----------+----------+----------+----------+-+
+    | Z        | X        | C        | V        | B        |
+    | Activity | Parent   | Replace  | Search   | Yank and |
+    | to bottom| activity |          | forward  | advance  |
+    |          |          |          |          |          |
+    | From bot | Child    | In region| Backward | No adv   |
+    +----------+----------+----------+----------+----------+
+----------------
+
+Right hand:
+----------------
++----------+----------+----------+----------+----------+
+| Y        | U        | I        | O        | P        |
+| Undo     | Forward  | Backward | Kill bkwd| Kill fwd |
+|          | group    | group    | group    | group    |
+|          | To target| To target| To target| To target|
+| Redo     | group    | group    | group    | group    |
++----------+----------+----------+----------+----------+-+
+  | H        | J        | K        | L        | ;        |
+  | Home     | Backward | Forward  | Kill bkwd| Kill fwd |
+  |          | unit     | unit     | unit     | unit     |
+  | Kill to  | To target| To target| To target| To target|
+  | home     | unit     | unit     | unit     | unit     |
+  +----------+----------+----------+----------+----------+-+
+    | N        | M        | ,        | .        | /        |
+    | End      | Backward | Forward  | Kill bkwd| Kill fwd |
+    |          | s-expr   | s-expr   | s-expr   | s-expr   |
+    | Kill to  |          |          |          |          |
+    | end      | Exit curr| Exit curr| Kill curr| Thru next|
+    +----------+----------+----------+----------+----------+
+----------------
