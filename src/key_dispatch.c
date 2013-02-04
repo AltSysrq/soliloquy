@@ -215,29 +215,29 @@ defun($h_key_undefined) {
                            $v_Terminal_key_mode);
   wstring prefix = (lprefix? lprefix->car : L"");
 
-  wstring keyname;
+  wstring wkeyname;
 
   if ($x_Terminal_input_value & (1<<31)) {
-    keyname = cstrtowstr(key_name($x_Terminal_input_value &~ (1<<31)));
+    wkeyname = cstrtowstr(keyname($x_Terminal_input_value &~ (1<<31)));
   } else if ($x_Terminal_input_value == CONTROL_SPACE) {
-    keyname = L"^SPC";
+    wkeyname = L"^SPC";
   } else if ($x_Terminal_input_value == L'\r') {
-    keyname = L"RET";
+    wkeyname = L"RET";
   } else if ($x_Terminal_input_value < L' ') {
     static wchar_t str[3] = L"^X";
     str[1] = $x_Terminal_input_value + L'@';
-    keyname = str;
+    wkeyname = str;
   } else if ($x_Terminal_input_value == L' ') {
-    keyname = L"SPC";
+    wkeyname = L"SPC";
   } else {
     static wchar_t str[2] = L"X";
     str[0] = $x_Terminal_input_value;
-    keyname = str;
+    wkeyname = str;
   }
 
   static wchar_t message[256];
   swprintf(message, lenof(message), L"Undefined: %ls%ls",
-           prefix, keyname);
+           prefix, wkeyname);
 
   $$($o_Terminal_current_view) {
     $$($o_View_workspace) {
