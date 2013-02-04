@@ -23,7 +23,6 @@
   OVERVIEW: Manages Workspaces, global objects associated with a Backing, an
   Echo area, and an activity stack.
 */
-//class $c_Backing $c_Clip
 
 /*
   SYMBOL: $c_Workspace

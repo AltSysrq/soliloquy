@@ -19,8 +19,6 @@
 #include "key_dispatch.slc"
 #include "inc_ncurses.h"
 
-//class $c_Terminal $c_View $c_Workspace $c_Backing $c_Activity
-
 /*
   TITLE: Key Dispatch Handler
   OVERVIEW: Implements the keybinding dispatcher as described in the header

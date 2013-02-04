@@ -25,8 +25,6 @@
     within the workspace and on the screen).
 */
 
-//class $c_Terminal $c_Workspace
-
 /*
   SYMBOL: $c_View
     Binds workspace-specific data for each workspace to a Terminal.

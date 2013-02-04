@@ -33,8 +33,6 @@
 #include <poll.h>
 #include <errno.h>
 
-// classes $c_Consumer $c_Producer
-
 static void handle_sigchld(int, siginfo_t*, void*);
 static void handle_quit(int);
 static void handle_fatal(int);
