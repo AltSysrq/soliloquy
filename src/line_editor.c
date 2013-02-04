@@ -560,6 +560,37 @@ interactive($h_LineEditor_seek_and_kill_backward_to_word_i,
 }
 
 /*
+  SYMBOL: $f_LineEditor_yank_and_adv
+    Inserts the text at the front of the character-oriented kill ring, then
+    advances the cursor to be one past the end of the inserted string.
+ */
+defun($h_LineEditor_yank_and_adv) {
+  if (!$aw_c_kill_ring->v[$I_c_kill_ring])
+    return;
+
+  $m_yank();
+  $i_LineEditor_cursor += wcslen($aw_c_kill_ring->v[$I_c_kill_ring]);
+  $m_changed();
+}
+
+/*
+  SYMBOL: $f_LineEditor_yank_no_adv
+     Inserts the text at the front of the character-oriented kill ring, and
+     leaves the cursor where it was.
+ */
+defun($h_LineEditor_yank) {
+  if (!$aw_c_kill_ring->v[$I_c_kill_ring])
+    return;
+
+  wstring to_insert = $aw_c_kill_ring->v[$I_c_kill_ring];
+  $m_push_undo();
+  dynar_ins_z($az_LineEditor_buffer, $i_LineEditor_cursor,
+              to_insert, wcslen(to_insert));
+
+  $m_changed();
+}
+
+/*
   SYMBOL: $lp_LineEditor_keybindings
     List of keybindings supported by generic LineEditors.
  */
@@ -607,6 +638,10 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $m_end);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'N', $v_end_meta,
             $m_kill_to_eol);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'b', $v_end_meta,
+            $m_yank_and_adv);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'B', $v_end_meta,
+            $m_yank);
   bind_char($lp_LineEditor_keybindings, $u_ground, L'\r', NULL,
             $m_accept);
 }
