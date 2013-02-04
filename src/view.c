@@ -17,6 +17,7 @@
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "view.slc"
+#include "key_dispatch.h"
 
 /*
   TITLE: Terminal/Workspace View Management
@@ -128,8 +129,12 @@ defun($h_View_destroy) {
     Redraws the entire view, including pins and the echo area.
  */
 defun($h_View_redraw) {
-  for (int $i_View_line_to_paint = 0;
-       $i_View_line_to_paint < $i_View_rows;
+  int end = $i_View_cut_in_workspace;
+  int begin = end - $i_View_rows;
+  if (begin < 0) begin = 0;
+
+  for ($i_View_line_to_paint = begin;
+       $i_View_line_to_paint < end;
        ++$i_View_line_to_paint)
     $f_View_paint_line();
   //TODO: pins
@@ -215,3 +220,86 @@ defun($h_View_paint_line) {
 
 STATIC_INIT_TO($i_column_width, 80)
 STATIC_INIT_TO($i_line_meta_width, 4)
+
+/*
+  SYMBOL: $i_View_page_less_lines
+    When paging a View, leave this many lines in common with the previous/next
+    page.
+ */
+STATIC_INIT_TO($i_View_page_less_lines, 4)
+
+/*
+  SYMBOL: $f_View_scroll $i_View_scroll
+    Moves the cut of this View on the workspace, and as necessary on the screen
+    to preserve line locations, by $i_View_scroll lines.
+ */
+defun($h_View_scroll) {
+  int old = $i_View_cut_in_workspace;
+  $i_View_cut_in_workspace += $i_View_scroll;
+
+  unsigned end = $($($o_View_workspace,
+                     $o_Workspace_backing),
+                   $ao_Backing_lines)->len;
+
+  if ($i_View_cut_in_workspace < $i_View_rows)
+    $i_View_cut_in_workspace = $i_View_rows;
+  else if ($i_View_cut_in_workspace > (signed)end)
+    $i_View_cut_in_workspace = end;
+
+  $i_View_cut_on_screen += $i_View_cut_in_workspace - old;
+  while ($i_View_cut_on_screen < 0)
+    $i_View_cut_on_screen += $i_View_rows;
+  $i_View_cut_on_screen %= $i_View_rows;
+
+  $m_redraw();
+}
+
+/*
+  SYMBOL: $f_View_page_up
+    Scrolls the view one page up, except for $i_View_page_less_lines.
+ */
+defun($h_View_page_up) {
+  $M_scroll(0,0, $i_View_scroll = -($i_View_rows - $i_View_page_less_lines));
+}
+
+/*
+  SYMBOL: $f_View_page_down
+    Scrolls the view one page down, except for $i_View_page_less_lines.
+ */
+defun($h_View_page_down) {
+  $M_scroll(0,0, $i_View_scroll = $i_View_rows - $i_View_page_less_lines);
+}
+
+/*
+  SYMBOL: $f_View_home
+    Moves the scroll of this View back to the top.
+ */
+defun($h_View_home) {
+  $M_scroll(0,0, $i_View_scroll = $i_View_rows - $i_View_cut_in_workspace);
+}
+
+/*
+  SYMBOL: $f_View_end
+    Moves the scroll of this View to the end.
+ */
+defun($h_View_end) {
+  unsigned end = $($($o_View_workspace, $o_Workspace_backing),
+                   $ao_Backing_lines)->len;
+  $M_scroll(0,0, $i_View_scroll = end - $i_View_cut_in_workspace);
+}
+
+/*
+  SYMBOL: $lp_View_keymap
+    The basic key commands supported by the View class.
+ */
+class_keymap($c_View, $lp_View_keymap, $llp_View_keymap)
+ATSINIT {
+  bind_char($lp_View_keymap, $u_meta, L'e', $v_end_meta,
+            $m_page_up);
+  bind_char($lp_View_keymap, $u_meta, L'E', $v_end_meta,
+            $m_home);
+  bind_char($lp_View_keymap, $u_meta, L'r', $v_end_meta,
+            $m_page_down);
+  bind_char($lp_View_keymap, $u_meta, L'R', $v_end_meta,
+            $m_end);
+}
