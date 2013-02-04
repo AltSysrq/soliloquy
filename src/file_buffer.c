@@ -212,6 +212,16 @@ defun($h_FileBuffer_destroy) {
   each_o($lo_FileBuffer_attachments,
          lambdav((object that), $M_destroy(0,that)));
   $lo_buffers = lrm_o($lo_buffers, $o_FileBuffer);
+
+
+  // If we have been modified, there may be an autosave file on-disk. Remove it
+  // if it is there.
+  if (!$y_FileBuffer_memory_backed && $y_FileBuffer_modified) {
+    // Ignore the return value; if it failed, there isn't anything we can do
+    // about it, and we can't give a terribly informative message to the user
+    // about the problem.
+    unlink(wstrtocstr(wstrap($w_FileBuffer_filename, L"#")));
+  }
 }
 
 /*
