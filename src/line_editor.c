@@ -660,7 +660,8 @@ defun($h_LineEditor_traverse_sexpr) {
   //   while(true) { ... if (xxx) break; ... }
   // is kludgy, just patch up the increment behaviours before and after the
   // loop.
-  $i_LineEditor_cursor += delta;
+  if (!$y_LineEditor_sexpr_direction)
+    $i_LineEditor_cursor += delta;
   
   while ($i_LineEditor_cursor != bound &&
          (!has_encountered_paren || $i_LineEditor_sexpr_depth > 0)) {
@@ -736,6 +737,53 @@ defun($h_LineEditor_exit_backward_sexpr) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_kill_forward_sexpr
+    Kills text between the cursor and the destination of
+    $m_move_forward_sexpr().
+ */
+defun($h_LineEditor_kill_forward_sexpr) {
+  $p_LineEditor_move_and_kill_between = $m_move_forward_sexpr;
+  $m_move_and_kill_between();
+}
+
+/*
+  SYMBOL: $f_LineEditor_kill_backward_sexpr
+    Kills text between the cursor and the destination of
+    $m_move_backward_sexpr().
+ */
+defun($h_LineEditor_kill_backward_sexpr) {
+  $p_LineEditor_move_and_kill_between = $m_move_backward_sexpr;
+  $m_move_and_kill_between();
+}
+
+/*
+  SYMBOL: $f_LineEditor_kill_this_sexpr
+    Kills the text within the current s-expr, including the outer boundaries.
+ */
+defun($h_LineEditor_kill_this_sexpr) {
+  $M_traverse_sexpr(0,0,
+                    $y_LineEditor_sexpr_direction = false,
+                    $y_LineEditor_sexpr_skip_init = false,
+                    $i_LineEditor_sexpr_depth = 1);
+  $p_LineEditor_move_and_kill_between = $m_move_forward_sexpr;
+  $m_move_and_kill_between();
+}
+
+/*
+  SYMBOL: $f_LineEditor_kill_parent_sexpr
+    Kills the text within the parent of the current s-expr, including the outer
+    boundaries.
+ */
+defun($h_LineEditor_kill_parent_sexpr) {
+  $M_traverse_sexpr(0,0,
+                    $y_LineEditor_sexpr_direction = false,
+                    $y_LineEditor_sexpr_skip_init = false,
+                    $i_LineEditor_sexpr_depth = 2);
+  $p_LineEditor_move_and_kill_between = $m_move_forward_sexpr;
+  $m_move_and_kill_between();
+}
+
+/*
   SYMBOL: $lp_LineEditor_keybindings
     List of keybindings supported by generic LineEditors.
  */
@@ -783,6 +831,14 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $m_seek_and_kill_backward_to_word_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'P', $v_end_meta,
             $m_seek_and_kill_forward_to_word_i);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'.', $v_end_meta,
+            $m_kill_backward_sexpr);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'/', $v_end_meta,
+            $m_kill_forward_sexpr);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'>', $v_end_meta,
+            $m_kill_this_sexpr);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'?', $v_end_meta,
+            $m_kill_parent_sexpr);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'h', $v_end_meta,
             $m_home);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'H', $v_end_meta,
