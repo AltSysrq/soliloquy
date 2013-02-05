@@ -740,31 +740,31 @@ defun($h_BufferEditor_save) {
 class_keymap($c_BufferEditor, $lp_BufferEditor_keymap, $llp_Activity_keymap)
 ATSINIT {
   bind_char($lp_BufferEditor_keymap, $u_ground, L'\r', NULL,
-            $f_BufferEditor_insert_blank_line_above);
+            $m_insert_blank_line_above);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'o', NULL,
-            $f_BufferEditor_insert_blank_line_below);
+            $m_insert_blank_line_below);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'e', NULL,
-            $f_BufferEditor_edit_current);
+            $m_edit_current);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'i', NULL,
-            $f_BufferEditor_insert_and_edit);
+            $m_insert_and_edit);
 
   bind_char($lp_BufferEditor_keymap, $u_extended, CONTROL_S, $u_ground,
-            $f_BufferEditor_save);
+            $m_save);
 
   bind_char($lp_BufferEditor_keymap, $u_meta, L'j', $v_end_meta,
-            $f_BufferEditor_backward_line);
+            $m_backward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'k', $v_end_meta,
-            $f_BufferEditor_forward_line);
+            $m_forward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'l', $v_end_meta,
-            $f_BufferEditor_kill_backward_line);
+            $m_kill_backward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L';', $v_end_meta,
-            $f_BufferEditor_kill_forward_line);
+            $m_kill_forward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'h', $v_end_meta,
-            $f_BufferEditor_home);
+            $m_home);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'n', $v_end_meta,
-            $f_BufferEditor_end);
+            $m_end);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'f', $v_end_meta,
-            $f_BufferEditor_show_forward_line);
+            $m_show_forward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'd', $v_end_meta,
-            $f_BufferEditor_show_backward_line);
+            $m_show_backward_line);
 }
