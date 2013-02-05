@@ -55,7 +55,7 @@ ATSINIT {
   SYMBOL: $o_BufferEditor_buffer
     The FileBuffer which this BufferEditor is currently editing.
 
-  SYMBOL: $o_BufferEditor_cursor
+  SYMBOL: $o_BufferEditor_point
     The cursor into the current buffer. If this is NULL when the BufferEditor
     is constructed, it is set to point to the first line in
     BufferEditor_buffer.
@@ -69,13 +69,13 @@ ATSINIT {
  */
 subclass($c_Activity, $c_BufferEditor)
 defun($h_BufferEditor) {
-  if (!$o_BufferEditor_cursor) {
-    $o_BufferEditor_cursor =
+  if (!$o_BufferEditor_point) {
+    $o_BufferEditor_point =
       $c_FileBufferCursor($o_FileBufferCursor_buffer =
                           $o_BufferEditor_buffer);
   }
 
-  $$($o_BufferEditor_cursor) {
+  $$($o_BufferEditor_point) {
     add_hook_obj($H_shunt, HOOK_AFTER,
                  $u_BufferEditor, $u_shunt_notify,
                  $f_Workspace_update_echo_area, $o_Activity_workspace,
@@ -92,7 +92,7 @@ defun($h_BufferEditor) {
     Destroys this BufferEditor, releasing all cursors it currently holds.
  */
 defun($h_BufferEditor_destroy) {
-  $M_destroy(0, $o_BufferEditor_cursor);
+  $M_destroy(0, $o_BufferEditor_point);
   each_o($lo_BufferEditor_marks,
          lambdav((object o), $M_destroy(0,o)));
 
@@ -124,10 +124,10 @@ defun($h_BufferEditor_get_face) {
 
 /*
   SYMBOL: $f_BufferEditor_get_echo_area_contents
-    Sets $q_Workspace_echo_area_contents to the string under the cursor.
+    Sets $q_Workspace_echo_area_contents to the string under point.
  */
 defun($h_BufferEditor_get_echo_area_contents) {
-  $$($o_BufferEditor_buffer) $$($o_BufferEditor_cursor) {
+  $$($o_BufferEditor_buffer) $$($o_BufferEditor_point) {
     $m_access();
 
     if ($I_FileBufferCursor_line_number <
@@ -174,7 +174,7 @@ defun($h_BufferEditor_get_echo_area_meta) {
 
   wchar_t linenum[16], markline[16];
   markline[0] = 0;
-  swprintf(linenum, 16, L":%d", 1+$($o_BufferEditor_cursor,
+  swprintf(linenum, 16, L":%d", 1+$($o_BufferEditor_point,
                                     $I_FileBufferCursor_line_number));
   if ($lo_BufferEditor_marks)
     swprintf(markline, 16, L"%+d",
@@ -212,9 +212,9 @@ defun($h_BufferLineEditor) {
   // Clone won't work here because it doesn't set the new "this" value and
   // such. For now, just do it by constructing a new object within the
   // context of the other (which has the effect of passing all parms).
-  //$o_BufferLineEditor_cursor = object_clone($o_BufferEditor_cursor);
+  //$o_BufferLineEditor_cursor = object_clone($o_BufferEditor_point);
   $o_BufferLineEditor_cursor =
-    within_context($o_BufferEditor_cursor, $c_FileBufferCursor());
+    within_context($o_BufferEditor_point, $c_FileBufferCursor());
   $o_BufferLineEditor_parent = $o_BufferEditor;
   $o_BufferLineEditor_buffer = $o_BufferEditor_buffer;
 
@@ -287,7 +287,7 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
   // if the line numbers diverge
   if (next != $o_BufferLineEditor_parent ||
       $($o_BufferLineEditor_cursor, $I_FileBufferCursor_line_number) !=
-      $($($o_BufferLineEditor_parent, $o_BufferEditor_cursor),
+      $($($o_BufferLineEditor_parent, $o_BufferEditor_point),
         $I_FileBufferCursor_line_number))
     swprintf(linenum, 16, L":%d", 1+$($o_BufferLineEditor_cursor,
                                       $I_FileBufferCursor_line_number));
@@ -344,7 +344,7 @@ defun($h_BufferLineEditor_accept) {
 
 /*
   SYMBOL: $f_BufferEditor_insert_blank_line_above
-    Inserts a blank line above the current line. The cursor will be shunted
+    Inserts a blank line above the current line. Point will be shunted
     downward by one line as a result.
  */
 defun($h_BufferEditor_insert_blank_line_above) {
@@ -352,17 +352,17 @@ defun($h_BufferEditor_insert_blank_line_above) {
           $I_FileBuffer_ndeletions = 0,
           $lw_FileBuffer_replacements = cons_w(L"", NULL),
           $I_FileBuffer_edit_line =
-            $($o_BufferEditor_cursor, $I_FileBufferCursor_line_number));
+            $($o_BufferEditor_point, $I_FileBufferCursor_line_number));
 }
 
 /*
   SYMBOL: $f_BufferEditor_insert_blank_line_below
-    Inserts a blank line below the cursor, without advancing. If cursor is at
-    the end of the buffer, a line is inserted before the cursor, then the
-    cursor is retreated one line.
+    Inserts a blank line below point, without advancing. If point is at
+    the end of the buffer, a line is inserted before point, then
+    point is retreated one line.
  */
 defun($h_BufferEditor_insert_blank_line_below) {
-  unsigned where = $($o_BufferEditor_cursor, $I_FileBufferCursor_line_number);
+  unsigned where = $($o_BufferEditor_point, $I_FileBufferCursor_line_number);
   $M_access(0, $o_BufferEditor_buffer);
   if (where < $($o_BufferEditor_buffer, $aw_FileBuffer_contents)->len) {
     $M_edit(0, $o_BufferEditor_buffer,
@@ -374,7 +374,7 @@ defun($h_BufferEditor_insert_blank_line_below) {
             $I_FileBuffer_ndeletions = 0,
             $lw_FileBuffer_replacements = cons_w(L"", NULL),
             $I_FileBuffer_edit_line = where);
-    $M_shunt(0, $o_BufferEditor_cursor,
+    $M_shunt(0, $o_BufferEditor_point,
              $i_FileBufferCursor_shunt_distance = -1);
   }
 }
@@ -386,7 +386,7 @@ defun($h_BufferEditor_insert_blank_line_below) {
 defun($h_BufferEditor_edit_current) {
   $$($o_BufferEditor_buffer) {
     $m_access();
-    unsigned where = $($o_BufferEditor_cursor,
+    unsigned where = $($o_BufferEditor_point,
                        $I_FileBufferCursor_line_number);
     wstring text = L"";
     if (where < $aw_FileBuffer_contents->len)
@@ -401,8 +401,8 @@ defun($h_BufferEditor_edit_current) {
 
 /*
   SYMBOL: $f_BufferEditor_insert_and_edit
-    Insert a new line before the cursor with a BufferLineEditor. When the line
-    editor is accepted, cursor will be shunted downward, and this method will
+    Insert a new line before point with a BufferLineEditor. When the line
+    editor is accepted, point will be shunted downward, and this method will
     be called again.
 
   SYMBOL: $u_continue_inserting
@@ -411,7 +411,7 @@ defun($h_BufferEditor_edit_current) {
  */
 defun($h_BufferEditor_insert_and_edit) {
   object editor = $c_BufferLineEditor(
-    $i_LineEditor_cursor = -1,
+    $i_LineEditor_point = -1,
     $w_LineEditor_text = NULL);
   $$(editor) {
     add_hook_obj($H_accept, HOOK_AFTER,
@@ -423,8 +423,8 @@ defun($h_BufferEditor_insert_and_edit) {
 
 /*
   SYMBOL: $f_BufferEditor_self_insert
-    Insert a new line before cursor, invoke an editor on it, call
-    $m_self_insert in its context. As a side-effect, cursor will be shunted
+    Insert a new line before point, invoke an editor on it, call
+    $m_self_insert in its context. As a side-effect, point will be shunted
     downward.
     --
     This method is no longer used in the default keybindings. You can bind it
@@ -444,14 +444,14 @@ defun($h_BufferEditor_self_insert) {
 
 /*
   SYMBOL: $f_BufferEditor_forward_line
-    Moves the buffer cursor down one line, unless already at the end of the
+    Moves the buffer point down one line, unless already at the end of the
     file.
 
   SYMBOL: $I_LastCommand_forward_line
     Variable for accelerate() in $f_BufferEditor_forward_line.
  */
 defun($h_BufferEditor_forward_line) {
-  $$($o_BufferEditor_cursor) $$($o_BufferEditor_buffer) {
+  $$($o_BufferEditor_point) $$($o_BufferEditor_buffer) {
     $m_access();
     unsigned dist = accelerate_max(&$I_LastCommand_forward_line,
                                    $aw_FileBuffer_contents->len -
@@ -464,14 +464,14 @@ defun($h_BufferEditor_forward_line) {
 
 /*
   SYMBOL: $f_BufferEditor_backward_line
-    Moves the buffer cursor up one line, unless already at the end of the
+    Moves the buffer point up one line, unless already at the end of the
     file.
 
   SYMBOL: $I_LastCommand_backward_line
     Variable for accelerate() in $f_BufferEditor_backward_line.
  */
 defun($h_BufferEditor_backward_line) {
-  $$($o_BufferEditor_cursor) {
+  $$($o_BufferEditor_point) {
     unsigned dist = accelerate_max(&$I_LastCommand_backward_line,
                                    $I_FileBufferCursor_line_number);
     $I_FileBufferCursor_line_number -= dist;
@@ -482,12 +482,12 @@ defun($h_BufferEditor_backward_line) {
 
 /*
   SYMBOL: $f_BufferEditor_kill_forward_line
-    Kills the line in front of the cursor, saving it to the kill ring.
+    Kills the line in front of point, saving it to the kill ring.
  */
 defun($h_BufferEditor_kill_forward_line) {
   $$($o_BufferEditor_buffer) {
     $m_access();
-    $$($o_BufferEditor_cursor) {
+    $$($o_BufferEditor_point) {
       if ($I_FileBufferCursor_line_number != $aw_FileBuffer_contents->len) {
         $F_l_kill(0,0,
                   $lw_kill = cons_w(
@@ -505,12 +505,12 @@ defun($h_BufferEditor_kill_forward_line) {
 
 /*
   SYMBOL: $f_BufferEditor_kill_backward_line
-    Kills the line behind the cursor, saving it to the kill ring.
+    Kills the line behind point, saving it to the kill ring.
  */
 defun($h_BufferEditor_kill_backward_line) {
   $$($o_BufferEditor_buffer) {
     $m_access();
-    $$($o_BufferEditor_cursor) {
+    $$($o_BufferEditor_point) {
       if ($I_FileBufferCursor_line_number) {
         $F_l_kill(0,0,
                   $lw_kill = cons_w(
@@ -528,10 +528,10 @@ defun($h_BufferEditor_kill_backward_line) {
 
 /*
   SYMBOL: $f_BufferEditor_home
-    Moves the cursor back to the first line.
+    Moves point back to the first line.
  */
 defun($h_BufferEditor_home) {
-  $$($o_BufferEditor_cursor) {
+  $$($o_BufferEditor_point) {
     let($i_FileBufferCursor_shunt_distance,
         -(signed)$I_FileBufferCursor_line_number);
     $m_shunt();
@@ -540,12 +540,12 @@ defun($h_BufferEditor_home) {
 
 /*
   SYMBOL: $f_BufferEditor_end
-    Moves the cursor forward to one line after the last line.
+    Moves point forward to one line after the last line.
  */
 defun($h_BufferEditor_end) {
   $$($o_BufferEditor_buffer) {
     $m_access();
-    $$($o_BufferEditor_cursor) {
+    $$($o_BufferEditor_point) {
       let($i_FileBufferCursor_shunt_distance,
           $aw_FileBuffer_contents->len -
             $I_FileBufferCursor_line_number);
@@ -556,7 +556,7 @@ defun($h_BufferEditor_end) {
 
 /*
   SYMBOL: $f_BufferEditor_show_forward_line
-    Show the line(s) below the cursor in the current Transcript.
+    Show the line(s) below point in the current Transcript.
 
   SYMBOL: $I_LastCommand_show_forward_line
     Param to accelerate() for $f_BufferEditor_show_forward_line.
@@ -567,7 +567,7 @@ defun($h_BufferEditor_end) {
 defun($h_BufferEditor_show_forward_line) {
   $$($o_BufferEditor_buffer) {
     $m_access();
-    $$($o_BufferEditor_cursor) {
+    $$($o_BufferEditor_point) {
       unsigned offset = $($o_prev_command, $I_LastCommand_show_forward_line_off);
       unsigned cnt = accelerate_max(&$I_LastCommand_show_forward_line,
                                     $aw_FileBuffer_contents->len -
@@ -595,10 +595,10 @@ defun($h_BufferEditor_show_forward_line) {
 
 /*
   SYMBOL: $f_BufferEditor_show_backward_line
-    Shows the line(s) before the cursor in the current Transcript.
+    Shows the line(s) before point in the current Transcript.
 
   SYMBOL: $I_LastCommand_show_backward_line_off
-    The offset from the cursor of the last call to
+    The offset from point of the last call to
     $f_BufferEditor_show_backward_line.
 
   SYMBOL: $I_LastCommand_show_backward_line
@@ -607,7 +607,7 @@ defun($h_BufferEditor_show_forward_line) {
 defun($h_BufferEditor_show_backward_line) {
   $$($o_BufferEditor_buffer) {
     $m_access();
-    $$($o_BufferEditor_cursor) {
+    $$($o_BufferEditor_point) {
       if (!$I_FileBufferCursor_line_number) return;
 
       unsigned offset = $($o_prev_command,

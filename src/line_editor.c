@@ -55,7 +55,7 @@ subclass($c_Activity, $c_LineEditor)
 STATIC_INIT_TO($v_Workspace_echo_mode, $u_echo_on)
 
 /*
-  SYMBOL: $i_LineEditor_cursor
+  SYMBOL: $i_LineEditor_point
     The current insert position within the LineEditor's buffer. If it is -1
     when the LineEditor is constructed, it is set to the length of the initial
     buffer.
@@ -72,7 +72,7 @@ STATIC_INIT_TO($v_Workspace_echo_mode, $u_echo_on)
     The echo mode specific to this LineEditor. If NULL, it is inherited from
     $v_Workspace_echo_mode.
  */
-STATIC_INIT_TO($i_LineEditor_cursor, -1)
+STATIC_INIT_TO($i_LineEditor_point, -1)
 
 defun($h_LineEditor) {
   if (!$w_LineEditor_text)
@@ -84,8 +84,8 @@ defun($h_LineEditor) {
       $az_LineEditor_buffer->v[i] = $w_LineEditor_text[i];
   }
 
-  if (-1 == $i_LineEditor_cursor)
-    $i_LineEditor_cursor = $az_LineEditor_buffer->len;
+  if (-1 == $i_LineEditor_point)
+    $i_LineEditor_point = $az_LineEditor_buffer->len;
 }
 
 /*
@@ -141,7 +141,7 @@ defun($h_LineEditor_push_undo) {
 /*
   SYMBOL: $f_LineEditor_self_insert
     Inserts $x_Terminal_input_value into $az_LineEditor_buffer at
-    $i_LineEditor_cursor, then increments the cursor position. If
+    $i_LineEditor_point, then increments point. If
     $x_Terminal_input_value is not a non-control character, the function sets
     $y_key_dispatch_continue to true and returns without taking action.
  */
@@ -155,7 +155,7 @@ defun($h_LineEditor_self_insert) {
   let($y_LineEditor_edit_is_minor, true);
   $m_push_undo();
   wchar_t input = (wchar_t)$x_Terminal_input_value;
-  dynar_ins_z($az_LineEditor_buffer, $i_LineEditor_cursor++,
+  dynar_ins_z($az_LineEditor_buffer, $i_LineEditor_point++,
               &input, 1);
 
   $m_changed();
@@ -166,13 +166,13 @@ defun($h_LineEditor_self_insert) {
     Called after modifications to $az_LineEditor_buffer have occurred, so that
     the echo area can be updated as needed, etc. This must be called within the
     context of the current Workspace. Besides repainting the echo area, it also
-    ensures that the cursor is within allowable boundaries.
+    ensures that point is within allowable boundaries.
  */
 defun($h_LineEditor_changed) {
-  if ($i_LineEditor_cursor < 0)
-    $i_LineEditor_cursor = 0;
-  else if ($i_LineEditor_cursor > $az_LineEditor_buffer->len)
-    $i_LineEditor_cursor = $az_LineEditor_buffer->len;
+  if ($i_LineEditor_point < 0)
+    $i_LineEditor_point = 0;
+  else if ($i_LineEditor_point > $az_LineEditor_buffer->len)
+    $i_LineEditor_point = $az_LineEditor_buffer->len;
 
   $f_Workspace_update_echo_area();
 }
@@ -190,7 +190,7 @@ defun($h_LineEditor_is_echo_enabled) {
 /*
   SYMBOL: $f_LineEditor_get_echo_area_contents
     Converts the LineEditor buffer into an unformatted qstring and sets the
-    cursor position therein (see $m_get_echo_area_contents).
+    point position therein (see $m_get_echo_area_contents).
  */
 defun($h_LineEditor_get_echo_area_contents) {
   mqstring result = gcalloc((1+$az_LineEditor_buffer->len) *
@@ -202,7 +202,7 @@ defun($h_LineEditor_get_echo_area_contents) {
   $q_Workspace_echo_area_contents = result;
 
   if ($u_echo_off != ($v_LineEditor_echo_mode ?: $v_Workspace_echo_mode))
-    $i_Workspace_echo_area_cursor = $i_LineEditor_cursor;
+    $i_Workspace_echo_area_cursor = $i_LineEditor_point;
   else
     $i_Workspace_echo_area_cursor = -1;
 }
@@ -221,14 +221,14 @@ defun($h_LineEditor_get_text) {
 
 /*
   SYMBOL: $f_LineEditor_delete_backward_char
-    Delete the character immediately before the cursor.
+    Delete the character immediately before point.
  */
 defun($h_LineEditor_delete_backward_char) {
-  if ($i_LineEditor_cursor != 0) {
+  if ($i_LineEditor_point != 0) {
     let($y_LineEditor_edit_is_minor, true);
     $f_LineEditor_push_undo();
-    --$i_LineEditor_cursor;
-    dynar_erase_z($az_LineEditor_buffer, $i_LineEditor_cursor, 1);
+    --$i_LineEditor_point;
+    dynar_erase_z($az_LineEditor_buffer, $i_LineEditor_point, 1);
 
     $m_changed();
   }
@@ -236,13 +236,13 @@ defun($h_LineEditor_delete_backward_char) {
 
 /*
   SYMBOL: $f_LineEditor_delete_forward_char
-    Delete the character immediately after the cursor.
+    Delete the character immediately after point.
  */
 defun($h_LineEditor_delete_forward_char) {
-  if ($i_LineEditor_cursor != $az_LineEditor_buffer->len) {
+  if ($i_LineEditor_point != $az_LineEditor_buffer->len) {
     let($y_LineEditor_edit_is_minor, true);
     $f_LineEditor_push_undo();
-    dynar_erase_z($az_LineEditor_buffer, $i_LineEditor_cursor, 1);
+    dynar_erase_z($az_LineEditor_buffer, $i_LineEditor_point, 1);
 
     $m_changed();
   }
@@ -250,7 +250,7 @@ defun($h_LineEditor_delete_forward_char) {
 
 /*
   SYMBOL: $f_LineEditor_move_forward_char
-    Moves the cursor one character to the right.
+    Moves point one character to the right.
 
   SYMBOL: $I_LastCommand_forward_char
     The distance to move on the next LineEditor_move_forward_char. Zero means 1
@@ -259,15 +259,15 @@ defun($h_LineEditor_delete_forward_char) {
 defun($h_LineEditor_move_forward_char) {
   unsigned dist = accelerate_max(
     &$I_LastCommand_forward_char,
-    $az_LineEditor_buffer->len - $i_LineEditor_cursor);
+    $az_LineEditor_buffer->len - $i_LineEditor_point);
 
-  $i_LineEditor_cursor += dist;
+  $i_LineEditor_point += dist;
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_move_backward_char
-    Moves the cursor one character to the left.
+    Moves point one character to the left.
 
   SYMBOL: $I_LastCommand_backward_char
     accelerate() value for $f_LineEditor_move_backward_char.
@@ -275,62 +275,62 @@ defun($h_LineEditor_move_forward_char) {
 defun($h_LineEditor_move_backward_char) {
   unsigned dist = accelerate_max(
     &$I_LastCommand_backward_char,
-    $i_LineEditor_cursor);
+    $i_LineEditor_point);
 
-  $i_LineEditor_cursor -= dist;
+  $i_LineEditor_point -= dist;
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_move_forward_word
-    Moves the cursor forward one word, as defined by is_word_boundary().
+    Moves point forward one word, as defined by is_word_boundary().
  */
 defun($h_LineEditor_move_forward_word) {
-  if ($i_LineEditor_cursor == $az_LineEditor_buffer->len)
+  if ($i_LineEditor_point == $az_LineEditor_buffer->len)
     // Already at end
     return;
 
   do {
-    ++$i_LineEditor_cursor;
-  } while ($i_LineEditor_cursor != $az_LineEditor_buffer->len &&
+    ++$i_LineEditor_point;
+  } while ($i_LineEditor_point != $az_LineEditor_buffer->len &&
            !is_word_boundary(
-             $az_LineEditor_buffer->v[$i_LineEditor_cursor-1],
-             $az_LineEditor_buffer->v[$i_LineEditor_cursor  ]));
+             $az_LineEditor_buffer->v[$i_LineEditor_point-1],
+             $az_LineEditor_buffer->v[$i_LineEditor_point  ]));
 
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_move_backward_word
-    Moves the cursor backward one word, as defined by is_word_boundary().
+    Moves point backward one word, as defined by is_word_boundary().
  */
 defun($h_LineEditor_move_backward_word) {
-  if ($i_LineEditor_cursor == 0)
+  if ($i_LineEditor_point == 0)
     // Already at the beginning
     return;
 
   do {
-    --$i_LineEditor_cursor;
-  } while ($i_LineEditor_cursor &&
+    --$i_LineEditor_point;
+  } while ($i_LineEditor_point &&
            !is_word_boundary(
-             $az_LineEditor_buffer->v[$i_LineEditor_cursor-1],
-             $az_LineEditor_buffer->v[$i_LineEditor_cursor  ]));
+             $az_LineEditor_buffer->v[$i_LineEditor_point-1],
+             $az_LineEditor_buffer->v[$i_LineEditor_point  ]));
 
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_kill
-    Kills text between $i_LineEditor_kill and $i_LineEditor_cursor, including
+    Kills text between $i_LineEditor_kill and $i_LineEditor_point, including
     the lower bound and excluding the upper bound, placing the text on the kill
-    ring. The cursor is moved to the lower bound.
+    ring. The point is moved to the lower bound.
  */
 defun($h_LineEditor_kill) {
-  if ($i_LineEditor_cursor == $i_LineEditor_kill) return;
-  if ($i_LineEditor_cursor > $i_LineEditor_kill) {
+  if ($i_LineEditor_point == $i_LineEditor_kill) return;
+  if ($i_LineEditor_point > $i_LineEditor_kill) {
     int tmp = $i_LineEditor_kill;
-    $i_LineEditor_kill = $i_LineEditor_cursor;
-    $i_LineEditor_cursor = tmp;
+    $i_LineEditor_kill = $i_LineEditor_point;
+    $i_LineEditor_point = tmp;
 
     // Cursor was ahead of the killed region, so killing backwards
     $v_kill_direction = $u_backward;
@@ -339,7 +339,7 @@ defun($h_LineEditor_kill) {
     $v_kill_direction = $u_forward;
   }
 
-  int begin = $i_LineEditor_cursor;
+  int begin = $i_LineEditor_point;
   int end = $i_LineEditor_kill;
   mwstring text = gcalloc(sizeof(wchar_t)*(end-begin+1));
   memcpy(text,
@@ -355,24 +355,24 @@ defun($h_LineEditor_kill) {
 
 /*
   SYMBOL: $f_LineEditor_move_and_kill_between
-    Saves $i_LineEditor_cursor into $i_LineEditor_kill, then calls
+    Saves $i_LineEditor_point into $i_LineEditor_kill, then calls
     $p_LineEditor_move_and_kill_between, which must be of type
       void (*)(void)
     afterward, it calls $m_kill().
 
   SYMBOL: $p_LineEditor_move_and_kill_between
-    A pointer of type void (*)(void) which performs some kind of cursor
+    A pointer of type void (*)(void) which performs some kind of point
     movement within this LineEditor.
  */
 defun($h_LineEditor_move_and_kill_between) {
-  $i_LineEditor_kill = $i_LineEditor_cursor;
+  $i_LineEditor_kill = $i_LineEditor_point;
   ((void (*)(void))$p_LineEditor_move_and_kill_between)();
   $m_kill();
 }
 
 /*
   SYMBOL: $f_LineEditor_kill_forward_word
-    Deletes characters between the cursor and the next word boundary, and adds
+    Deletes characters between point and the next word boundary, and adds
     the killed text to the character-oriented kill ring.
  */
 defun($h_LineEditor_kill_forward_word) {
@@ -382,7 +382,7 @@ defun($h_LineEditor_kill_forward_word) {
 
 /*
   SYMBOL: $f_LineEditor_kill_backward_word
-    Deletes characters between the cursor and the previous word boundary, and
+    Deletes characters between point and the previous word boundary, and
     adds the killed text to the character-oriented kill ring.
  */
 defun($h_LineEditor_kill_backward_word) {
@@ -392,7 +392,7 @@ defun($h_LineEditor_kill_backward_word) {
 
 /*
   SYMBOL: $f_LineEditor_home
-    Moves cursor to the first non-whitespace character, or to column zero if it
+    Moves point to the first non-whitespace character, or to column zero if it
     was already there.
  */
 defun($h_LineEditor_home) {
@@ -401,26 +401,26 @@ defun($h_LineEditor_home) {
          iswspace($az_LineEditor_buffer->v[firstNonWhitespace]))
     ++firstNonWhitespace;
 
-  if ($i_LineEditor_cursor == firstNonWhitespace)
-    $i_LineEditor_cursor = 0;
+  if ($i_LineEditor_point == firstNonWhitespace)
+    $i_LineEditor_point = 0;
   else
-    $i_LineEditor_cursor = firstNonWhitespace;
+    $i_LineEditor_point = firstNonWhitespace;
 
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_end
-    Moves the cursor past the last character in the line.
+    Moves point past the last character in the line.
  */
 defun($h_LineEditor_end) {
-  $i_LineEditor_cursor = $az_LineEditor_buffer->len;
+  $i_LineEditor_point = $az_LineEditor_buffer->len;
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_kill_to_bol
-    Kills all text between the cursor and the beginning of the line.
+    Kills all text between point and the beginning of the line.
  */
 defun($h_LineEditor_kill_to_bol) {
   $p_LineEditor_move_and_kill_between = $m_home;
@@ -429,7 +429,7 @@ defun($h_LineEditor_kill_to_bol) {
 
 /*
   SYMBOL: $f_LineEditor_kill_to_eol
-    Kills all text between the cursor and the end of the line.
+    Kills all text between point and the end of the line.
  */
 defun($h_LineEditor_kill_to_eol) {
   $p_LineEditor_move_and_kill_between = $m_end;
@@ -447,22 +447,22 @@ defun($h_LineEditor_kill_to_eol) {
 interactive($h_LineEditor_seek_forward_to_char_i,
             $h_LineEditor_seek_forward_to_char,
             i_(z, $z_LineEditor_seek_dst, L"Seek")) {
-  if ($i_LineEditor_cursor >= $az_LineEditor_buffer->len)
+  if ($i_LineEditor_point >= $az_LineEditor_buffer->len)
     return; //already at end
 
-  ++$i_LineEditor_cursor;
+  ++$i_LineEditor_point;
 
-  while ($i_LineEditor_cursor < $az_LineEditor_buffer->len &&
+  while ($i_LineEditor_point < $az_LineEditor_buffer->len &&
          $z_LineEditor_seek_dst !=
-           $az_LineEditor_buffer->v[$i_LineEditor_cursor])
-    ++$i_LineEditor_cursor;
+           $az_LineEditor_buffer->v[$i_LineEditor_point])
+    ++$i_LineEditor_point;
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_seek_and_kill_forward_to_char
   SYMBOL: $f_LineEditor_seek_and_kill_forward_to_char_i
-    Kills text between the cursor and the targetted character in
+    Kills text between point and the targetted character in
     $z_LineEditor_seek_dst.
  */
 interactive($h_LineEditor_seek_and_kill_forward_to_char_i,
@@ -480,21 +480,21 @@ interactive($h_LineEditor_seek_and_kill_forward_to_char_i,
 interactive($h_LineEditor_seek_backward_to_char_i,
             $h_LineEditor_seek_backward_to_char,
             i_(z, $z_LineEditor_seek_dst, L"Seek")) {
-  if (!$i_LineEditor_cursor) return; //Already at beginning
+  if (!$i_LineEditor_point) return; //Already at beginning
 
-  --$i_LineEditor_cursor;
+  --$i_LineEditor_point;
 
-  while ($i_LineEditor_cursor > 0 &&
+  while ($i_LineEditor_point > 0 &&
          $z_LineEditor_seek_dst !=
-           $az_LineEditor_buffer->v[$i_LineEditor_cursor])
-    --$i_LineEditor_cursor;
+           $az_LineEditor_buffer->v[$i_LineEditor_point])
+    --$i_LineEditor_point;
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_seek_and_kill_backward_to_char
   SYMBOL: $f_LineEditor_seek_and_kill_backward_to_char_i
-    Kills text between the cursor and the targetted character in
+    Kills text between point and the targetted character in
     $z_LineEditor_seek_dst.
  */
 interactive($h_LineEditor_seek_and_kill_backward_to_char_i,
@@ -514,15 +514,15 @@ interactive($h_LineEditor_seek_forward_to_word_i,
             i_(z, $z_LineEditor_seek_dst, L"Seek")) {
   do {
     $f_LineEditor_move_forward_word();
-  }  while ($i_LineEditor_cursor != $az_LineEditor_buffer->len &&
+  }  while ($i_LineEditor_point != $az_LineEditor_buffer->len &&
             $z_LineEditor_seek_dst !=
-              $az_LineEditor_buffer->v[$i_LineEditor_cursor]);
+              $az_LineEditor_buffer->v[$i_LineEditor_point]);
 }
 
 /*
   SYMBOL: $f_LineEditor_seek_and_kill_forward_to_word
   SYMBOL: $f_LineEditor_seek_and_kill_forward_to_word_i
-    Kills text between the cursor and the next word beginning with
+    Kills text between point and the next word beginning with
     $z_LineEditor_seek_dst.
  */
 interactive($h_LineEditor_seek_and_kill_forward_to_word_i,
@@ -542,15 +542,15 @@ interactive($h_LineEditor_seek_backward_to_word_i,
             i_(z, $z_LineEditor_seek_dst, L"Seek")) {
   do {
     $f_LineEditor_move_backward_word();
-  } while ($i_LineEditor_cursor &&
+  } while ($i_LineEditor_point &&
            $z_LineEditor_seek_dst !=
-             $az_LineEditor_buffer->v[$i_LineEditor_cursor]);
+             $az_LineEditor_buffer->v[$i_LineEditor_point]);
 }
 
 /*
   SYMBOL: $f_LineEditor_seek_and_kill_backward_to_word_i
   SYMBOL: $f_LineEditor_seek_and_kill_backward_to_word
-    Kills text between the cursor and the previous word beginning with
+    Kills text between point and the previous word beginning with
     $z_LineEditor_seek_dst.
  */
 interactive($h_LineEditor_seek_and_kill_backward_to_word_i,
@@ -563,21 +563,21 @@ interactive($h_LineEditor_seek_and_kill_backward_to_word_i,
 /*
   SYMBOL: $f_LineEditor_yank_and_adv
     Inserts the text at the front of the character-oriented kill ring, then
-    advances the cursor to be one past the end of the inserted string.
+    advances point to be one past the end of the inserted string.
  */
 defun($h_LineEditor_yank_and_adv) {
   if (!$aw_c_kill_ring->v[$I_c_kill_ring])
     return;
 
   $m_yank();
-  $i_LineEditor_cursor += wcslen($aw_c_kill_ring->v[$I_c_kill_ring]);
+  $i_LineEditor_point += wcslen($aw_c_kill_ring->v[$I_c_kill_ring]);
   $m_changed();
 }
 
 /*
   SYMBOL: $f_LineEditor_yank
      Inserts the text at the front of the character-oriented kill ring, and
-     leaves the cursor where it was.
+     leaves point where it was.
  */
 defun($h_LineEditor_yank) {
   if (!$aw_c_kill_ring->v[$I_c_kill_ring])
@@ -585,7 +585,7 @@ defun($h_LineEditor_yank) {
 
   wstring to_insert = $aw_c_kill_ring->v[$I_c_kill_ring];
   $m_push_undo();
-  dynar_ins_z($az_LineEditor_buffer, $i_LineEditor_cursor,
+  dynar_ins_z($az_LineEditor_buffer, $i_LineEditor_point,
               to_insert, wcslen(to_insert));
 
   $m_changed();
@@ -600,8 +600,8 @@ defun($h_LineEditor_undo) {
     lpush_az($laz_LineEditor_redo, $az_LineEditor_buffer);
     $az_LineEditor_buffer = lpop_az($laz_LineEditor_undo);
 
-    if ($i_LineEditor_cursor > $az_LineEditor_buffer->len)
-      $i_LineEditor_cursor = $az_LineEditor_buffer->len;
+    if ($i_LineEditor_point > $az_LineEditor_buffer->len)
+      $i_LineEditor_point = $az_LineEditor_buffer->len;
 
     $m_changed();
   }
@@ -616,8 +616,8 @@ defun($h_LineEditor_redo) {
     lpush_az($laz_LineEditor_undo, $az_LineEditor_buffer);
     $az_LineEditor_buffer = lpop_az($laz_LineEditor_redo);
 
-    if ($i_LineEditor_cursor > $az_LineEditor_buffer->len)
-      $i_LineEditor_cursor = $az_LineEditor_buffer->len;
+    if ($i_LineEditor_point > $az_LineEditor_buffer->len)
+      $i_LineEditor_point = $az_LineEditor_buffer->len;
 
     $m_changed();
   }
@@ -627,14 +627,14 @@ defun($h_LineEditor_redo) {
   SYMBOL: $f_LineEditor_traverse_sexpr
     Moves in the direction indicated by $y_LineEditor_sexpr_direction
     (true=forward, false=backward) until $i_LineEditor_sexpr_depth reaches
-    zero. At least one character will be traversed, unless the cursor began at
+    zero. At least one character will be traversed, unless point began at
     the end of the string in the direction that was to be moved. The default
     implementation balances ([{ with }]). If $y_LineEditor_sexpr_skip_init is
     true, movement should continue even if depth is zero when no paren-like
     character has been encountered.
     --
     Note that this function does *not* call $m_changed(), even though it
-    updates the cursor location. It is the caller's responsibility to do so.
+    updates point location. It is the caller's responsibility to do so.
 
   SYMBOL: $y_LineEditor_sexpr_direction
     The direction to move in a call to $f_LineEditor_traverse_sexpr. true
@@ -654,18 +654,18 @@ defun($h_LineEditor_traverse_sexpr) {
   signed bound = $y_LineEditor_sexpr_direction? $az_LineEditor_buffer->len : -1;
   bool has_encountered_paren = !$y_LineEditor_sexpr_skip_init;
 
-  // Moving backward really requires us to alter the cursor *before* checking
+  // Moving backward really requires us to alter point *before* checking
   // the loop condition, then do the parenthesis balancing. Since C doesn't
   // have that control structure, and emulating it with
   //   while(true) { ... if (xxx) break; ... }
   // is kludgy, just patch up the increment behaviours before and after the
   // loop.
   if (!$y_LineEditor_sexpr_direction)
-    $i_LineEditor_cursor += delta;
+    $i_LineEditor_point += delta;
   
-  while ($i_LineEditor_cursor != bound &&
+  while ($i_LineEditor_point != bound &&
          (!has_encountered_paren || $i_LineEditor_sexpr_depth > 0)) {
-    switch ($az_LineEditor_buffer->v[$i_LineEditor_cursor]) {
+    switch ($az_LineEditor_buffer->v[$i_LineEditor_point]) {
     case L'(':
     case L'[':
     case L'{':
@@ -681,16 +681,16 @@ defun($h_LineEditor_traverse_sexpr) {
       break;
     }
 
-    $i_LineEditor_cursor += delta;
+    $i_LineEditor_point += delta;
   }
 
   if (!$y_LineEditor_sexpr_direction)
-    $i_LineEditor_cursor -= delta;
+    $i_LineEditor_point -= delta;
 }
 
 /*
   SYMBOL: $f_LineEditor_move_forward_sexpr
-    Advances the cursor past one s-expr, as defined by $m_traverse_expr().
+    Advances point past one s-expr, as defined by $m_traverse_expr().
  */
 defun($h_LineEditor_move_forward_sexpr) {
   $M_traverse_sexpr(0,0,
@@ -702,7 +702,7 @@ defun($h_LineEditor_move_forward_sexpr) {
 
 /*
   SYMBOL: $f_LineEditor_move_backward_sexpr
-    Retreats the cursor past one s-expr, as defined by $m_traverse_expr().
+    Retreats point past one s-expr, as defined by $m_traverse_expr().
  */
 defun($h_LineEditor_move_backward_sexpr) {
   $M_traverse_sexpr(0,0,
@@ -738,7 +738,7 @@ defun($h_LineEditor_exit_backward_sexpr) {
 
 /*
   SYMBOL: $f_LineEditor_kill_forward_sexpr
-    Kills text between the cursor and the destination of
+    Kills text between point and the destination of
     $m_move_forward_sexpr().
  */
 defun($h_LineEditor_kill_forward_sexpr) {
@@ -748,7 +748,7 @@ defun($h_LineEditor_kill_forward_sexpr) {
 
 /*
   SYMBOL: $f_LineEditor_kill_backward_sexpr
-    Kills text between the cursor and the destination of
+    Kills text between point and the destination of
     $m_move_backward_sexpr().
  */
 defun($h_LineEditor_kill_backward_sexpr) {
