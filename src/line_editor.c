@@ -624,6 +624,85 @@ defun($h_LineEditor_redo) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_traverse_sexpr
+    Moves in the direction indicated by $y_LineEditor_sexpr_direction
+    (true=forward, false=backward) until $i_LineEditor_sexpr_depth reaches
+    zero. At least one character will be traversed, unless the cursor began at
+    the end of the string in the direction that was to be moved. The default
+    implementation balances ([{ with }]).
+    --
+    Note that this function does *not* call $m_changed(), even though it
+    updates the cursor location. It is the caller's responsibility to do so.
+
+  SYMBOL: $y_LineEditor_sexpr_direction
+    The direction to move in a call to $f_LineEditor_traverse_sexpr. true
+    indicates forward, false backward.
+
+  SYMBOL: $i_LineEditor_sexpr_depth
+    The starting depth for the sexpr traversal. $f_LineEditor_traverse_sexpr
+    must be prepared for this to begin with a non-zero value.
+ */
+defun($h_LineEditor_traverse_sexpr) {
+  signed delta = $y_LineEditor_sexpr_direction? +1 : -1;
+  signed bound = $y_LineEditor_sexpr_direction? $az_LineEditor_buffer->len : -1;
+  bool has_encountered_paren = false;
+
+  // Moving backward really requires us to alter the cursor *before* checking
+  // the loop condition, then do the parenthesis balancing. Since C doesn't
+  // have that control structure, and emulating it with
+  //   while(true) { ... if (xxx) break; ... }
+  // is kludgy, just patch up the increment behaviours before and after the
+  // loop.
+  $i_LineEditor_cursor += delta;
+  
+  while ($i_LineEditor_cursor != bound &&
+         (!has_encountered_paren || $i_LineEditor_sexpr_depth > 0)) {
+    switch ($az_LineEditor_buffer->v[$i_LineEditor_cursor]) {
+    case L'(':
+    case L'[':
+    case L'{':
+      $i_LineEditor_sexpr_depth += delta;
+      has_encountered_paren = true;
+      break;
+
+    case L'}':
+    case L']':
+    case L')':
+      $i_LineEditor_sexpr_depth -= delta;
+      has_encountered_paren = true;
+      break;
+    }
+
+    $i_LineEditor_cursor += delta;
+  }
+
+  if (!$y_LineEditor_sexpr_direction)
+    $i_LineEditor_cursor -= delta;
+}
+
+/*
+  SYMBOL: $f_LineEditor_move_forward_sexpr
+    Advances the cursor past one s-expr, as defined by $m_traverse_expr().
+ */
+defun($h_LineEditor_move_forward_sexpr) {
+  $M_traverse_sexpr(0,0,
+                    $y_LineEditor_sexpr_direction = true,
+                    $i_LineEditor_sexpr_depth = 0);
+  $m_changed();
+}
+
+/*
+  SYMBOL: $f_LineEditor_move_backward_char
+    Retreats the cursor past one s-expr, as defined by $m_traverse_expr().
+ */
+defun($h_LineEditor_move_backward_sexpr) {
+  $M_traverse_sexpr(0,0,
+                    $y_LineEditor_sexpr_direction = false,
+                    $i_LineEditor_sexpr_depth = 0);
+  $m_changed();
+}
+
+/*
   SYMBOL: $lp_LineEditor_keybindings
     List of keybindings supported by generic LineEditors.
  */
@@ -639,6 +718,10 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $m_move_backward_word);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'i', $v_end_meta,
             $m_move_forward_word);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'm', $v_end_meta,
+            $m_move_backward_sexpr);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L',', $v_end_meta,
+            $m_move_forward_sexpr);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'J', $v_end_meta,
             $m_seek_backward_to_char_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'K', $v_end_meta,
