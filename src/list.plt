@@ -121,7 +121,9 @@ static inline list_HUNG lmput_HUNG(list_HUNG this, CTYPE key, CTYPE value) {
 })
 #define lpop_HUNG(lst) ({                       \
   list_HUNG* _lv = &(lst);                      \
+  list_HUNG _l = *_lv;                          \
   *_lv = (*_lv)->cdr;                           \
+  _l->car;                                      \
 })
 
 #endif /* HAVE_DEFINED_LIST_HUNG */

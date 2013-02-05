@@ -591,6 +591,38 @@ defun($h_LineEditor_yank) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_undo
+    Undoes one undo step for this LineEditor, if there are any undo states.
+ */
+defun($h_LineEditor_undo) {
+  if ($laz_LineEditor_undo) {
+    lpush_az($laz_LineEditor_redo, $az_LineEditor_buffer);
+    $az_LineEditor_buffer = lpop_az($laz_LineEditor_undo);
+
+    if ($i_LineEditor_cursor > $az_LineEditor_buffer->len)
+      $i_LineEditor_cursor = $az_LineEditor_buffer->len;
+
+    $m_changed();
+  }
+}
+
+/*
+  SYMBOL: $f_LineEditor_redo
+    Redoes one redo step for this LineEditor, if there are any redo states.
+ */
+defun($h_LineEditor_redo) {
+  if ($laz_LineEditor_redo) {
+    lpush_az($laz_LineEditor_undo, $az_LineEditor_buffer);
+    $az_LineEditor_buffer = lpop_az($laz_LineEditor_redo);
+
+    if ($i_LineEditor_cursor > $az_LineEditor_buffer->len)
+      $i_LineEditor_cursor = $az_LineEditor_buffer->len;
+
+    $m_changed();
+  }
+}
+
+/*
   SYMBOL: $lp_LineEditor_keybindings
     List of keybindings supported by generic LineEditors.
  */
@@ -642,6 +674,10 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $m_yank_and_adv);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'B', $v_end_meta,
             $m_yank);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'y', $v_end_meta,
+            $m_undo);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'Y', $v_end_meta,
+            $m_redo);
   bind_char($lp_LineEditor_keybindings, $u_ground, L'\r', NULL,
             $m_accept);
 }
