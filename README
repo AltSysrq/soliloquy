@@ -68,6 +68,6 @@ Right hand:
     | End      | Backward | Forward  | Kill bkwd| Kill fwd |
     |          | s-expr   | s-expr   | s-expr   | s-expr   |
     | Kill to  |          |          |          |          |
-    | end      | Exit curr| Exit curr| Kill curr| Thru next|
+    | end      | Exit curr| Exit curr| Kill curr| Kill prnt|
     +----------+----------+----------+----------+----------+
 ----------------
