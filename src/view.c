@@ -17,8 +17,12 @@
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "view.slc"
+
+#include "inc_ncurses.h"
+
 #include "key_dispatch.h"
 #include "face.h"
+#include "interactive.h"
 
 /*
   TITLE: Terminal/Workspace View Management
@@ -313,6 +317,24 @@ defun($h_View_end) {
 }
 
 /*
+  SYMBOL: $f_View_scroll_up $I_LastCommand_view_scroll_up
+    Scrolls the view one line up, accelerating.
+ */
+defun($h_View_scroll_up) {
+  $i_View_scroll = -accelerate(&$I_LastCommand_view_scroll_up);
+  $m_scroll();
+}
+
+/*
+  SYMBOL: $f_View_scroll_down $I_LastCommand_view_scroll_down
+    Scrolls the View one line down, accelerating.
+ */
+defun($h_View_scroll_down) {
+  $i_View_scroll = accelerate(&$I_LastCommand_view_scroll_down);
+  $m_scroll();
+}
+
+/*
   SYMBOL: $lp_View_keymap
     The basic key commands supported by the View class.
  */
@@ -326,4 +348,12 @@ ATSINIT {
             $m_page_down);
   bind_char($lp_View_keymap, $u_meta, L'R', $v_end_meta,
             $m_end);
+  bind_kp($lp_View_keymap, $u_ground, KEY_DOWN, NULL,
+          $m_scroll_down);
+  bind_kp($lp_View_keymap, $u_ground, KEY_SF, NULL,
+          $m_scroll_down);
+  bind_kp($lp_View_keymap, $u_ground, KEY_UP, NULL,
+          $m_scroll_up);
+  bind_kp($lp_View_keymap, $u_ground, KEY_SR, NULL,
+          $m_scroll_up);
 }
