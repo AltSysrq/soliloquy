@@ -575,7 +575,7 @@ defun($h_LineEditor_yank_and_adv) {
 }
 
 /*
-  SYMBOL: $f_LineEditor_yank_no_adv
+  SYMBOL: $f_LineEditor_yank
      Inserts the text at the front of the character-oriented kill ring, and
      leaves the cursor where it was.
  */
@@ -700,7 +700,7 @@ defun($h_LineEditor_move_forward_sexpr) {
 }
 
 /*
-  SYMBOL: $f_LineEditor_move_backward_char
+  SYMBOL: $f_LineEditor_move_backward_sexpr
     Retreats the cursor past one s-expr, as defined by $m_traverse_expr().
  */
 defun($h_LineEditor_move_backward_sexpr) {
