@@ -400,6 +400,28 @@ defun($h_BufferEditor_edit_current) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_insert_and_edit
+    Insert a new line before the cursor with a BufferLineEditor. When the line
+    editor is accepted, cursor will be shunted downward, and this method will
+    be called again.
+
+  SYMBOL: $u_continue_inserting
+    Identifies hooks used to continue in "insert mode" after a line editor is
+    accepted.
+ */
+defun($h_BufferEditor_insert_and_edit) {
+  object editor = $c_BufferLineEditor(
+    $i_LineEditor_cursor = -1,
+    $w_LineEditor_text = NULL);
+  $$(editor) {
+    add_hook_obj($H_accept, HOOK_AFTER,
+                 $u_continue_inserting, $u_BufferEditor,
+                 $m_insert_and_edit, $o_BufferEditor,
+                 NULL);
+  }
+}
+
+/*
   SYMBOL: $f_BufferEditor_self_insert
     Insert a new line before cursor, invoke an editor on it, call
     $m_self_insert in its context. As a side-effect, cursor will be shunted
@@ -719,16 +741,15 @@ class_keymap($c_BufferEditor, $lp_BufferEditor_keymap, $llp_Activity_keymap)
 ATSINIT {
   bind_char($lp_BufferEditor_keymap, $u_ground, L'\r', NULL,
             $f_BufferEditor_insert_blank_line_above);
-  bind_char($lp_BufferEditor_keymap, $u_ground, CONTROL_O, NULL,
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'o', NULL,
             $f_BufferEditor_insert_blank_line_below);
-  bind_char($lp_BufferEditor_keymap, $u_ground, CONTROL_E, NULL,
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'e', NULL,
             $f_BufferEditor_edit_current);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'i', NULL,
+            $f_BufferEditor_insert_and_edit);
 
   bind_char($lp_BufferEditor_keymap, $u_extended, CONTROL_S, $u_ground,
             $f_BufferEditor_save);
-
-  bind_kp($lp_BufferEditor_keymap, $u_ground, KEYBINDING_DEFAULT, NULL,
-          $f_BufferEditor_self_insert);
 
   bind_char($lp_BufferEditor_keymap, $u_meta, L'j', $v_end_meta,
             $f_BufferEditor_backward_line);
