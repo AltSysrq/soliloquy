@@ -115,7 +115,8 @@ defun($h_LineEditor_destroy) {
   SYMBOL: $y_LineEditor_edit_is_minor
     Indicates whether the current edit to the LineEditor buffer is
     "minor". Consecutive minor edits made in short succession will not push
-    multiple states onto the undo stack.
+    multiple states onto the undo stack. This is reset to false after calls to
+    $f_LineEditor_push_undo().
 
   SYMBOL: $y_LineEditor_previous_edit_was_minor
     Indicates whether the previous call to $f_LineEditor_push_undo was due to
@@ -130,11 +131,11 @@ defun($h_LineEditor_push_undo) {
       time(0) != $i_LineEditor_last_edit)
     lpush_az($laz_LineEditor_undo, dynar_clone_z($az_LineEditor_buffer));
 
-  $y_LineEditor_previous_edit_was_minor =
-    $y_LineEditor_edit_is_minor;
+  $y_LineEditor_previous_edit_was_minor = $y_LineEditor_edit_is_minor;
   $i_LineEditor_last_edit = time(0);
 
   $laz_LineEditor_redo = NULL;
+  $y_LineEditor_edit_is_minor = false;
 }
 
 /*
