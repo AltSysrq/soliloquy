@@ -426,6 +426,11 @@ defun($h_BufferEditor_insert_and_edit) {
     Insert a new line before cursor, invoke an editor on it, call
     $m_self_insert in its context. As a side-effect, cursor will be shunted
     downward.
+    --
+    This method is no longer used in the default keybindings. You can bind it
+    to KEYBINDING_DEFAULT to get less modefull editing, though you'll also need
+    to arrange for some way to access the unshifted BufferEditor commands which
+    are currently bound to basic characters.
  */
 defun($h_BufferEditor_self_insert) {
   if (!is_nc_char($x_Terminal_input_value)) {
