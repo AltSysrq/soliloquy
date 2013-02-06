@@ -26,6 +26,8 @@ AC_SEARCH_LIBS([wget_wch], [ncursesw curses cursesw ncurses pcurses], [],
 [No wide-character version of curses could be found. You probably want to
 install libncursesw5-dev.])])
 
+AC_SEARCH_LIBS([keyname], [ncursesw curses cursesw ncurses pcurses tinfo tinfow])
+
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h locale.h],
                  [],
