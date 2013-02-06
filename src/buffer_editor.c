@@ -69,22 +69,39 @@ ATSINIT {
  */
 subclass($c_Activity, $c_BufferEditor)
 defun($h_BufferEditor) {
+  // Add hooks for cursor modification notification
+  if ($o_BufferEditor_point) {
+    $$($o_BufferEditor_point) {
+      $m_attach_cursor();
+    }
+  }
+  add_hook_obj(&$h_FileBufferCursor, HOOK_AFTER,
+               $u_BufferEditor, $u_shunt_notify,
+               $m_attach_cursor, $o_BufferEditor,
+               NULL);
+
   if (!$o_BufferEditor_point) {
     $o_BufferEditor_point =
       $c_FileBufferCursor($o_FileBufferCursor_buffer =
                           $o_BufferEditor_buffer);
   }
 
-  $$($o_BufferEditor_point) {
-    add_hook_obj($H_shunt, HOOK_AFTER,
-                 $u_BufferEditor, $u_shunt_notify,
-                 $f_Workspace_update_echo_area, $o_Activity_workspace,
-                 NULL);
-  }
-
   $$($o_BufferEditor_buffer) {
     lpush_o($lo_FileBuffer_attachments, $o_BufferEditor);
   }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_attach_cursor
+    Must be called within the context of the BufferEditor and a
+    FileBufferCursor. Adds a hook to update the echo area when the cursor is
+    shunted.
+ */
+defun($h_BufferEditor_attach_cursor) {
+  add_hook_obj($H_shunt, HOOK_AFTER,
+               $u_BufferEditor, $u_shunt_notify,
+               $f_Workspace_update_echo_area, $o_Activity_workspace,
+               NULL);
 }
 
 /*
@@ -180,7 +197,7 @@ defun($h_BufferEditor_get_echo_area_meta) {
     swprintf(markline, 16, L"%+d",
              ((signed)$($lo_BufferEditor_marks->car,
                         $I_FileBufferCursor_line_number)) -
-             ((signed)$($o_BufferLineEditor_cursor,
+             ((signed)$($o_BufferEditor_point,
                         $I_FileBufferCursor_line_number)));
 
   qstring parts[] = { lparen, name,
@@ -739,8 +756,160 @@ defun($h_BufferEditor_save) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_digit_input
+    Replaces or edits the line number of point or mark according to
+    $x_Terminal_input_value. Affected by
+    $y_LastCommand_line_number_is_relative, $y_LastCommand_is_setting_mark,
+    $i_LastCommand_relative_sign, $I_LastCommand_line_number_relative_to,
+    $I_LastCommand_line_number.
+
+  SYMBOL: $y_LastCommand_line_number_is_relative
+    If true, line number entry in $f_BufferEditor_digit_input (et al) is
+    relative to $I_LastCommand_line_number_relative_to.
+
+  SYMBOL: $y_LastCommand_is_setting_mark
+    If true, line number edits by $f_BufferEditor_digit_input et al affect the
+    topmost mark instead of point.
+
+  SYMBOL: $i_LastCommand_relative_sign
+    When $y_LastCommand_line_number_is_relative, either +1 or -1 to indicate
+    which direction relative line number entry is progressing.
+
+  SYMBOL: $I_LastCommand_line_number_relative_to
+    WHen $y_LastCommand_line_number_is_relative, indicates the base line number
+    which the number being entered is relative to.
+
+  SYMBOL: $I_LastCommand_line_number
+    The magnitude of the current line number entry used by
+    $f_BufferEditor_digit_input.
+ */
+defun($h_BufferEditor_digit_input) {
+  bool line_number_is_relative, is_setting_mark;
+  signed relative_sign, max;
+  unsigned relative_to, line_number;
+  $$($o_prev_command) {
+    line_number_is_relative = $y_LastCommand_line_number_is_relative;
+    is_setting_mark = $y_LastCommand_is_setting_mark;
+    relative_sign = $i_LastCommand_relative_sign;
+    relative_to = $I_LastCommand_line_number_relative_to;
+    line_number = $I_LastCommand_line_number;
+  }
+
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    max = $aw_FileBuffer_contents->len;
+  }
+
+  if ($x_Terminal_input_value < L'0' || $x_Terminal_input_value > L'9') {
+    $y_key_dispatch_continue = true;
+    return;
+  }
+
+  unsigned ones = $x_Terminal_input_value - L'0';
+  line_number *= 10;
+  line_number += ones;
+
+  signed real_number;
+  if (line_number_is_relative)
+    real_number = relative_to + relative_sign * line_number;
+  else
+    real_number = ((signed)line_number) - 1; //one-based indexing
+
+  if (real_number < 0)
+    real_number = 0;
+  else if (real_number > max)
+    real_number = max;
+
+  // Always set the mark; either this point (if setting mark) or to one after
+  // it (if setting point)
+  if (!$lo_BufferEditor_marks)
+    lpush_o($lo_BufferEditor_marks,
+            $c_FileBufferCursor(
+              $o_FileBufferCursor_buffer = $o_BufferEditor_buffer));
+
+  $$($lo_BufferEditor_marks->car) {
+    $I_FileBufferCursor_line_number =
+      !is_setting_mark? (real_number == max && real_number?
+                         real_number - 1 :
+                         real_number == max? real_number : real_number + 1)
+      : real_number;
+  }
+  if (!is_setting_mark) {
+    $$($o_BufferEditor_point) {
+      $I_FileBufferCursor_line_number = real_number;
+    }
+  }
+
+  //Propagate values
+  $$($o_this_command) {
+    $y_LastCommand_line_number_is_relative = line_number_is_relative;
+    $y_LastCommand_is_setting_mark = is_setting_mark;
+    $I_LastCommand_line_number = line_number;
+    $I_LastCommand_line_number_relative_to = relative_to;
+    $i_LastCommand_relative_sign = relative_sign;
+  }
+
+  $m_update_echo_area();
+}
+
+/*
+  SYMBOL: $f_BufferEditor_sign
+    Enters relative line number mode, setting $i_LastCommand_relative_sign to
+    $i_BufferEditor_sign. See $f_BufferEditor_digit_input().
+ */
+defun($h_BufferEditor_sign) {
+  unsigned relative_to = 0;
+  $$($o_BufferEditor_point) {
+    relative_to = $I_FileBufferCursor_line_number;
+  }
+
+  $$($o_this_command) {
+    $y_LastCommand_is_setting_mark =
+      $($o_prev_command, $y_LastCommand_is_setting_mark);
+    $y_LastCommand_line_number_is_relative = true;
+    $i_LastCommand_relative_sign = $i_BufferEditor_sign;
+    $I_LastCommand_line_number_relative_to = relative_to;
+    $I_LastCommand_line_number = 0;
+  }
+}
+
+/*
+  SYMBOL: $f_BufferEditor_sign_positive
+    Calls $f_BufferEditor_sign with +1.
+ */
+defun($h_BufferEditor_sign_positive) {
+  $i_BufferEditor_sign = +1;
+  $m_sign();
+}
+
+/*
+  SYMBOL: $f_BufferEditor_sign_negative
+    Calls $f_BufferEditor_sign with -1.
+ */
+defun($h_BufferEditor_sign_negative) {
+  $i_BufferEditor_sign = -1;
+  $m_sign();
+}
+
+/*
+  SYMBOL: $f_BufferEditor_set_mark
+    Sets $y_LastCommand_is_setting_mark to true for this command, so further
+    line number commands affect mark instead of point.
+ */
+defun($h_BufferEditor_set_mark) {
+  $$($o_this_command) {
+    $y_LastCommand_is_setting_mark = true;
+    $I_LastCommand_line_number = 0;
+    $y_LastCommand_line_number_is_relative = false;
+  }
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
+
+  SYMBOL: $u_after_sign
+    Key mode for the key immediately following a numeric sign command.
  */
 class_keymap($c_BufferEditor, $lp_BufferEditor_keymap, $llp_Activity_keymap)
 ATSINIT {
@@ -752,6 +921,27 @@ ATSINIT {
             $m_edit_current);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'i', NULL,
             $m_insert_and_edit);
+  for (wchar_t ch = L'0'; ch <= L'9'; ++ch) {
+    bind_char($lp_BufferEditor_keymap, $u_ground, ch, NULL,
+              $m_digit_input);
+    bind_char($lp_BufferEditor_keymap, $u_after_sign, ch, $u_ground,
+              $m_digit_input);
+  }
+  bind_kp($lp_BufferEditor_keymap, $u_after_sign, KEYBINDING_DEFAULT,
+          $u_ground, $m_other_input_after_sign);
+  bind_char($lp_BufferEditor_keymap, $u_after_sign, '\033', $u_meta,
+            NULL);
+
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'+', $u_after_sign,
+            $m_sign_positive);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'.', $u_after_sign,
+            $m_sign_positive);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'-', $u_after_sign,
+            $m_sign_negative);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L',', $u_after_sign,
+            $m_sign_negative);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'/', NULL,
+            $m_set_mark);
 
   bind_char($lp_BufferEditor_keymap, $u_extended, CONTROL_S, $u_ground,
             $m_save);
