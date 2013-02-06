@@ -14,7 +14,16 @@ AC_PROG_CC
 AC_PROG_CXX
 AM_PROG_CC_C_O
 
+# Modifying these variables directly is typically considered a bad thing.
+# But for whatever reason, Autotools doesn't bother adding the /usr/local paths
+# to the search directories on systems (eg, FreeBSD) where *everything* lives
+# there, so we'll do it ourselves here, making sure to preserve the flags
+# already given.
+CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+LDFLAGS="$LDFLAGS -L/usr/local/lib"
+
 # Checks for libraries.
+AC_SEARCH_LIBS([keyname], [tinfo tinfow ncursesw curses cursesw ncurses pcurses])
 AC_SEARCH_LIBS([pcre_compile], [pcre], [],
                [AC_MSG_ERROR(
 [The PCRE library could not be found. Make sure libpcre[-dev] is installed.])])
@@ -25,8 +34,6 @@ AC_SEARCH_LIBS([wget_wch], [ncursesw curses cursesw ncurses pcurses], [],
                [AC_MSG_ERROR(
 [No wide-character version of curses could be found. You probably want to
 install libncursesw5-dev.])])
-
-AC_SEARCH_LIBS([keyname], [ncursesw curses cursesw ncurses pcurses tinfo tinfow])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h locale.h],
