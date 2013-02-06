@@ -69,7 +69,7 @@ STATIC_INIT_TO($$y_Terminal_cursor_visible, true)
 defun($h_Terminal) {
   $$p_Terminal_screen = newterm($s_Terminal_type,
                                 $p_Terminal_output, $p_Terminal_input);
-  $i_Consumer_fd = fileno($p_Terminal_input);
+  $i_Consumer_fd = fileno((FILE*)$p_Terminal_input);
 
   if (!$$p_Terminal_screen) {
     $y_Terminal_ok = false;
