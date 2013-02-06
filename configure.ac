@@ -23,7 +23,7 @@ CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 LDFLAGS="$LDFLAGS -L/usr/local/lib"
 
 # Checks for libraries.
-AC_SEARCH_LIBS([keyname], [tinfo tinfow ncursesw curses cursesw ncurses pcurses])
+AC_SEARCH_LIBS([keyname], [tinfow tinfo ncursesw curses cursesw ncurses pcurses])
 AC_SEARCH_LIBS([pcre_compile], [pcre], [],
                [AC_MSG_ERROR(
 [The PCRE library could not be found. Make sure libpcre[-dev] is installed.])])
