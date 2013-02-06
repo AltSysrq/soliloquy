@@ -203,7 +203,12 @@ defun($h_Terminal_putch) {
   cchar_t wch;
   let($p_wch, &wch);
   $f_translate_qchar_to_ncurses();
+#ifndef ADD_WCH_IS_BROKEN
   mvadd_wch($i_y, $i_x, &wch);
+#else
+  chtype cht = (0xFF & (chtype)wch.chars[0]) | wch.attr;
+  mvaddch($i_y, $i_x, cht);
+#endif
 
   // Schedule refresh if not already so scheduled
   $f_Terminal_update();
