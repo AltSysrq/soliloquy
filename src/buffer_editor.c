@@ -480,6 +480,15 @@ defun($h_BufferEditor_forward_line) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_forward_line_reset_mark
+    Moves the buffer point down one line and resets mark.
+ */
+defun($h_BufferEditor_forward_line_reset_mark) {
+  $m_forward_line();
+  $m_reset_mark();
+}
+
+/*
   SYMBOL: $f_BufferEditor_backward_line
     Moves the buffer point up one line, unless already at the end of the
     file.
@@ -495,6 +504,15 @@ defun($h_BufferEditor_backward_line) {
   }
 
   $m_update_echo_area();
+}
+
+/*
+  SYMBOL: $f_BufferEditor_backward_line_reset_mark
+    Moves the buffer point up one line and resets mark.
+ */
+defun($h_BufferEditor_backward_line_reset_mark) {
+  $m_backward_line();
+  $m_reset_mark();
 }
 
 /*
@@ -863,6 +881,35 @@ defun($h_BufferEditor_digit_input) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_reset_mark
+    Ensures that a mark exists, and that it is (if possible) one line away from
+    point.
+ */
+defun($h_BufferEditor_reset_mark) {
+  if (!$lo_BufferEditor_marks)
+    lpush_o($lo_BufferEditor_marks, $c_FileBufferCursor(
+              $o_FileBufferCursor_buffer = $o_BufferEditor_buffer));
+
+  unsigned point = $($o_BufferEditor_point, $I_FileBufferCursor_line_number);
+  unsigned max = 0;
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    max = $aw_FileBuffer_contents->len;
+  }
+
+  $$($lo_BufferEditor_marks->car) {
+    if (!max)
+      $I_FileBufferCursor_line_number = 0;
+    else if (point < max)
+      $I_FileBufferCursor_line_number = point+1;
+    else
+      $I_FileBufferCursor_line_number = point-1;
+  }
+
+  $m_update_echo_area();
+}
+
+/*
   SYMBOL: $f_BufferEditor_sign
     Enters relative line number mode, setting $i_LastCommand_relative_sign to
     $i_BufferEditor_sign. See $f_BufferEditor_digit_input().
@@ -915,6 +962,38 @@ defun($h_BufferEditor_set_mark) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_print_region
+    Outputs the lines between point (inclusive) and mark (exclusive) to the
+    Trascript, as an output group.
+ */
+defun($h_BufferEditor_print_region) {
+  if (!$lo_BufferEditor_marks)
+    $m_reset_mark();
+
+  unsigned point = $($o_BufferEditor_point, $I_FileBufferCursor_line_number);
+  unsigned mark = $($lo_BufferEditor_marks->car,
+                    $I_FileBufferCursor_line_number);
+
+  signed start, end;
+  if (point < mark)
+    start = point, end = mark;
+  else
+    start = mark+1, end = point+1;
+
+  $lo_BufferEditor_format = NULL;
+  $$($o_BufferEditor_buffer) {
+    for (signed i = end-1; i >= start; --i) {
+      $M_format(0,0, $I_BufferEditor_index = i);
+    }
+  }
+
+  if ($o_Transcript)
+    $M_group(0, $o_Transcript,
+             $lo_Transcript_output = $lo_BufferEditor_format);
+  $lo_BufferEditor_format = NULL;
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
 
@@ -931,6 +1010,9 @@ ATSINIT {
             $m_edit_current);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'i', NULL,
             $m_insert_and_edit);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'p', NULL,
+            $m_print_region);
+
   for (wchar_t ch = L'0'; ch <= L'9'; ++ch) {
     bind_char($lp_BufferEditor_keymap, $u_ground, ch, NULL,
               $m_digit_input);
@@ -964,8 +1046,12 @@ ATSINIT {
             $m_save);
 
   bind_char($lp_BufferEditor_keymap, $u_meta, L'j', $v_end_meta,
-            $m_backward_line);
+            $m_backward_line_reset_mark);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'k', $v_end_meta,
+            $m_forward_line_reset_mark);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'J', $v_end_meta,
+            $m_backward_line);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'K', $v_end_meta,
             $m_forward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'l', $v_end_meta,
             $m_kill_backward_line);
