@@ -761,7 +761,8 @@ defun($h_BufferEditor_save) {
     $x_Terminal_input_value. Affected by
     $y_LastCommand_line_number_is_relative, $y_LastCommand_is_setting_mark,
     $i_LastCommand_relative_sign, $I_LastCommand_line_number_relative_to,
-    $I_LastCommand_line_number.
+    $I_LastCommand_line_number. The "digits" a..z are interpreted as 10..35,
+    and A..Z as 36..61.
 
   SYMBOL: $y_LastCommand_line_number_is_relative
     If true, line number entry in $f_BufferEditor_digit_input (et al) is
@@ -800,12 +801,21 @@ defun($h_BufferEditor_digit_input) {
     max = $aw_FileBuffer_contents->len;
   }
 
-  if ($x_Terminal_input_value < L'0' || $x_Terminal_input_value > L'9') {
+  if (($x_Terminal_input_value < L'0' || $x_Terminal_input_value > L'9') &&
+      ($x_Terminal_input_value < L'a' || $x_Terminal_input_value > L'z') &&
+      ($x_Terminal_input_value < L'A' || $x_Terminal_input_value > L'Z')) {
     $y_key_dispatch_continue = true;
     return;
   }
 
-  unsigned ones = $x_Terminal_input_value - L'0';
+  unsigned ones;
+  if ($x_Terminal_input_value >= L'0' && $x_Terminal_input_value <= L'9')
+    ones = $x_Terminal_input_value - L'0';
+  else if ($x_Terminal_input_value >= L'a' && $x_Terminal_input_value <= L'z')
+    ones = $x_Terminal_input_value - L'a' + 10;
+  else
+    ones = $x_Terminal_input_value - L'A' + 36;
+    
   line_number *= 10;
   line_number += ones;
 
@@ -927,6 +937,13 @@ ATSINIT {
     bind_char($lp_BufferEditor_keymap, $u_after_sign, ch, $u_ground,
               $m_digit_input);
   }
+  for (wchar_t ch = L'a'; ch <= L'z';  ++ch)
+    bind_char($lp_BufferEditor_keymap, $u_after_sign, ch, $u_ground,
+              $m_digit_input);
+  for (wchar_t ch = 'A'; ch <= L'Z'; ++ch)
+    bind_char($lp_BufferEditor_keymap, $u_after_sign, ch, $u_ground,
+              $m_digit_input);
+
   bind_kp($lp_BufferEditor_keymap, $u_after_sign, KEYBINDING_DEFAULT,
           $u_ground, $m_other_input_after_sign);
   bind_char($lp_BufferEditor_keymap, $u_after_sign, '\033', $u_meta,
