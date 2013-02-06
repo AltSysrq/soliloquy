@@ -801,6 +801,9 @@ defun($h_BufferEditor_save) {
   SYMBOL: $I_LastCommand_line_number
     The magnitude of the current line number entry used by
     $f_BufferEditor_digit_input.
+
+  SYMBOL: $y_LastCommand_was_digit_input
+    True if the last command was $f_BufferEditor_digit_input.
  */
 defun($h_BufferEditor_digit_input) {
   bool line_number_is_relative, is_setting_mark;
@@ -875,6 +878,8 @@ defun($h_BufferEditor_digit_input) {
     $I_LastCommand_line_number = line_number;
     $I_LastCommand_line_number_relative_to = relative_to;
     $i_LastCommand_relative_sign = relative_sign;
+
+    $y_LastCommand_was_digit_input = true;
   }
 
   $m_update_echo_area();
@@ -922,7 +927,8 @@ defun($h_BufferEditor_sign) {
 
   $$($o_this_command) {
     $y_LastCommand_is_setting_mark =
-      $($o_prev_command, $y_LastCommand_is_setting_mark);
+      $($o_prev_command, $y_LastCommand_is_setting_mark) ||
+      $($o_prev_command, $y_LastCommand_was_digit_input);
     $y_LastCommand_line_number_is_relative = true;
     $i_LastCommand_relative_sign = $i_BufferEditor_sign;
     $I_LastCommand_line_number_relative_to = relative_to;
