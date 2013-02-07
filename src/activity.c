@@ -119,6 +119,21 @@ defun($h_Activity_resume) {
 }
 
 /*
+  SYMBOL: $f_Activity_rotate_echo_mode
+    Rotates $v_Workspace_echo_mode between its three states.
+ */
+defun($h_Activity_rotate_echo_mode) {
+  if ($v_Workspace_echo_mode == $u_echo_on)
+    $v_Workspace_echo_mode = $u_echo_ghost;
+  else if ($v_Workspace_echo_mode == $u_echo_ghost)
+    $v_Workspace_echo_mode = $u_echo_off;
+  else
+    $v_Workspace_echo_mode = $u_echo_on;
+
+  $m_update_echo_area();
+}
+
+/*
   SYMBOL: $lp_Activity_base_keymap
     The basic keymap applied to all Activities.
  */
@@ -126,4 +141,6 @@ class_keymap($c_Activity, $lp_Activity_base_keymap, $llp_Activity_keymap)
 ATSINIT {
   bind_char($lp_Activity_base_keymap, $u_ground, CONTROL_G, NULL,
             $m_abort);
+  bind_char($lp_Activity_base_keymap, $u_ground, CONTROL_SPACE, NULL,
+            $m_rotate_echo_mode);
 }

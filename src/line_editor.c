@@ -188,6 +188,24 @@ defun($h_LineEditor_is_echo_enabled) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_rotate_echo_mode
+    Rotates either $v_Workspace_echo_mode or $v_LineEditor_echo_mode (as with
+    $f_Activity_rotate_echo_mode), cycling the latter if it is non-NULL.
+ */
+defun($h_LineEditor_rotate_echo_mode) {
+  identity* mode = $v_LineEditor_echo_mode?
+    &$v_LineEditor_echo_mode : &$v_Workspace_echo_mode;
+  if (*mode == $u_echo_on)
+    *mode = $u_echo_ghost;
+  else if (*mode == $u_echo_ghost)
+    *mode = $u_echo_off;
+  else
+    *mode = $u_echo_on;
+
+  $m_update_echo_area();
+}
+
+/*
   SYMBOL: $f_LineEditor_get_echo_area_contents
     Converts the LineEditor buffer into an unformatted qstring and sets the
     point position therein (see $m_get_echo_area_contents).
