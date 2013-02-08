@@ -101,7 +101,7 @@
  */
 static bool is_alternate_word_boundary(wchar_t, wchar_t);
 static bool starts_with_same_char(wstring, wstring);
-static bool is_subsequence_of_input(wstring candidate, wstring input);
+static bool is_supersequence_of_input(wstring candidate, wstring input);
 static bool can_fit_word_boundary_rule(wstring candidate, wstring input);
 static wstring select_shorter(wstring, wstring);
 static wstring select_with_fewer_word_boundaries(wstring, wstring);
@@ -122,7 +122,7 @@ defun($h_pseudo_steno_expand) {
     while ((candidate = enumerate_next_expansion())) {
       wstring input = $w_pseudo_steno_expand;
       if (starts_with_same_char(candidate, input) &&
-          is_subsequence_of_input(candidate, input) &&
+          is_supersequence_of_input(candidate, input) &&
           can_fit_word_boundary_rule(candidate, input)) {
         if (!best)
           best = candidate;
@@ -158,20 +158,36 @@ static bool starts_with_same_char(wstring a, wstring b) {
   return a[0] == b[0];
 }
 
-static bool is_subsequence_of_input(wstring candidate, wstring input) {
+static bool is_supersequence_of_input(wstring candidate, wstring input) {
   while (*candidate && *input) {
     // Move candidate forward if it matches the current character of input
-    if (*candidate == *input++)
-      ++candidate;
+    if (*candidate++ == *input)
+      ++input;
   }
 
-  if (*candidate)
-    // Input is empty; this candidate is not, so there can be no match
+  if (*input)
+    // This candidate is empty; the input is not, so there can be no match
     return false;
 
   // Either both are empty now, or only candidate is (meaning that we just
   // insert more characters beyond the end of candidate), so this is a match
   return true;
+}
+
+deftest(is_supersequence_of_input) {
+  assert(is_supersequence_of_input(L"foo", L"foo"));
+  assert(is_supersequence_of_input(L"foo", L"fo"));
+  assert(is_supersequence_of_input(L"foobar", L"fb"));
+  assert(is_supersequence_of_input(L"fooBar", L"fa"));
+  assert(is_supersequence_of_input(L"zoooooom", L"zoom"));
+  assert(is_supersequence_of_input(L"soliloquy", L"slq"));
+  assert(is_supersequence_of_input(L"oo", L"o"));
+  assert(is_supersequence_of_input(L"o", L"o"));
+
+  assert(!is_supersequence_of_input(L"zar", L"foo"));
+  assert(!is_supersequence_of_input(L"eeeee", L"eeeeee"));
+  assert(!is_supersequence_of_input(L"zoom", L"zooooo"));
+  assert(!is_supersequence_of_input(L"fo", L"fa"));
 }
 
 static bool can_fit_word_boundary_rule(wstring candidate, wstring input) {
