@@ -106,7 +106,7 @@ static bool can_fit_word_boundary_rule(wstring candidate, wstring input);
 static wstring select_shorter(wstring, wstring);
 static wstring select_with_fewer_word_boundaries(wstring, wstring);
 static wstring select_with_latest_insertions(wstring,wstring, wstring input);
-static wstring select_with_least_common_insertion(wstring,wstring, wstring input);
+static wstring select_with_most_common_insertion(wstring,wstring, wstring input);
 static wstring select_asciibetically_first(wstring,wstring);
 static wstring enumerate_next_expansion(void);
 defun($h_pseudo_steno_expand) {
@@ -131,7 +131,7 @@ defun($h_pseudo_steno_expand) {
             select_shorter(best, candidate) ?:
             select_with_fewer_word_boundaries(best, candidate) ?:
             select_with_latest_insertions(best, candidate, input) ?:
-            select_with_least_common_insertion(best, candidate, input) ?:
+            select_with_most_common_insertion(best, candidate, input) ?:
             select_asciibetically_first(best, candidate);
       }
     }
@@ -284,7 +284,7 @@ wstring select_with_latest_insertions(wstring a_orig, wstring b_orig,
 STATIC_INIT_TO($w_character_freqs,
                L"etaoinshrdlcumwfgypbvkjxqzETAOINSHRDLCUMWFGYPBVKJXQZ-_");
 
-wstring select_with_least_common_insertion(wstring a_orig, wstring b_orig,
+wstring select_with_most_common_insertion(wstring a_orig, wstring b_orig,
                                            wstring input) {
   wstring a = a_orig, b = b_orig;
 
@@ -293,9 +293,6 @@ wstring select_with_least_common_insertion(wstring a_orig, wstring b_orig,
       ++input;
     ++a, ++b;
   }
-
-  if (!*input)
-    return NULL;
 
   wstring aocc = wcschr($w_character_freqs, *a),
           bocc = wcschr($w_character_freqs, *b);
@@ -307,11 +304,21 @@ wstring select_with_least_common_insertion(wstring a_orig, wstring b_orig,
     return a_orig;
 
   if (aocc < bocc)
-    return a; //*a is the more common character
+    return a_orig; //*a is the more common character
   else if (bocc < aocc)
-    return b;
+    return b_orig;
   else
     return NULL;
+}
+
+deftest(select_with_most_common_insertion) {
+  assert(!select_with_most_common_insertion(L"foo", L"foo", L"f"));
+  assert(!wcscmp(L"fee",
+                 select_with_most_common_insertion(
+                   L"foo", L"fee", L"f")));
+  assert(!wcscmp(L"fee",
+                 select_with_most_common_insertion(
+                   L"fee", L"foo", L"f")));
 }
 
 wstring select_asciibetically_first(wstring a, wstring b) {
