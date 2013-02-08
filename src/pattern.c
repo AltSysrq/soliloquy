@@ -264,7 +264,6 @@ wstring select_with_latest_insertions(wstring a_orig, wstring b_orig,
 
   // We have either encountered the end of one of the strings, or one of them
   // needs an insertion.
-  if (!*input) return NULL;
   if (*a != *input && *b != *input)
     // Tie (insertions at the same point)
     return NULL;
@@ -273,6 +272,18 @@ wstring select_with_latest_insertions(wstring a_orig, wstring b_orig,
     return b_orig;
   else //*b != *input
     return a_orig;
+}
+
+deftest(select_with_latest_insertions) {
+  assert(!select_with_latest_insertions(L"Axe", L"Axx", L"Ax"));
+  assert(!wcscmp(L"Axe",
+                 select_with_latest_insertions(L"Axe",
+                                               L"Annex",
+                                               L"Ax")));
+  assert(!wcscmp(L"Axe",
+                 select_with_latest_insertions(L"Annex",
+                                               L"Axe",
+                                               L"Ax")));
 }
 
 /*
