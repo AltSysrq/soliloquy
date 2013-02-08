@@ -323,3 +323,8 @@ wstring select_asciibetically_first(wstring a, wstring b) {
 
   //If res==0, they are equal, so it doesn't matter
 }
+
+deftest(select_asciibetically_first) {
+  assert(!wcscmp(L"bar", select_asciibetically_first(L"foo", L"bar")));
+  assert(!wcscmp(L"bar", select_asciibetically_first(L"bar", L"foo")));
+}

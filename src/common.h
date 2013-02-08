@@ -19,10 +19,15 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#if !defined(DEBUG) && !defined(NDEBUG)
+#define NDEBUG
+#endif
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +48,7 @@
 #define SYMBOL_ROOT_IMPLANTATION_PRIORITY 133
 #define ADVICE_INSTALLATION_PRIORITY 164
 #define STATIC_INITIALISATION_PRIORITY 228
+#define TEST_EXECUTION_PRIORITY 356
 
 #define __GLUE(x,y) x##y
 #define _GLUE(x,y) __GLUE(x,y)
@@ -381,6 +387,24 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
              NULL);                                                     \
   }                                                                     \
   static void _GLUE(hook,$main)(void)
+
+/**
+ * Usage: deftest(name) { (* body *) }
+ *
+ * If DEBUG is defined, runs the given test function after static
+ * initialisation time, but before main runs. Otherwise, has no effect.
+ */
+#ifdef DEBUG
+#define deftest(name)                                           \
+  static  void test_##name(void)                                \
+    __attribute__((constructor(TEST_EXECUTION_PRIORITY)));      \
+  static void test_##name(void)
+#else
+// inline so that the function isn't even generated if not referenced (which it
+// won't be)
+#define deftest(name) \
+  static inline void test_##name(void)
+#endif
 
 /**
  * Expands into an anonymous function which takes the given arguments and
