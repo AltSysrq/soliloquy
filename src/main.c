@@ -37,6 +37,10 @@ ATSTART(wait_for_debugging, 101) {
 }
 #endif
 
+ATSTART(initialise_gc, 102) {
+  GC_init();
+}
+
 class_keymap($c_Terminal, $$lp_main_keymap, $llp_Terminal_keymap)
 class_keymap($c_Workspace, $$lp_main_keymap2, $llp_Workspace_keymap)
 
