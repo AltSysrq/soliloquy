@@ -255,6 +255,16 @@ wstring select_with_fewer_word_boundaries(wstring a, wstring b) {
     return NULL;
 }
 
+deftest(select_with_fewer_word_boundaries) {
+  assert(!select_with_fewer_word_boundaries(L"foo", L"foo"));
+  assert(!wcscmp(L"foobar",
+                 select_with_fewer_word_boundaries(L"foobar",
+                                                   L"fooBar")));
+  assert(!wcscmp(L"foobar",
+                 select_with_fewer_word_boundaries(L"fooBar",
+                                                   L"foobar")));
+}
+
 wstring select_with_latest_insertions(wstring a_orig, wstring b_orig,
                                       wstring input) {
   wstring a = a_orig, b = b_orig;
