@@ -221,6 +221,16 @@ static bool can_fit_word_boundary_rule(wstring candidate, wstring input) {
   return false;
 }
 
+deftest(can_fit_word_boundary_rule) {
+  assert(can_fit_word_boundary_rule(L"foo", L"f"));
+  assert(can_fit_word_boundary_rule(L"foobar", L"fb"));
+  assert(can_fit_word_boundary_rule(L"fooBar", L"fB"));
+  assert(can_fit_word_boundary_rule(L"FooBar", L"FB"));
+  assert(can_fit_word_boundary_rule(L"abCxCbx", L"aCbx"));
+  assert(!can_fit_word_boundary_rule(L"abCd", L"abd"));
+  assert(!can_fit_word_boundary_rule(L"eeeeeeXf", L"ef"));
+}
+
 wstring select_shorter(wstring a, wstring b) {
   size_t alen = wcslen(a), blen = wcslen(b);
 
