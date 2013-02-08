@@ -232,6 +232,14 @@ wstring select_shorter(wstring a, wstring b) {
     return NULL;
 }
 
+deftest(select_shorter) {
+  assert(!select_shorter(L"foo", L"bar"));
+  assert(!wcscmp(L"foo",
+                 select_shorter(L"foo", L"foobar")));
+  assert(!wcscmp(L"foo",
+                 select_shorter(L"foobar", L"foo")));
+}
+
 static unsigned count_word_boundaries(wstring str) {
   unsigned cnt = 0;
   while (*str) {
