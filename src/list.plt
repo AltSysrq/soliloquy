@@ -136,6 +136,16 @@ static inline list_HUNG lmput_HUNG(list_HUNG this, CTYPE key, CTYPE value) {
   return cons_HUNG(key, cons_HUNG(value, this));
 }
 
+static inline list_HUNG lrev_HUNG(list_HUNG this) {
+  list_HUNG that = NULL;
+  while (this) {
+    that = cons_HUNG(this->car, that);
+    this = this->cdr;
+  }
+
+  return that;
+}
+
 #define lpush_HUNG(lst,value) ({                \
   list_HUNG* _lv = &(lst);                      \
   *_lv = cons_HUNG((value), *_lv);              \

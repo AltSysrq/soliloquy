@@ -576,7 +576,66 @@ defun($h_FileBuffer_edit) {
     as an insertion.
  */
 defun($h_FileBuffer_read_undo_entry) {
-  //TODO
+  FILE* journal = $p_shared_undo_log;
+  if (-1 == fseek(journal, $I_FileBuffer_read_undo_entry, SEEK_SET)) {
+    int err = errno;
+    //Try to seek back to where we were
+    fseek(journal, 0, SEEK_END);
+
+    errno = err;
+    tx_rollback_errno($u_FileBuffer);
+  }
+
+  wchar_t discard[2];
+  // Read the header in
+  char type;
+  unsigned long long when;
+  int nscanned = fscanf(journal, "%c%X,%X,%llX:%2ls\n",
+                        &type,
+                        &$I_FileBuffer_prev_undo,
+                        &$I_FileBuffer_edit_line,
+                        &when,
+                        discard);
+  $I_FileBuffer_undo_time = when;
+
+  if (nscanned != 5 || (type != '%' && type != '@')) {
+    int err = errno;
+    fseek(journal, 0, SEEK_END);
+    errno = err;
+
+    tx_rollback_merrno($u_FileBuffer, nscanned, "Corrupt undo journal");
+  }
+
+  $y_FileBuffer_continue_undo = (type == '%');
+  $I_FileBuffer_ndeletions = 0;
+  $lw_FileBuffer_replacements = NULL;
+
+  char* line = NULL;
+  size_t line_size = 0;
+  while (-1 != getline(&line, &line_size, journal)) {
+    // Line will always be at least one byte long (for the term NUL)
+    if (line[0] != '+' && line[0] != '-') 
+      // End of this record
+      break;
+
+    if (line[0] == (char)$z_FileBuffer_undo_deletion_char)
+      ++$I_FileBuffer_ndeletions;
+    else
+      lpush_w($lw_FileBuffer_replacements, cstrtowstr(line+1));
+  }
+
+  //Seek back to the end
+  {
+    int err = errno;
+    fseek(journal, 0, SEEK_END);
+    errno = err;
+  }
+
+  if (ferror(journal))
+    tx_rollback_errno($u_FileBuffer);
+
+  // Put the replacements back into the correct order
+  $lw_FileBuffer_replacements = lrev_w($lw_FileBuffer_replacements);
 }
 
 /*
