@@ -757,7 +757,7 @@ defun($h_BufferEditor_line_wrap_reverse) {
          (unsigned)$i_column_width) {
     mqstring new = gcalloc(sizeof(qchar) * (1+$i_column_width));
     memcpy(new, $q_BufferEditor_line_wrap_reverse,
-           sizeof(qchar)*(1 + $i_column_width));
+           sizeof(qchar)*$i_column_width);
     lpush_q($lq_BufferEditor_wrapped_rev, new);
     $q_BufferEditor_line_wrap_reverse += $i_column_width;
   }
