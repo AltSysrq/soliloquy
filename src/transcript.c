@@ -144,7 +144,7 @@ defun($h_Transcript_group) {
   $lo_Transcript_output =
     map_o($lo_Transcript_output,
           lambda((object o), ({
-                mqstring new_meta = gcalloc($i_line_meta_width+1);
+                mqstring new_meta = gcalloc(sizeof(qchar)*($i_line_meta_width+1));
                 memcpy(new_meta, $(o, $q_RenderedLine_meta),
                        sizeof(qchar)*$i_line_meta_width);
                 apply_face_arr(group_face, new_meta, $i_line_meta_width);
