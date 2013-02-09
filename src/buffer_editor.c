@@ -1140,6 +1140,22 @@ interactive($h_BufferEditor_search_backward_i,
 }
 
 /*
+  SYMBOL: $f_BufferEditor_undo
+    Undoes the FileBuffer by one step.
+ */
+defun($h_BufferEditor_undo) {
+  $M_undo(0, $o_BufferEditor_buffer);
+}
+
+/*
+  SYMBOL: $f_BufferEditor_redo
+    Redoes the FileBuffer by one step.
+ */
+defun($h_BufferEditor_redo) {
+  $M_redo(0, $o_BufferEditor_buffer);
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
 
@@ -1215,4 +1231,8 @@ ATSINIT {
             $m_show_forward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'd', $v_end_meta,
             $m_show_backward_line);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'y', $v_end_meta,
+            $m_undo);
+  bind_char($lp_BufferEditor_keymap, $u_meta, L'Y', $v_end_meta,
+            $m_redo);
 }

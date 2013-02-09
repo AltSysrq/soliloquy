@@ -499,6 +499,8 @@ defun($h_FileBuffer_edit) {
   wchar_t undo_type =
     ($y_FileBuffer_continue_undo? L'&' : L'@');
   $y_FileBuffer_continue_undo = false;
+  // Since we're making a new edit, this destroys the redo trail.
+  $lI_FileBuffer_redo_trail = NULL;
 
   // Cap ndeletions if it would run past the end of the buffer
   if ($I_FileBuffer_edit_line + $I_FileBuffer_ndeletions >
@@ -586,19 +588,17 @@ defun($h_FileBuffer_read_undo_entry) {
     tx_rollback_errno($u_FileBuffer);
   }
 
-  wchar_t discard[2];
   // Read the header in
   char type;
   unsigned long long when;
-  int nscanned = fscanf(journal, "%c%X,%X,%llX:%2ls\n",
+  int nscanned = fscanf(journal, "%c%X,%X,%llX:",
                         &type,
                         &$I_FileBuffer_prev_undo,
                         &$I_FileBuffer_edit_line,
-                        &when,
-                        discard);
+                        &when);
   $I_FileBuffer_undo_time = when;
 
-  if (nscanned != 5 || (type != '%' && type != '@')) {
+  if (nscanned != 4 || (type != '&' && type != '@')) {
     int err = errno;
     fseek(journal, 0, SEEK_END);
     errno = err;
@@ -606,23 +606,33 @@ defun($h_FileBuffer_read_undo_entry) {
     tx_rollback_merrno($u_FileBuffer, nscanned, "Corrupt undo journal");
   }
 
-  $y_FileBuffer_continue_undo = (type == '%');
+  $y_FileBuffer_continue_undo = (type == '&');
   $I_FileBuffer_ndeletions = 0;
   $lw_FileBuffer_replacements = NULL;
 
   char* line = NULL;
   size_t line_size = 0;
+  //Skip the rest of the current line
+  getline(&line, &line_size, journal);
+  //Read in the rest of the record
   while (-1 != getline(&line, &line_size, journal)) {
     // Line will always be at least one byte long (for the term NUL)
     if (line[0] != '+' && line[0] != '-') 
       // End of this record
       break;
 
+    //Trim off the trailing newline
+    line[strlen(line)] = 0;
+
+    // Classify it as insertion or deletion
     if (line[0] == (char)$z_FileBuffer_undo_deletion_char)
       ++$I_FileBuffer_ndeletions;
     else
       lpush_w($lw_FileBuffer_replacements, cstrtowstr(line+1));
   }
+
+  if (line)
+    free(line);
 
   //Seek back to the end
   {
@@ -639,11 +649,40 @@ defun($h_FileBuffer_read_undo_entry) {
 }
 
 /*
+  SYMBOL: $f_FileBuffer_undo
+    Undoes changes to this FileBuffer by one step. The transaction is rolled
+    back if anything fails, or if there is no undo information.
+
+  SYMBOL: $lI_FileBuffer_redo_trail
+    List of file offsets for redo states within the journal. Each time a record
+    is undone, it is pushed into this list.
+ */
+defun($h_FileBuffer_undo) {
+  if (!$I_FileBuffer_undo_offset) {
+    $s_rollback_reason = "No more undo information";
+    $v_rollback_type = $u_FileBuffer;
+    tx_rollback();
+  }
+
+  do {
+    lpush_I($lI_FileBuffer_redo_trail, $I_FileBuffer_undo_offset);
+    $z_FileBuffer_undo_deletion_char = L'+';
+    $M_read_undo_entry(0,0,
+                       $I_FileBuffer_read_undo_entry =
+                         $I_FileBuffer_undo_offset);
+    $I_FileBuffer_undo_offset = $I_FileBuffer_prev_undo;
+    $m_raw_edit();
+  } while ($y_FileBuffer_continue_undo && $I_FileBuffer_undo_offset);
+}
+
+/*
   SYMBOL: $f_FileBuffer_raw_edit
     Applies edit changes (as described in $f_FileBuffer_edit) to the buffer,
     without writing to the undo log.
  */
 defun($h_FileBuffer_raw_edit) {
+  $m_access();
+
   unsigned ndeletions = $I_FileBuffer_ndeletions;
   unsigned ninsertions = llen_w($lw_FileBuffer_replacements);
   unsigned nreplacements =
