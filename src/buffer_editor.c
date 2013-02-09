@@ -914,6 +914,39 @@ defun($h_BufferEditor_reset_mark) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_move_point $I_BufferEditor_move_point_to
+    Immediately moves point to the line specified by
+    $I_BufferEditor_move_point_to, without resetting mark.
+ */
+defun($h_BufferEditor_move_point) {
+  $$($o_BufferEditor_point) {
+    $I_FileBufferCursor_line_number = $I_BufferEditor_move_point_to;
+  }
+
+  $m_update_echo_area();
+}
+
+/*
+  SYMBOL: $f_BufferEditor_move_mark $I_BufferEditor_move_mark_to
+    Immediately moves mark to the line specified by
+    $I_BufferEditor_move_mark_to.
+ */
+defun($h_BufferEditor_move_mark) {
+  if (!$lo_BufferEditor_marks) {
+    lpush_o($lo_BufferEditor_marks,
+            $c_FileBufferCursor(
+              $o_FileBufferCursor_buffer = $o_BufferEditor_buffer,
+              $I_FileBufferCursor_line_number = $I_BufferEditor_move_mark_to));
+  } else {
+    $$($lo_BufferEditor_marks->car) {
+      $I_FileBufferCursor_line_number = $I_BufferEditor_move_mark_to;
+    }
+  }
+
+  $m_update_echo_area();
+}
+
+/*
   SYMBOL: $f_BufferEditor_sign
     Enters relative line number mode, setting $i_LastCommand_relative_sign to
     $i_BufferEditor_sign. See $f_BufferEditor_digit_input().
@@ -1003,6 +1036,110 @@ defun($h_BufferEditor_print_region) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_search $w_BufferEditor_search $i_BufferEditor_search
+    Searches the buffer for $w_BufferEditor_search, beginning one line before
+    or after point. If the beginning or end of the buffer is encountered, the
+    search wraps. The search will stop if the line where the search began is
+    encountered; this is considered a failure, even if the initial line
+    matches. On success, mark is set to the line where point used to be, and
+    point is set to the line which matched. On failure, point and mark are
+    unchanged. Search direction is determined by $i_BufferEditor_search, which
+    must be +1 or -1.
+    --
+    If $w_BufferEditor_search is the empty string, it is replaced by
+    $w_previous_search_query.
+
+  SYMBOL: $w_previous_search_query
+    The most recent query to $f_BufferEditor_search().
+ */
+defun($h_BufferEditor_search) {
+  if (!*$w_BufferEditor_search && $w_previous_search_query)
+    $w_BufferEditor_search = $w_previous_search_query;
+  else
+    $w_previous_search_query = $w_BufferEditor_search;
+
+  object pattern = $c_Pattern($w_Pattern_pattern = $w_BufferEditor_search);
+  int start_line = $($o_BufferEditor_point, $I_FileBufferCursor_line_number);
+
+  dynar_w contents;
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    contents = $aw_FileBuffer_contents;
+  }
+
+  // Just do nothing if this buffer is empty
+  if (!contents->len)
+    return;
+
+  // If starting on the virtual line at the end of the file, pretend that we
+  // started one before that.
+  if ($i_BufferEditor_search == contents->len)
+    $i_BufferEditor_search = contents->len-1;
+
+  int line = start_line + $i_BufferEditor_search;
+  bool wrapped = false;
+  while (true) {
+    // Wrap if necessary
+    wrapped |= (line < 0 || line >= contents->len);
+    if (line < 0)
+      line += contents->len;
+    else
+      line %= contents->len;
+
+    if (line == start_line) {
+      // Search failed
+      $F_message_error(
+        0, 0,
+        $w_message_text = wstrap(L"Search failed: ", $w_BufferEditor_search));
+      return;
+    }
+
+    if ($M_matches($y_Pattern_matches, pattern,
+                   $w_Pattern_input = contents->v[line])) {
+      // Success; move mark and point, and display this line
+      $I_BufferEditor_move_point_to = line;
+      $I_BufferEditor_move_mark_to = start_line;
+      $m_move_point();
+      $m_move_mark();
+
+      //Notiy the user if the search wrapped
+      if (wrapped)
+        $F_message_notice(0,0,
+                          $w_message_text = L"Search wrapped");
+
+      $I_BufferEditor_index = line;
+      $m_echo_line();
+      return;
+    }
+
+    line += $i_BufferEditor_search;
+  }
+  //Will not get here
+}
+
+/*
+  SYMBOL: $f_BufferEditor_search_forward $f_BufferEditor_search_forward_i
+    Sets $i_BufferEditor_search to +1 and calls $f_BufferEditor_search().
+ */
+interactive($h_BufferEditor_search_forward_i,
+            $h_BufferEditor_search_forward,
+            i_(w, $w_BufferEditor_search, L"grep")) {
+  $i_BufferEditor_search = +1;
+  $m_search();
+}
+
+/*
+  SYMBOL: $f_BufferEditor_search_backward $f_BufferEditor_search_backward_i
+    Sets $i_BufferEditor_search to -1 and calls $f_BufferEditor_search().
+ */
+interactive($h_BufferEditor_search_backward_i,
+            $h_BufferEditor_search_backward,
+            i_(w, $w_BufferEditor_search, L"rgrep")) {
+  $i_BufferEditor_search = -1;
+  $m_search();
+}
+
+/*
   SYMBOL: $lp_BufferEditor_keymap
     Keybindings specific to BufferEditors.
 
@@ -1021,6 +1158,10 @@ ATSINIT {
             $m_insert_and_edit);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'p', NULL,
             $m_print_region);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'g', NULL,
+            $m_search_forward_i);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'G', NULL,
+            $m_search_backward_i);
 
   for (wchar_t ch = L'0'; ch <= L'9'; ++ch) {
     bind_char($lp_BufferEditor_keymap, $u_ground, ch, NULL,

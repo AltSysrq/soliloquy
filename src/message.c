@@ -123,8 +123,10 @@ defun($h_Interruption_abort) {
 
 ATSINIT {
   $I_message_error_face = mkface("+fR");
+  $I_message_notice_face = mkface("+fg");
 }
 
+static void message_common(face, wchar_t, unsigned);
 /*
   SYMBOL: $f_message_error
     Produces an error message. With a transcript, the message is simply
@@ -143,15 +145,35 @@ ATSINIT {
     The number of keystrokes to dismiss an error Interruption.
  */
 defun($h_message_error) {
+  message_common($I_message_error_face, L'!', $I_error_key_count);
+}
+
+/*
+  SYMBOL: $f_message_notice
+    Produces a notice. This is a purely informational message that is added to
+    the transcript if possible, otherwise shown to the user for a short time.
+
+  SYMBOL: $I_message_notice_face
+    The face to apply to notices, when not already foramtted.
+
+  SYMBOL: $I_notice_key_count
+    The number of keystrokes to dismiss a notice Interruption.
+ */
+defun($h_message_notice) {
+  message_common($I_message_notice_face, L':', $I_notice_key_count);
+}
+
+static void message_common(face message_face, wchar_t mchar,
+                           unsigned key_count) {
   if (!$q_message_text) {
-    $q_message_text = apply_face_str($I_message_error_face,
+    $q_message_text = apply_face_str(message_face,
                                      wstrtoqstr($w_message_text));
   }
 
   qchar meta[$i_line_meta_width+1];
   for (int i = 0; i < $i_line_meta_width; ++i)
     meta[i] = apply_face($I_message_error_face,
-                         i < $i_line_meta_width-2? L'!' : ' ');
+                         i < $i_line_meta_width-2? mchar : ' ');
   meta[$i_line_meta_width] = 0;
 
   if ($o_Transcript) {
@@ -164,7 +186,7 @@ defun($h_message_error) {
   } else if ($o_Workspace) {
     $c_Interruption($q_Interruption_text =
                       qstrap(meta, $q_message_text),
-                    $I_Interruption_key_count = $I_error_key_count);
+                    $I_Interruption_key_count = key_count);
   }
 
   $q_message_text = NULL;
@@ -172,3 +194,4 @@ defun($h_message_error) {
 }
 
 STATIC_INIT_TO($I_error_key_count, 5)
+STATIC_INIT_TO($I_notice_key_count, 1)
