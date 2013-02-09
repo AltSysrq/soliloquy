@@ -240,6 +240,11 @@ of type `void*` which is NULL on the first call, and the return value of the
 previous call to _fun_ on each subsequent call. The return value of the last
 call to _fun_ is returned, or NULL for the empty list.
 
+any_C(list,fun) and every_C(list,fun) evaluate _fun_ for each item in _list_,
+until _fun_ returns true (for all_C) or false (for every_C) or the end of the
+list is reached. That is, they return whether _fun_ is true for *any* item
+(any_C) or for *every* item (every_C) in the list.
+
 each_C(list,fun) calls _fun_(item) for each item in _list_.
 
 lrm_C(list,item) returns a list equal to _list_, but with the *first* cons cell
