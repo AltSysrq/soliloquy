@@ -46,6 +46,27 @@ static inline void* fold_HUNG
   return ret;
 }
 
+static inline bool any_HUNG
+(list_HUNG haystack, bool (*f)(CTYPE)) {
+  while (haystack) {
+    if (f(haystack->car))
+      return true;
+    haystack = haystack->cdr;
+  }
+  return false;
+}
+
+static inline bool every_HUNG
+(list_HUNG haystack, bool (*f)(CTYPE)) {
+  while (haystack) {
+    if (!f(haystack->car))
+      return false;
+    haystack = haystack->cdr;
+  }
+
+  return true;
+}
+
 static inline void each_HUNG
 (list_HUNG this, void (*f)(CTYPE)) {
   while (this) {

@@ -415,7 +415,132 @@ deftest(select_asciibetically_first) {
         non-whitespace character in the string; similarly, a term anchored to
         the end must terminate on the last non-whitespace character.
     - The null pattern matches everything.
+
+  SYMBOL: $w_Pattern_begin_anchor $w_Pattern_end_anchor
+    Literal strings to match at the beginning and end of the input string for a
+    pattern, respectively. NULL indicates no requirement.
+
+  SYMBOL: $lw_Pattern_terms
+    Literal strings to match anywhere within the input strings for a pattern.
  */
 defun($h_Pattern) {
-  //TODO
+  wstring control_r = wcschr($w_Pattern_pattern, L'R' - L'@');
+  if (control_r) {
+    // Regex --- TODO
+    $s_rollback_reason = "Regexen not yet supported";
+    $v_rollback_type = $u_Pattern;
+    tx_rollback();
+  }
+
+  mwstring token, state;
+  for (token = wcstok(wstrdup($w_Pattern_pattern), L" \t\v\r\n", &state);
+       token;
+       token = wcstok(NULL, L" \t\v\r\n", &state)) {
+    if (!*token) continue; //Ignore empty term
+
+    mwstring control;
+    if ((control = wcschr(token, L'A' - L'@'))) {
+      wmemmove(control, control+1, wcslen(control) /* +1-1*/ );
+      // Do nothing if this makes the string empty
+      if (!*token) continue;
+      //Anchored to beginning
+      if ($w_Pattern_begin_anchor) {
+        $s_rollback_reason = "More than one beginning anchor in pattern.";
+        $v_rollback_type = $u_Pattern;
+        tx_rollback();
+      } else {
+        $w_Pattern_begin_anchor = wstrdup(token);
+      }
+    } else if ((control = wcschr(token, L'Z' - L'@'))) {
+      wmemmove(control, control+1, wcslen(control));
+      // Do nothing if this makes the string empty
+      if (!*token) continue;
+      //Anchored to end
+      if ($w_Pattern_end_anchor) {
+        $s_rollback_reason = "More than one ending anchor in pattern.";
+        $v_rollback_type = $u_Pattern;
+        tx_rollback();
+      } else {
+        $w_Pattern_end_anchor = wstrdup(token);
+      }
+    } else {
+      // No anchoring
+      lpush_w($lw_Pattern_terms, wstrdup(token));
+    }
+  }
+}
+
+/*
+  SYMBOL: $f_Pattern_matches $y_Pattern_matches
+    Tests whether the string in $w_Pattern_input matches this Pattern, setting
+    $y_Pattern_matches to indicate the result. Note that $w_Pattern_input will
+    be modified by this call (only the pointer; the string itself is immutable)
+    to point to the first non-whitespace character.
+
+  SYMBOL: $w_Pattern_input
+    Input string to test against this pattern. The pointer itself may be
+    modified.
+ */
+defun($h_Pattern_matches) {
+  // Advance input string beyond whitespace
+  while (*$w_Pattern_input && iswspace(*$w_Pattern_input))
+    ++$w_Pattern_input;
+
+  if ($p_Pattern_regex) {
+    // Not yet supported
+    $y_Pattern_matches = false;
+  } else {
+    if (!*$w_Pattern_input) {
+      // Null input; can only match null pattern
+      $y_Pattern_matches = 
+        !$w_Pattern_begin_anchor &&
+        !$w_Pattern_end_anchor &&
+        !$lw_Pattern_terms;
+      return;
+    }
+
+    // Check beginning anchor if required
+    if ($w_Pattern_begin_anchor) {
+      if (wcsncmp($w_Pattern_input, $w_Pattern_begin_anchor,
+                  wcslen($w_Pattern_input))) {
+        $y_Pattern_matches = false;
+        return;
+      }
+    }
+
+    // Check end anchor if required
+    if ($w_Pattern_end_anchor) {
+      if (wcslen($w_Pattern_end_anchor) > wcslen($w_Pattern_input)) {
+        // Anchor is longer than string, so it can't match
+        $y_Pattern_matches = false;
+        return;
+      }
+
+      // Starting from the end, locate the first non-whitespace character, then
+      // move back by the number of characters in the anchor
+      wstring input = $w_Pattern_input + wcslen($w_Pattern_input);
+      do {
+        --input;
+      } while (iswspace(*input) && input != $w_Pattern_input);
+
+      // Ensure there is enough space for the anchor to possibly match
+      if (((unsigned)(input - $w_Pattern_input)) <
+          wcslen($w_Pattern_end_anchor)) {
+        $y_Pattern_matches = false;
+        return;
+      }
+
+      input -= wcslen($w_Pattern_end_anchor);
+      // See whether the anchor actually matches
+      if (wcsncmp(input,$w_Pattern_end_anchor,wcslen($w_Pattern_end_anchor))) {
+        $y_Pattern_matches = false;
+        return;
+      }
+    }
+
+    // Check for other terms
+    $y_Pattern_matches =
+      every_w($lw_Pattern_terms,
+              lambdab((wstring term), wcsstr($w_Pattern_input, term)));
+  }
 }

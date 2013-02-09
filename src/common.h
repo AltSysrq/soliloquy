@@ -140,8 +140,21 @@ static inline wchar_t* wmemcpy(wchar_t* dst, const wchar_t* src,
 }
 #endif
 
+#ifndef HAVE_WMEMMOVE
+static inline wchar_t* wmemmove(wchar_t* dst, const wchar_t* src,
+                                size_t n) {
+  memmove(dst, src, sizeof(wchar_t)*n);
+  return dst;
+}
+#endif
+
 static inline qchar* qmemcpy(qchar* dst, const qchar* src, size_t n) {
   memcpy(dst, src, sizeof(qchar)*n);
+  return dst;
+}
+
+static inline qchar* qmemmove(qchar* dst, const qchar* src, size_t n) {
+  memmove(dst, src, sizeof(qchar)*n);
   return dst;
 }
 
@@ -453,6 +466,12 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
       return expr;                                      \
     }                                                   \
     _GLUE(_lambda_,ANONYMOUS); })
+
+/**
+ * Like lambda, but the expression is prefixed with "(bool)!!" so that the
+ * function returns a normalised boolean value.
+ */
+#define lambdab(args, expr) lambda(args, (bool)!!(expr))
 
 /**
  * Like lambda, but the inner function returns void.
