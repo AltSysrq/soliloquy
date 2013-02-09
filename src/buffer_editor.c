@@ -75,6 +75,7 @@ defun($h_BufferEditor) {
       $m_attach_cursor();
     }
   }
+  implant($h_FileBufferCursor);
   add_hook_obj(&$h_FileBufferCursor, HOOK_AFTER,
                $u_BufferEditor, $u_shunt_notify,
                $m_attach_cursor, $o_BufferEditor,
