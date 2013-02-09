@@ -555,6 +555,31 @@ defun($h_FileBuffer_edit) {
 }
 
 /*
+  SYMBOL: $f_FileBuffer_read_undo_entry $I_FileBuffer_read_undo_entry
+    Reads the undo entry in the undo journal at the given offset, setting
+    $I_FileBuffer_undo_time, $I_FileBuffer_prev_undo, and
+    $y_FileBuffer_continue_undo according to the data stored in the
+    headers. $I_FileBuffer_edit_line, $I_FileBuffer_ndeletions, and
+    $lw_FileBuffer_replacements are set up to be suitable for a call to
+    $f_FileBuffer_raw_edit(), given $z_FileBuffer_undo_deletion_char.
+
+  SYMBOL: $I_FileBuffer_prev_undo
+    The "previous undo offset" of the record read by
+    $f_FileBuffer_read_undo_entry().
+
+  SYMBOL: $I_FileBuffer_undo_time
+    The timestamp of the undo record read by $f_FileBuffer_read_undo_entry().
+
+  SYMBOL: $z_FileBuffer_undo_deletion_char
+    Either '+' or '-'. When reading an undo record, lines beginning with this
+    character are treated as deletions; the contrasponding character is treated
+    as an insertion.
+ */
+defun($h_FileBuffer_read_undo_entry) {
+  //TODO
+}
+
+/*
   SYMBOL: $f_FileBuffer_raw_edit
     Applies edit changes (as described in $f_FileBuffer_edit) to the buffer,
     without writing to the undo log.
