@@ -337,9 +337,8 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
     Whether the BufferLineEditor will replace a line, or insert a new one.
  */
 defun($h_BufferLineEditor_accept) {
-  mwstring line = gcalloc(sizeof(wchar_t)*($az_LineEditor_buffer->len + 1));
-  memcpy(line, $az_LineEditor_buffer->v,
-         sizeof(wchar_t)*$az_LineEditor_buffer->len);
+  mwstring line = wcalloc($az_LineEditor_buffer->len + 1);
+  wmemcpy(line, $az_LineEditor_buffer->v, $az_LineEditor_buffer->len);
   unsigned line_number = $($o_BufferLineEditor_cursor, $I_FileBufferCursor_line_number);
 
   // We no longer care about window notifications (and we're about to trigger
@@ -755,9 +754,8 @@ defun($h_BufferEditor_format) {
 defun($h_BufferEditor_line_wrap_reverse) {
   while (qstrlen($q_BufferEditor_line_wrap_reverse) >
          (unsigned)$i_column_width) {
-    mqstring new = gcalloc(sizeof(qchar) * (1+$i_column_width));
-    memcpy(new, $q_BufferEditor_line_wrap_reverse,
-           sizeof(qchar)*$i_column_width);
+    mqstring new = qcalloc(1+$i_column_width);
+    qmemcpy(new, $q_BufferEditor_line_wrap_reverse, $i_column_width);
     lpush_q($lq_BufferEditor_wrapped_rev, new);
     $q_BufferEditor_line_wrap_reverse += $i_column_width;
   }

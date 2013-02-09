@@ -211,8 +211,7 @@ defun($h_LineEditor_rotate_echo_mode) {
     point position therein (see $m_get_echo_area_contents).
  */
 defun($h_LineEditor_get_echo_area_contents) {
-  mqstring result = gcalloc((1+$az_LineEditor_buffer->len) *
-                            sizeof(qchar));
+  mqstring result = qcalloc(1+$az_LineEditor_buffer->len);
   for (unsigned i = 0; i < $az_LineEditor_buffer->len; ++i)
     result[i] = (qchar)$az_LineEditor_buffer->v[i];
   result[$az_LineEditor_buffer->len] = 0;
@@ -230,10 +229,8 @@ defun($h_LineEditor_get_echo_area_contents) {
     Sets $w_LineEditor_text to the current contents of the LineEditor.
  */
 defun($h_LineEditor_get_text) {
-  mwstring dst =
-    gcalloc(sizeof(wchar_t)*(1 + $az_LineEditor_buffer->len));
-  memcpy(dst, $az_LineEditor_buffer->v,
-         $az_LineEditor_buffer->len * sizeof(wchar_t));
+  mwstring dst = wcalloc(1 + $az_LineEditor_buffer->len);
+  wmemcpy(dst, $az_LineEditor_buffer->v, $az_LineEditor_buffer->len);
   $w_LineEditor_text = dst;
 }
 
@@ -359,10 +356,8 @@ defun($h_LineEditor_kill) {
 
   int begin = $i_LineEditor_point;
   int end = $i_LineEditor_kill;
-  mwstring text = gcalloc(sizeof(wchar_t)*(end-begin+1));
-  memcpy(text,
-         $az_LineEditor_buffer->v + begin,
-         (end-begin)*sizeof(wchar_t));
+  mwstring text = wcalloc(end-begin+1);
+  wmemcpy(text, $az_LineEditor_buffer->v + begin, (end-begin));
 
   $F_c_kill(0,0, $w_kill = text);
 

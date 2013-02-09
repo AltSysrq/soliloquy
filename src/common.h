@@ -117,6 +117,35 @@ static inline void* gcalloc(size_t size) {
 }
 
 /**
+ * Allocates the given number of wchar_ts with gcalloc().
+ */
+static inline wchar_t* wcalloc(size_t cnt) __attribute__((malloc));
+static inline wchar_t* wcalloc(size_t cnt) {
+  return gcalloc(cnt*sizeof(wchar_t));
+}
+
+/**
+ * Allocates the given number of qchars with gcalloc().
+ */
+static inline qchar* qcalloc(size_t cnt) __attribute__((malloc));
+static inline qchar* qcalloc(size_t cnt) {
+  return gcalloc(cnt*sizeof(qchar));
+}
+
+#ifndef HAVE_WMEMCPY
+static inline wchar_t* wmemcpy(wchar_t* dst, const wchar_t* src,
+                               size_t n) {
+  memcpy(dst, src, sizeof(wchar_t)*n);
+  return dst;
+}
+#endif
+
+static inline qchar* qmemcpy(qchar* dst, const qchar* src, size_t n) {
+  memcpy(dst, src, sizeof(qchar)*n);
+  return dst;
+}
+
+/**
  * Reällocates the given pointer to be of the requested new size, returning the
  * result. The behaviour is the same as realloc(), except that the memory will
  * be reclaimed automatically. The given pointer must have been retrieved from

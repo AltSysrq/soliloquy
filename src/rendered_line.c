@@ -47,7 +47,7 @@
  */
 defun($h_RenderedLine) {
   if (!$q_RenderedLine_meta) {
-    $q_RenderedLine_meta = gcalloc(sizeof(qchar)*(1 + $i_line_meta_width));
+    $q_RenderedLine_meta = qcalloc(1 + $i_line_meta_width);
     $m_gen_meta();
   }
 }
@@ -58,7 +58,7 @@ defun($h_RenderedLine) {
     $q_RenderedLine_cvt.
  */
 defun($h_RenderedLine_cvt) {
-  mqstring meta = gcalloc(sizeof(qchar)*(1 + $i_line_meta_width));
+  mqstring meta = qcalloc(1 + $i_line_meta_width);
   size_t max = qstrlen($q_RenderedLine_meta);
 
   for (unsigned i = 0; i < $i_line_meta_width; ++i)
