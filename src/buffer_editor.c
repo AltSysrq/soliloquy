@@ -989,6 +989,10 @@ defun($h_BufferEditor_print_region) {
 
   $lo_BufferEditor_format = NULL;
   $$($o_BufferEditor_buffer) {
+    $m_access();
+    if (end > $aw_FileBuffer_contents->len)
+      end = $aw_FileBuffer_contents->len;
+
     for (signed i = end-1; i >= start; --i) {
       $M_format(0,0, $I_BufferEditor_index = i);
     }
