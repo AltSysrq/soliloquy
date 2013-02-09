@@ -308,6 +308,12 @@ defun($h_FileBuffer_reload) {
     contents of the buffer to "NAME#", where "NAME" is the base filename. The
     transaction is rolled back if this fails. There is no effect if this buffer
     is memory backed or if it has not been modified.
+
+  SYMBOL: $y_FileBuffer_suppress_fsync_on_autosave
+    If true, fsync() will not be called to ensure that a buffer's contents have
+    been flushed to disk on autosave. This will make autosave less useful
+    against power or system failure, since there is no guarantee that the
+    autosave file will actually be meaningful.
  */
 defun($h_FileBuffer_write_autosave) {
   if ($y_FileBuffer_modified && !$y_FileBuffer_memory_backed) {
@@ -327,6 +333,9 @@ defun($h_FileBuffer_write_autosave) {
       }
     }
 
+    fflush(output);
+    if (!$y_FileBuffer_suppress_fsync_on_autosave)
+      fsync(fileno(output));
     fclose(output);
   }
 }
