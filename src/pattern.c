@@ -390,3 +390,32 @@ deftest(select_asciibetically_first) {
   assert(!wcscmp(L"bar", select_asciibetically_first(L"foo", L"bar")));
   assert(!wcscmp(L"bar", select_asciibetically_first(L"bar", L"foo")));
 }
+
+/*
+  SYMBOL: $c_Pattern
+    Encapsulates data used for Soliloquy's pattern matching. Unlike some other
+    editors, Soliloquy defaults to literal string matching, and can easily be
+    switched to regeular expressions by an embedded control character. When the
+    object is constructed, the constructor attempts to compile the pattern in
+    $w_Pattern_pattern. If that fails, the current transaction is rolled back.
+
+  SYMBOL: $w_Pattern_pattern
+    The source for the pattern to match against. The pattern rules are as follows:
+    - If the pattern contains the character ^R, the first ^R is deleted and the
+      entire resulting string treated as a verbatim regular expression.
+    - Otherwise, the pattern is split into terms on whitespace. Empty terms are
+      deleted. Terms work as follows
+      - If the term contains a ^A, it is anchored to the begining of the
+        string and the first ^A deleted; if it contains a ^Z, it is anchored to
+        the end of the string and the ^Z deleted; otherwise, it is unanchored.
+      - At most one term may be anchored to the beginning, and one to the end;
+        if this is violated, it is an error.
+      - For a string to match, all terms must be found within the string, and
+        *may* overlap. A term anchored to the beginning must begin on the first
+        non-whitespace character in the string; similarly, a term anchored to
+        the end must terminate on the last non-whitespace character.
+    - The null pattern matches everything.
+ */
+defun($h_Pattern) {
+  //TODO
+}
