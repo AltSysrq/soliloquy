@@ -168,7 +168,7 @@ defun($h_FileBuffer) {
     if (!$p_shared_undo_log)
       tx_rollback_errno($u_FileBuffer);
 
-    if (-1 == fputws(L"Soliloquy Undo Journal\n", $p_shared_undo_log)) {
+    if (-1 == fputs("Soliloquy Undo Journal\n", $p_shared_undo_log)) {
       int old_errno = errno;
       fclose($p_shared_undo_log);
       $p_shared_undo_log = NULL;
@@ -325,7 +325,7 @@ defun($h_FileBuffer_write_autosave) {
       tx_rollback_errno($u_FileBuffer);
 
     for (unsigned i = 0; i < $aw_FileBuffer_contents->len; ++i) {
-      if (-1 == fwprintf(output, L"%ls\n", $aw_FileBuffer_contents->v[i])) {
+      if (-1 == fprintf(output, "%ls\n", $aw_FileBuffer_contents->v[i])) {
         int err = errno;
         fclose(output);
         errno = err;
@@ -524,13 +524,13 @@ defun($h_FileBuffer_edit) {
 
   //Write the header for this undo record
   if (-1 ==
-      fwprintf($p_shared_undo_log, L"%lc%X,%X,%llX:%ls\n",
-               undo_type,
-               prev_undo,
-               $I_FileBuffer_edit_line,
-               now,
-               wcscmp($w_prev_undo_name, $w_FileBuffer_filename)?
-               $w_FileBuffer_filename : L""))
+      fprintf($p_shared_undo_log, "%lc%X,%X,%llX:%ls\n",
+              undo_type,
+              prev_undo,
+              $I_FileBuffer_edit_line,
+              now,
+              wcscmp($w_prev_undo_name, $w_FileBuffer_filename)?
+              $w_FileBuffer_filename : L""))
     tx_rollback_errno($u_FileBuffer);
 
   //Whether we like it or not, this is now unconditionally the new undo offset
@@ -540,13 +540,13 @@ defun($h_FileBuffer_edit) {
 
   //Write deletions
   for (unsigned i = 0; i < $I_FileBuffer_ndeletions; ++i)
-    if (-1 == fwprintf($p_shared_undo_log, L"-%ls\n",
+    if (-1 == fprintf($p_shared_undo_log, "-%ls\n",
                        $aw_FileBuffer_contents->v[i + $I_FileBuffer_edit_line]))
       tx_rollback_errno($u_FileBuffer);
 
   //Write insertions
   for (list_w curr = insertions; curr; curr = curr->cdr)
-    if (-1 == fwprintf($p_shared_undo_log, L"+%ls\n", curr->car))
+    if (-1 == fprintf($p_shared_undo_log, "+%ls\n", curr->car))
       tx_rollback_errno($u_FileBuffer);
 
   $y_FileBuffer_modified = true;
