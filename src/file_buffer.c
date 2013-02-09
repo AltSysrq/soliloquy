@@ -513,10 +513,6 @@ defun($h_FileBuffer_edit) {
     tx_rollback();
   }
 
-  unsigned ndeletions = $I_FileBuffer_ndeletions;
-  unsigned ninsertions = llen_w($lw_FileBuffer_replacements);
-  unsigned nreplacements =
-    ndeletions > ninsertions? ninsertions : ndeletions;
   list_w insertions = $lw_FileBuffer_replacements;
 
   unsigned long long now = time(0);
@@ -553,6 +549,23 @@ defun($h_FileBuffer_edit) {
     if (-1 == fwprintf($p_shared_undo_log, L"+%ls\n", curr->car))
       tx_rollback_errno($u_FileBuffer);
 
+  $y_FileBuffer_modified = true;
+
+  $m_raw_edit();
+}
+
+/*
+  SYMBOL: $f_FileBuffer_raw_edit
+    Applies edit changes (as described in $f_FileBuffer_edit) to the buffer,
+    without writing to the undo log.
+ */
+defun($h_FileBuffer_raw_edit) {
+  unsigned ndeletions = $I_FileBuffer_ndeletions;
+  unsigned ninsertions = llen_w($lw_FileBuffer_replacements);
+  unsigned nreplacements =
+    ndeletions > ninsertions? ninsertions : ndeletions;
+  list_w insertions = $lw_FileBuffer_replacements;
+
   //Make the changes
   for (unsigned i = 0;
        insertions && i < ndeletions;
@@ -561,8 +574,6 @@ defun($h_FileBuffer_edit) {
     $aw_FileBuffer_contents->v[line] = insertions->car;
     $ao_FileBuffer_meta->v[line] = object_new(NULL);
   }
-
-  $y_FileBuffer_modified = true;
 
   if (insertions) {
     unsigned line = $I_FileBuffer_edit_line + ndeletions;
