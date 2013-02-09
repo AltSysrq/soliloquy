@@ -172,7 +172,7 @@ static void message_common(face message_face, wchar_t mchar,
 
   qchar meta[$i_line_meta_width+1];
   for (int i = 0; i < $i_line_meta_width; ++i)
-    meta[i] = apply_face($I_message_error_face,
+    meta[i] = apply_face(message_face,
                          i < $i_line_meta_width-2? mchar : ' ');
   meta[$i_line_meta_width] = 0;
 
