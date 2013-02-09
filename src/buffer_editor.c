@@ -807,9 +807,9 @@ defun($h_BufferEditor_save) {
     True if the last command was $f_BufferEditor_digit_input.
  */
 defun($h_BufferEditor_digit_input) {
-  bool line_number_is_relative, is_setting_mark;
-  signed relative_sign, max;
-  unsigned relative_to, line_number;
+  bool line_number_is_relative = 0, is_setting_mark = 0;
+  signed relative_sign = 0, max = 0;
+  unsigned relative_to = 0, line_number = 0;
   $$($o_prev_command) {
     line_number_is_relative = $y_LastCommand_line_number_is_relative;
     is_setting_mark = $y_LastCommand_is_setting_mark;
