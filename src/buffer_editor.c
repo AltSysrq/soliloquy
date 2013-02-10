@@ -363,6 +363,13 @@ defun($h_BufferLineEditor_accept) {
 }
 
 /*
+  SYMBOL: $lp_BufferLineEditor_keymap
+    Miscelaneous keybindings for BufferLineEditors.
+ */
+class_keymap($c_BufferLineEditor, $lp_BufferLineEditor_keymap,
+             $llp_Activity_keymap)
+
+/*
   SYMBOL: $f_BufferEditor_insert_blank_line_above
     Inserts a blank line above the current line. Point will be shunted
     downward by one line as a result.

@@ -114,4 +114,9 @@ ATSINIT {
             $m_parent_activity_to_top);
   bind_char($lp_recursive_edit_keymap, $u_meta, L'X', $v_end_meta,
             $m_child_activity_to_top);
+
+  bind_char($lp_BufferLineEditor_keymap, $u_ground, L'\t', NULL,
+            $m_parent_activity_to_top);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'\t', NULL,
+            $m_child_activity_to_top);
 }
