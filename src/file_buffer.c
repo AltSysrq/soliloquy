@@ -676,6 +676,39 @@ defun($h_FileBuffer_undo) {
 }
 
 /*
+  SYMBOL: $f_FileBuffer_redo
+    Redoes the changes to this FileBuffer by one step. The transaction is
+    rolled back if anything fails, or if there is no redo information. This is
+    a notably more expensive operation than $f_FileBuffer_undo().
+ */
+defun($h_FileBuffer_redo) {
+  if (!$lI_FileBuffer_redo_trail) {
+    $s_rollback_reason = "No more redo information";
+    $v_rollback_type = $u_FileBuffer;
+    tx_rollback();
+  }
+
+  bool has_redone_anything = false;
+  while ($lI_FileBuffer_redo_trail) {
+    // We must read the next entry before we can decide how to handle it.
+    $I_FileBuffer_read_undo_entry = $lI_FileBuffer_redo_trail->car;
+    $z_FileBuffer_undo_deletion_char = L'-';
+    $m_read_undo_entry();
+
+    //If this is the first entry we've seen, we always replay it. Otherwise, we
+    //only do so if it is a continuation of the previous.
+    if (!has_redone_anything || $y_FileBuffer_continue_undo) {
+      $I_FileBuffer_undo_offset = lpop_I($lI_FileBuffer_redo_trail);
+      $m_raw_edit();
+    } else {
+      break;
+    }
+
+    has_redone_anything = true;
+  }
+}
+
+/*
   SYMBOL: $f_FileBuffer_raw_edit
     Applies edit changes (as described in $f_FileBuffer_edit) to the buffer,
     without writing to the undo log.
