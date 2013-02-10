@@ -30,22 +30,22 @@ Left hand:
 ----------------
 +----------+----------+----------+----------+----------+
 | Q        | W        | E        | R        | T        |
-| Exchg    | Set mark | View page| View page| Permute  |
-| mark/cur |          | up       | down     | chars    |
+|          |          | View page| View page| Permute  |
+|          |          | up       | down     | chars    |
 |          |          |          |          | Transpose|
-| Pop mark | Push mark| To TOF   | To EOF   | units    |
+|          |          | To TOF   | To EOF   | units    |
 +----------+----------+----------+----------+----------+-+
   | A        | S        | D        | F        | G        |
-  | Show open| Shw close| Show prev| Show next| Show sur-|
-  | block    | block    | line(s)  | line(s)  | ounding  |
-  |          |          |          |          | Ask how  |
-  | x 5      | x 5      | x 5      | x 5      | many     |
+  |          |          |          |          |          |
+  |          |          |          |          |          |
+  |          |          |          |          |          |
+  |          |          |          |          |          |
   +----------+----------+----------+----------+----------+-+
     | Z        | X        | C        | V        | B        |
-    | Activity | Parent   | Replace  | Search   | Yank and |
-    | to bottom| activity |          | forward  | advance  |
+    | Activity | Parent   |          |          | Yank and |
+    | to bottom| activity |          |          | advance  |
     |          |          |          |          |          |
-    | From bot | Child    | In region| Backward | No adv   |
+    | From bot | Child    |          |          | No adv   |
     +----------+----------+----------+----------+----------+
 ----------------
 

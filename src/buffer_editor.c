@@ -1239,10 +1239,6 @@ ATSINIT {
             $m_home);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'n', $v_end_meta,
             $m_end);
-  bind_char($lp_BufferEditor_keymap, $u_meta, L'f', $v_end_meta,
-            $m_show_forward_line);
-  bind_char($lp_BufferEditor_keymap, $u_meta, L'd', $v_end_meta,
-            $m_show_backward_line);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'y', $v_end_meta,
             $m_undo);
   bind_char($lp_BufferEditor_keymap, $u_meta, L'Y', $v_end_meta,
