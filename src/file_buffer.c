@@ -60,6 +60,31 @@
  */
 
 /*
+  SYMBOL: $c_LineMeta
+    Object class for line metadata, usually within a FileBuffer. Such objects
+    will have the containing buffer as their parent object. Note that very
+    little can be known with a LineMeta object alone; the class should
+    generally be used only to store data about the lines.
+    --
+    This is a subdomain of $c_FileBuffer, so alterations to the class within
+    the context of a FileBuffer are specific to that buffer.
+
+  SYMBOL: $f_LineMeta_clobber
+    Called when a line above an existing LineMeta has been inserted, removed,
+    or altered. Client code which adds data to LineMeta which is dependent on
+    other lines should hook to this (*not* override) to mark data as
+    potentially invalid.
+ */
+member_of_domain($d_LineMeta, $d_FileBuffer)
+member_of_domain($h_LineMeta, $d_FileBuffer)
+
+static object new_meta(void) {
+  object meta = object_new($o_FileBuffer);
+  $F_LineMeta(0, meta);
+  return meta;
+}
+
+/*
   SYMBOL: $c_FileBufferCursor
     Maintains a reference to a location within a FileBuffer, automatically
     being updated as the buffer is changed, so that the same logical line is
@@ -310,7 +335,7 @@ defun($h_FileBuffer_reload) {
     $ao_FileBuffer_meta = dynar_new_o();
     dynar_expand_by_o($ao_FileBuffer_meta, $aw_FileBuffer_contents->len);
     for (unsigned i = 0; i < $aw_FileBuffer_contents->len; ++i)
-      $ao_FileBuffer_meta->v[i] = object_new(NULL);
+      $ao_FileBuffer_meta->v[i] = new_meta();
   }
 }
 
@@ -750,7 +775,7 @@ defun($h_FileBuffer_raw_edit) {
        ++i, insertions = insertions->cdr) {
     unsigned line = i + $I_FileBuffer_edit_line;
     $aw_FileBuffer_contents->v[line] = insertions->car;
-    $ao_FileBuffer_meta->v[line] = object_new(NULL);
+    $ao_FileBuffer_meta->v[line] = new_meta();
   }
 
   if (insertions) {
@@ -760,10 +785,10 @@ defun($h_FileBuffer_raw_edit) {
     object meta[cnt];
     unsigned ix = 0;
     each_w(insertions, lambdav((wstring s), tail[ix++] = s));
-    for (unsigned i = 0; i < cnt; ++i)
-      meta[i] = object_new(NULL);
-
     dynar_ins_w($aw_FileBuffer_contents, line, tail, cnt);
+
+    for (unsigned i = 0; i < cnt; ++i)
+      meta[i] = new_meta();
     dynar_ins_o($ao_FileBuffer_meta, line, meta, cnt);
   } else if (ndeletions > ninsertions) {
     unsigned line = $I_FileBuffer_edit_line + ninsertions;
@@ -824,4 +849,9 @@ defun($h_FileBuffer_raw_edit) {
       }
     }
   }
+
+  // Clobber meta below the changed line
+  for (unsigned i = $I_FileBuffer_edit_line + ninsertions;
+       i < $aw_FileBuffer_contents->len; ++i)
+    $F_LineMeta_clobber(0, $ao_FileBuffer_meta->v[i]);
 }
