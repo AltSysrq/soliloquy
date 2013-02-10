@@ -207,7 +207,8 @@ defun($h_BufferEditor_get_echo_area_meta) {
                                      wstrtoqstr(markline)),
                       rparen,
                       $lo_echo_area_activities? qspace : qempty,
-                      $q_Workspace_echo_area_meta };
+                      $lo_echo_area_activities?
+                        $q_Workspace_echo_area_meta : qempty };
   $q_Workspace_echo_area_meta = qstrapv(parts, lenof(parts));
 }
 
@@ -318,12 +319,14 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
                                $o_BufferLineEditor_parent),
                    name);
     qstring parts[] = { lparen, name, wstrtoqstr(linenum), rparen,
-                        qspace, $q_Workspace_echo_area_meta };
+                        (*$q_Workspace_echo_area_meta? qspace : qempty),
+                        $q_Workspace_echo_area_meta };
     $q_Workspace_echo_area_meta = qstrapv(parts, lenof(parts));
   } else {
     // On top of parent, use concise syntax
     qstring parts[] = { lparen, inner,
-                        wstrtoqstr(linenum), rparen, qspace,
+                        wstrtoqstr(linenum), rparen,
+                        (*$q_Workspace_echo_area_meta? qspace : qempty),
                         $q_Workspace_echo_area_meta };
     $q_Workspace_echo_area_meta = qstrapv(parts, lenof(parts));
   }

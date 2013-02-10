@@ -116,6 +116,25 @@ defun($h_TopLevel_activate) {
 }
 
 /*
+  SYMBOL: $f_TopLevel_get_echo_area_meta
+    Returns echo area metadata for the Top-Level. If there are no Activities
+    underneath this TopLevel, this is just the empty string. Otherwise, the
+    meta for those activities is enclosed in braces.
+ */
+defun($h_TopLevel_get_echo_area_meta) {
+  static const qchar lbrace[2] = { L'{', 0 }, rbrace[2] = { L'}', 0 };
+
+  if (!$lo_echo_area_activities) return;
+
+  object next = $lo_echo_area_activities->car;
+  let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
+  $M_get_echo_area_meta(0, next);
+
+  $q_Workspace_echo_area_meta =
+    qstrap3(lbrace, $q_Workspace_echo_area_meta, rbrace);
+}
+
+/*
   SYMBOL: $f_TopLevel_visit_file $f_TopLevel_visit_file_i
     Opens a file whose name is obtained from the user (stored in
     $w_TopLevel_filename). If a buffer for that file already exists, it is
