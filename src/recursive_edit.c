@@ -83,6 +83,23 @@ defun($h_Workspace_parent_activity_to_top) {
 }
 
 /*
+  SYMBOL: $f_Workspace_this_parent_activity_to_top
+    Moves the direct parent of $o_Activity to the top of this Workspace's
+    Activity stack.
+ */
+defun($h_Workspace_this_parent_activity_to_top) {
+  if (!$lo_Workspace_activities) return;
+
+  object parent = $o_Activity_parent;
+  if (!parent) return;
+
+  $lo_Workspace_activities = lrm_o($lo_Workspace_activities, parent);
+  $M_push_activity(0, parent);
+
+  $m_update_echo_area();
+}
+
+/*
   SYMBOL: $f_Workspace_child_activity_to_top
     Moves the first direct child of the current Activity to the top of this
     Workspace's Activity stack.
@@ -96,6 +113,24 @@ defun($h_Workspace_child_activity_to_top) {
 
   $lo_Workspace_activities = lrm_o($lo_Workspace_activities, children->car);
   $M_push_activity(0, children->car);
+
+  $m_update_echo_area();
+}
+
+/*
+  SYMBOL: $f_Workspace_this_child_activity_to_top_recursive
+    Moves the first direct child of $o_Activity to the top of this Workspace's
+    Activity stack, repeating until there is no children.
+ */
+defun($h_Workspace_this_child_activity_to_top_recursive) {
+  if (!$lo_Activity_children) return;
+
+  $lo_Workspace_activities = lrm_o($lo_Workspace_activities,
+                                   $lo_Activity_children->car);
+  $$($lo_Activity_children->car) {
+    $m_push_activity();
+    $m_this_child_activity_to_top_recursive();
+  }
 
   $m_update_echo_area();
 }
@@ -116,7 +151,7 @@ ATSINIT {
             $m_child_activity_to_top);
 
   bind_char($lp_BufferLineEditor_keymap, $u_ground, L'\t', NULL,
-            $m_parent_activity_to_top);
+            $m_this_parent_activity_to_top);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'\t', NULL,
-            $m_child_activity_to_top);
+            $m_this_child_activity_to_top_recursive);
 }
