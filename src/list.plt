@@ -97,6 +97,19 @@ static inline list_HUNG lrm_HUNG(list_HUNG this, CTYPE needle) {
   return cons_HUNG(this->car, lrm_HUNG(this->cdr, needle));
 }
 
+static inline list_HUNG lrmrev_HUNG(list_HUNG this, CTYPE needle) {
+  list_HUNG that = NULL;
+  while (this) {
+    if (this->car != needle) {
+      that = cons_HUNG(this->car, that);
+    }
+
+    this = this->cdr;
+  }
+
+  return that;
+}
+
 static inline unsigned llen_HUNG(list_HUNG this) {
   unsigned len = 0;
   while (this) {
