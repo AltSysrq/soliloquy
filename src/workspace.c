@@ -142,5 +142,6 @@ static list_o push_activity(list_o list) {
     clear in $lo_Workspace_activities.
  */
 defun($h_Workspace_push_activity) {
-  $lo_Workspace_activities = push_activity($lo_Workspace_activities);
+  if (!find_o($lo_Workspace_activities, $o_Activity))
+    $lo_Workspace_activities = push_activity($lo_Workspace_activities);
 }
