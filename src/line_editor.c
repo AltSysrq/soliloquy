@@ -84,7 +84,8 @@ defun($h_LineEditor) {
       $az_LineEditor_buffer->v[i] = $w_LineEditor_text[i];
   }
 
-  if (-1 == $i_LineEditor_point)
+  if (-1 == $i_LineEditor_point ||
+      $i_LineEditor_point > $az_LineEditor_buffer->len)
     $i_LineEditor_point = $az_LineEditor_buffer->len;
 }
 
@@ -797,6 +798,61 @@ defun($h_LineEditor_kill_parent_sexpr) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_permute $f_LineEditor_permute_i $w_LineEditor_permute
+    Searches before point within the LineEditor, beginning with the characters
+    closest to point, for a sequence of characters which are a permutation of
+    $w_LineEditor_permute. If found, they will be re-ordered to equal
+    $w_LineEditor_permute. Otherwise, an error is issued. Point is not moved.
+ */
+static bool is_permutation_of(wstring candidate, wstring target);
+interactive($h_LineEditor_permute_i,
+            $h_LineEditor_permute,
+            i_(w, $w_LineEditor_permute, L"Permute")) {
+  if (wcslen($w_LineEditor_permute) < 2) return;
+
+  int start = $i_LineEditor_point - wcslen($w_LineEditor_permute);
+  while (start >= 0) {
+    if (is_permutation_of($az_LineEditor_buffer->v + start,
+                          $w_LineEditor_permute)) {
+      $m_push_undo();
+      wmemcpy($az_LineEditor_buffer->v + start, $w_LineEditor_permute,
+              wcslen($w_LineEditor_permute));
+      $m_changed();
+      return;
+    } else {
+      --start;
+    }
+  }
+
+  $F_message_error(0,0,
+                   $w_message_text = wstrap(
+                     L"Permutation not found: ", $w_LineEditor_permute));
+}
+
+static bool is_permutation_of(wstring candidate, wstring target) {
+  unsigned len = wcslen(target);
+  wchar_t a[len];
+  wmemcpy(a, candidate, len);
+
+  //This is O(n^2), but simpler and probably faster than sorting for typical
+  //inputs (< 5 chars)
+  for (unsigned i = 0; i < len; ++i) {
+    bool found = false;
+    for (unsigned j = 0; j < len && !found; ++j) {
+      if (a[j] == target[i]) {
+        a[j] = 0;
+        found = true;
+      }
+    }
+
+    if (!found)
+      return false;
+  }
+
+  return true;
+}
+
+/*
   SYMBOL: $lp_LineEditor_keybindings
     List of keybindings supported by generic LineEditors.
  */
@@ -868,6 +924,8 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $m_undo);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'Y', $v_end_meta,
             $m_redo);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L't', $v_end_meta,
+            $m_permute_i);
   bind_char($lp_LineEditor_keybindings, $u_ground, L'\r', NULL,
             $m_accept);
 }
