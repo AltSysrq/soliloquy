@@ -163,8 +163,8 @@ defun($h_FileBufferCursor_window_changed) {}
  */
 defun($h_FileBuffer) {
   if (!$p_shared_undo_log) {
-    //$p_shared_undo_log = tmpfile();
-    $p_shared_undo_log = fopen("sol.out", "w+b");
+    $p_shared_undo_log = tmpfile();
+    //$p_shared_undo_log = fopen("sol.out", "w+b");
     if (!$p_shared_undo_log)
       tx_rollback_errno($u_FileBuffer);
 
