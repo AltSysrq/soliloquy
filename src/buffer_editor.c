@@ -273,6 +273,29 @@ defun($h_BufferLineEditor_destroy) {
 }
 
 /*
+  SYMBOL: $f_BufferLineEditor_get_echo_area_contents
+    Prepends the BufferEditor line meta for the line being editted to the
+    contents of the LineEditor for display.
+ */
+defun($h_BufferLineEditor_get_echo_area_contents) {
+  $f_LineEditor_get_echo_area_contents();
+
+  if ($u_echo_on == ($v_LineEditor_echo_mode ?: $v_Workspace_echo_mode)) {
+    object rl = NULL;
+    $$($o_BufferLineEditor_parent) {
+      let($I_BufferEditor_index,
+          $($o_BufferLineEditor_cursor, $I_FileBufferCursor_line_number));
+      rl = $c_RenderedLine($q_RenderedLine_body = $q_Workspace_echo_area_contents,
+                           $q_RenderedLine_meta = NULL);
+    }
+    $q_Workspace_echo_area_contents = $M_cvt($q_RenderedLine_cvt, rl);
+  }
+
+  if (-1 != $i_Workspace_echo_area_cursor)
+    $i_Workspace_echo_area_cursor += $i_line_meta_width;
+}
+
+/*
   SYMBOL: $f_BufferLineEditor_get_echo_area_meta
     Adds the name of the buffer being edited and its line number to
     $q_Workspace_echo_area_meta.
