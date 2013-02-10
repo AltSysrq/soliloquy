@@ -1145,6 +1145,7 @@ interactive($h_BufferEditor_search_backward_i,
  */
 defun($h_BufferEditor_undo) {
   $M_undo(0, $o_BufferEditor_buffer);
+  $m_update_echo_area();
 }
 
 /*
@@ -1153,6 +1154,7 @@ defun($h_BufferEditor_undo) {
  */
 defun($h_BufferEditor_redo) {
   $M_redo(0, $o_BufferEditor_buffer);
+  $m_update_echo_area();
 }
 
 /*

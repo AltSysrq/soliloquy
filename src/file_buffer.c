@@ -402,6 +402,9 @@ STATIC_INIT_TO($I_FileBuffer_default_file_mode, 0644);
 
   SYMBOL: $I_FileBuffer_default_file_mode
     The file mode to apply to newly-created files.
+
+  SYMBOL: $I_FileBuffer_saved_undo_offset
+    The undo offset of the FileBuffer at the last save.
  */
 defun($h_FileBuffer_save) {
   if (!$y_FileBuffer_modified || $y_FileBuffer_memory_backed)
@@ -458,6 +461,7 @@ defun($h_FileBuffer_save) {
     tx_rollback_errno($u_FileBuffer);
 
   $y_FileBuffer_modified = false;
+  $I_FileBuffer_saved_undo_offset = $I_FileBuffer_undo_offset;
   tx_write_through($y_FileBuffer_modified);
 }
 
@@ -673,6 +677,9 @@ defun($h_FileBuffer_undo) {
     $I_FileBuffer_undo_offset = $I_FileBuffer_prev_undo;
     $m_raw_edit();
   } while ($y_FileBuffer_continue_undo && $I_FileBuffer_undo_offset);
+
+  $y_FileBuffer_modified =
+    ($I_FileBuffer_undo_offset != $I_FileBuffer_saved_undo_offset);
 }
 
 /*
@@ -706,6 +713,9 @@ defun($h_FileBuffer_redo) {
 
     has_redone_anything = true;
   }
+
+  $y_FileBuffer_modified =
+    ($I_FileBuffer_undo_offset != $I_FileBuffer_saved_undo_offset);
 }
 
 /*
