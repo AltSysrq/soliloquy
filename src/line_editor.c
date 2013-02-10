@@ -853,6 +853,27 @@ static bool is_permutation_of(wstring candidate, wstring target) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_transpose_and_advance
+    Transposes the character before point and the character at point, then
+    moves point forward one character. If point is at column zero, it is
+    advanced before the transpose as well.
+ */
+defun($h_LineEditor_transpose_and_advance) {
+  if ($az_LineEditor_buffer->len < 2) return;
+  if ($i_LineEditor_point == 0) ++$i_LineEditor_point;
+  if ($i_LineEditor_point == $az_LineEditor_buffer->len) return;
+
+  $m_push_undo();
+  wchar_t tmp = $az_LineEditor_buffer->v[$i_LineEditor_point];
+  $az_LineEditor_buffer->v[$i_LineEditor_point] =
+    $az_LineEditor_buffer->v[$i_LineEditor_point - 1];
+  $az_LineEditor_buffer->v[$i_LineEditor_point - 1] = tmp;
+
+  ++$i_LineEditor_point;
+  $m_changed();
+}
+
+/*
   SYMBOL: $lp_LineEditor_keybindings
     List of keybindings supported by generic LineEditors.
  */
@@ -926,6 +947,8 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $m_redo);
   bind_char($lp_LineEditor_keybindings, $u_meta, L't', $v_end_meta,
             $m_permute_i);
+  bind_char($lp_LineEditor_keybindings, $u_meta, L'T', $v_end_meta,
+            $m_transpose_and_advance);
   bind_char($lp_LineEditor_keybindings, $u_ground, L'\r', NULL,
             $m_accept);
 }
