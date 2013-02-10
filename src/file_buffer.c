@@ -292,6 +292,18 @@ defun($h_FileBuffer_reload) {
       }
       fclose(input);
     }
+
+    // Ensure that all cursors are within bounds
+    for (list_o curr = $lo_FileBuffer_cursors; curr; curr = curr->cdr) {
+      $$(curr->car) {
+        if ($I_FileBufferCursor_line_number > $aw_FileBuffer_contents->len) {
+          $i_FileBufferCursor_shunt_distance =
+            $aw_FileBuffer_contents->len -
+            (signed)$I_FileBufferCursor_line_number;
+          $m_shunt();
+        }
+      }
+    }
   }
 
   if (!$ao_FileBuffer_meta) {
