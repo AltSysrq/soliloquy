@@ -418,6 +418,50 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
 #define advise_id_after(id, hook) _ADVISE_ID(id, hook, HOOK_AFTER)
 
 /**
+ * Begins definining a mode. A mode is a set of hooks which are active based on
+ * a $y symbol. The $y symbol, upon construction of a class, is copied from the
+ * default control symbol.
+ *
+ * defmode() must be used before any of the modeadv* macros, and can only be
+ * used once per compilation unit. It defines static global variables named
+ * mode_id and mode_control. It is legal for multiple compilation units to use
+ * defmode() for the same parameters; in general, they all should be the same.
+ *
+ * Conventions:
+ * - id is named $u_NAME
+ * - control is named $y_CLASS_NAME
+ * - control_default is named $y_CLASS_NAME_default
+ *
+ * @param on_class The $c symbol to hook onto to potentially activate the mode.
+ * @param id A $u symbol identifying this mode.
+ */
+#define defmode(on_class, id, control, control_default) \
+  static const identity mode_id = id;                   \
+  static const bool* const mode_control = &control;     \
+  advise_id_after(id, _GLUE(on_class,$hook))            \
+  { control = control_default; }
+
+#define _MODEADV(class,hook,priority)                   \
+  ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {    \
+    add_hook_cond(&hook, priority, mode_control,        \
+                  mode_id, class,                       \
+                  _GLUE(modeadv,__LINE__), NULL);       \
+  }                                                     \
+  static void _GLUE(modeadv,__LINE__)(void)
+
+/**
+ * Defines advice on the given hook. It will only be run when the control
+ * variable specified in defmode() is true. class is the class of the hook, and
+ * is unrelated to any $c symbol (eg, it might be something like
+ * "$u_output_formatting").
+ */
+#define mode_adv(class, hook) _MODEADV(class, hook, HOOK_MAIN)
+/** Like mode_adv, but runs at HOOK_BEFORE priority. */
+#define mode_adv_before(class, hook) _MODEADV(class, hook, HOOK_BEFORE)
+/** Like mode_adv, but runs at HOOK_AFTER priority. */
+#define mode_adv_after(class, hook) _MODEDAV(class, hook, HOOK_AFTER)
+
+/**
  * Defines advice to run before a class's superconstructor.
  */
 #define advise_before_superconstructor(hook)            \
