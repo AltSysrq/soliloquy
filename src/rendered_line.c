@@ -36,7 +36,7 @@
   SYMBOL: $q_RenderedLine_meta
     The metadata for the line, in formatted text format.
 
-  SYMBOL: $H_gen_meta
+  SYMBOL: $f_RenderedLine_gen_meta
     Method on RenderedLine. Called from $f_RenderedLine() if
     $q_RenderedLine_meta was NULL. When this is called, $q_RenderedLine_meta
     has been initialised to a qchar array of length (1 + $i_line_meta_width),
@@ -44,6 +44,9 @@
     $i_line_meta_width of characters, and should not alter characters set to
     non-NUL values by hooks that run before them (though changing formatting is
     acceptable).
+    --
+    Subclasses generally should avoid overriding this function unless they also
+    call it.
  */
 defun($h_RenderedLine) {
   if (!$q_RenderedLine_meta) {
