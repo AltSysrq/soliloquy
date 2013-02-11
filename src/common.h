@@ -347,6 +347,23 @@ void add_hook_obj(struct hook_point*, unsigned priority,
                   hook_constraint_function);
 
 /**
+ * Like add_hook, but the hook is only executed if the bool is true when the
+ * hook is considered for execution.
+ */
+void add_hook_cond(struct hook_point*, unsigned priority, const bool* when,
+                   identity id, identity class,
+                   void (*fun)(void),
+                   hook_constraint_function);
+
+/**
+ * Combination of both add_hook_obj and add_hook_cond.
+ */
+void add_hook_obj_cond(struct hook_point*, unsigned priority, const bool* when,
+                       identity id, identity class,
+                       void (*fun)(void), object,
+                       hook_constraint_function);
+
+/**
  * Deletes the given hook of the given priority from the given hook point, if
  * such a hook exists. Does nothing otherwise.
  *
@@ -673,6 +690,7 @@ struct symbol_header {
 
 struct hook_point_entry {
   hook_function fun;
+  const bool* when;
   object context;
   hook_constraint_function constraints;
   identity id, class;

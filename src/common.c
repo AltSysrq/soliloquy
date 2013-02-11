@@ -542,10 +542,11 @@ static void sort_hook_functions(struct hook_point_entry** base) {
 
 static void del_hook_impl(struct hook_point*,
                           unsigned, identity, object);
-void add_hook_obj(struct hook_point* point, unsigned priority,
-                  identity id, identity class,
-                  void (*fun)(void), object context,
-                  hook_constraint_function constraints) {
+void add_hook_obj_cond(struct hook_point* point, unsigned priority,
+                       const bool* when,
+                       identity id, identity class,
+                       void (*fun)(void), object context,
+                       hook_constraint_function constraints) {
   // Copy the current chain in case we are currently sharing it
   clone_hook_chain(&point->entries[priority]);
   // Remove any existing
@@ -557,6 +558,7 @@ void add_hook_obj(struct hook_point* point, unsigned priority,
     .id = id,
     .class = class,
     .next = point->entries[priority],
+    .when = when,
   };
   point->entries[priority] = newdup(&hpe);
 
@@ -567,7 +569,22 @@ void add_hook(struct hook_point* point, unsigned priority,
               identity id, identity class,
               void (*fun)(void),
               hook_constraint_function constraints) {
-  add_hook_obj(point, priority, id, class, fun, NULL, constraints);
+  add_hook_obj_cond(point, priority, NULL, id, class, fun, NULL, constraints);
+}
+
+void add_hook_obj(struct hook_point* point, unsigned priority,
+                  identity id, identity class,
+                  void (*fun)(void), object this,
+                  hook_constraint_function constraints) {
+  add_hook_obj_cond(point, priority, NULL, id, class, fun, this, constraints);
+}
+
+void add_hook_cond(struct hook_point* point, unsigned priority,
+                   const bool* when,
+                   identity id, identity class,
+                   void (*fun)(void),
+                   hook_constraint_function constraints) {
+  add_hook_obj_cond(point, priority, when, id, class, fun, NULL, constraints);
 }
 
 static void del_hook_impl(struct hook_point* point,
@@ -617,7 +634,8 @@ void invoke_hook(struct hook_point* ppoint) {
        ++priority)
     for (struct hook_point_entry* curr = point.entries[priority];
          curr; curr = curr->next)
-      within_context(curr->context, curr->fun());
+      if (!curr->when || *curr->when)
+        within_context(curr->context, curr->fun());
 
   end:
   memcpy(hook_abort_point, old_point, sizeof(hook_abort_point));
