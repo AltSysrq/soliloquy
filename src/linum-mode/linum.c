@@ -97,10 +97,10 @@ mode_adv_after($u_line_numbering, $h_RenderedLine_gen_meta) {
       $($o_BufferEditor_point, $I_FileBufferCursor_line_number) -
       (signed)$I_BufferEditor_index;
 
-    face rel_face = $I_BufferEditor_line_number_pos_face;
+    face rel_face = $I_BufferEditor_line_number_neg_face;
     if (rel < 0) {
       rel *= -1;
-      rel_face = $I_BufferEditor_line_number_neg_face;
+      rel_face = $I_BufferEditor_line_number_pos_face;
     } else if (rel == 0) {
       rel_face = $I_BufferEditor_line_number_here_face;
     }
