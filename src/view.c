@@ -229,7 +229,7 @@ defun($h_View_paint_line) {
   }
 
   if (oline) {
-    qstrlcpy(line, $(oline, $q_RenderedLine_meta), $i_line_meta_width+1);
+    qmemcpy(line, $(oline, $q_RenderedLine_meta), $i_line_meta_width);
     qstrlcpy(line+$i_line_meta_width,
              $(oline, $q_RenderedLine_body), $i_column_width+1);
   }
