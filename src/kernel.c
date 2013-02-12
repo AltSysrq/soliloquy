@@ -263,6 +263,11 @@ defun($h_kernel_cycle) {
   $y_kernel_poll_infinite = true;
   $f_run_tasks();
 
+  if (GC_collect_a_little()) {
+    $y_kernel_poll_infinite = false;
+    $i_kernel_poll_duration_ms = 0;
+  }
+
   unsigned fdcount = llen_o($$lo_producers) + llen_o($$lo_consumers);
   {
     struct pollfd fds[fdcount];
