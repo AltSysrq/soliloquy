@@ -121,9 +121,9 @@ defun($h_Transcript_append) {
     alteration).
  */
 STATIC_INIT_TO($I_Transcript_even_group_meta_highlight_face,
-               mkface("!fb!bb"))
+               mkface("+bL"))
 STATIC_INIT_TO($I_Transcript_odd_group_meta_highlight_face,
-               mkface("!fr!br"));
+               mkface("!fL"));
 /*
   SYMBOL: $f_Transcript_group
     Like $f_Transcript_append, but handles the text as a group. Highlighting
