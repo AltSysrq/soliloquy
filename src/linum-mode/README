@@ -1,0 +1,30 @@
+linum-mode --- Show line numbers in the meta area
+=================================================
+
+Description
+-----------
+linum-mode extends BufferEditor to show line number information in the line
+meta area. It can show both absolute and relative line numbers, displaying the
+latter as the characters that can be used to jump to those lines with one
+relative line keystroke.
+
+When absolute line numbers do not fit within the meta area, the uppermost
+digits share the leftmost column, and the display rotates between them, most
+significant to least significant digit, using different highlightings to
+indicate the unit for that digit.
+
+Configuration
+-------------
+All configuration is described in linum.c
+
+Weight -- Inactive
+------------------
+About 100 bytes of constant memory usage; about 50 bytes extra space per
+BufferEditor; one dead hook on $f_RenderedLine_gen_meta.
+
+Weight -- Active
+----------------
+linum-mode, when active, incurs the logic needed to format the line numbers, as
+well as an additional memory allocation and copy equal to the line meta size,
+every time a line is to be formatted (eg, printed to the screen, or shown on
+the echo area).

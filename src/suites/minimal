@@ -1,0 +1,5 @@
+# Soliloquy suite "minimal"
+# This is the minimal suite for Soliloquy. It only includes modules considered
+# "very important" for operation, such as line numbering and handling of
+# control characters within files.
+require linum-mode

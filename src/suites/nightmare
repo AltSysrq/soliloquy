@@ -1,0 +1,3 @@
+# Soliloquy suite "nightmare"
+# The nightmare "suite" includes no modules. It only exists to allow regen.sh
+# to configure a build that includes nothing but the Soliloquy core.

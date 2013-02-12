@@ -1,0 +1,4 @@
+# Soliloquy suite "std"
+# This is the "standard" list of modules for Soliloquy; it includes those which
+# are generally the most useful and/or have little overhead.
+require linum-mode
