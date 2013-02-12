@@ -38,6 +38,7 @@ static unsigned translate_colour(char name) {
   case 'B': return BRIGHT_BLUE;
   case 'M': return BRIGHT_MAGENTA;
   case 'W': return BRIGHT_WHITE;
+  case 'L': return 0x1;
   default:
     fprintf(stderr, "WARN: Invalid colour: %c\n", name);
     return INVALID_COLOUR;
