@@ -60,6 +60,13 @@ defmode($c_BufferEditor, $u_line_number_mode,
 
   SYMBOL: $I_BufferEditor_line_number_face
     Face for absolute line numbers.
+
+  SYMBOL: $aI_BufferEditor_line_number_rotating_digits_faces
+    Array of faces to use for rotating digits display. Index zero is for 10**0,
+    one for 10**1, etc. This should be a length such that you'll never exceed
+    it. The default is 10 elements long, which is more than large enough to
+    account for the number of lines that can possibly be loaded given a 32-bit
+    unsigned type.
  */
 STATIC_INIT_TO($y_BufferEditor_line_number_mode_default, true)
 ATSINIT {
@@ -72,6 +79,24 @@ ATSINIT {
   $I_BufferEditor_line_number_pos_face = mkface("!fm");
   $I_BufferEditor_line_number_neg_face = mkface("!fc");
   $I_BufferEditor_line_number_face = mkface("!fb");
+
+  $aI_BufferEditor_line_number_rotating_digits_faces = dynar_new_I();
+  dynar_expand_by_I($aI_BufferEditor_line_number_rotating_digits_faces,
+                    10); // Nine billion lines should be enough for anyone
+  face rdf[10] = {
+    $I_BufferEditor_line_number_face, //ones
+    $I_BufferEditor_line_number_face, //tens
+    mkface("+X!fr"), //hundreds
+    mkface("+X!fy"), //thousands
+    mkface("+X!fg"), //ten thousdands
+    mkface("+X!fc"), //hundred thousands
+    mkface("+X!fb"), //millions
+    mkface("+X!fm"), //ten millions
+    mkface("+X+B!fR"), //hundred millions
+    mkface("+X+B!fG"), //billions
+  };
+  for (unsigned i = 0; i < lenof(rdf); ++i)
+    $aI_BufferEditor_line_number_rotating_digits_faces->v[i] = rdf[i];
 }
 
 mode_adv_after($u_line_numbering, $h_RenderedLine_gen_meta) {
@@ -139,7 +164,24 @@ mode_adv_after($u_line_numbering, $h_RenderedLine_gen_meta) {
       chars[ix] = apply_face($I_BufferEditor_line_number_face,
                              $w_BufferEditor_line_number_digits[num%10]);
 
-    // TODO: rotating display of upper digits
+    if (num_digits > avail) {
+      // Pad left part with zeroes
+      for (unsigned i = 1; i < lenof(chars); ++i)
+        if (!chars[i])
+          chars[i] = apply_face($I_BufferEditor_line_number_face,
+                                $w_BufferEditor_line_number_digits[0]);
+
+      unsigned rotating_digits = num_digits - avail + 1;
+      assert(rotating_digits);
+      num = $I_BufferEditor_index+1;
+      unsigned power = (rotating_digits - num%rotating_digits - 1) + avail - 1;
+
+      unsigned rot_face =
+        $aI_BufferEditor_line_number_rotating_digits_faces->v[power];
+      while (power--) num /= 10;
+      num %= 10;
+      chars[0] = apply_face(rot_face,$w_BufferEditor_line_number_digits[num]);
+    }
   }
 
   // Write back to the meta
