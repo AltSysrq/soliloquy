@@ -399,15 +399,22 @@ defun($h_translate_qchar_to_ncurses) {
   if (!character) {
     character = L' ';
 #ifndef BG_OPAQUE
-    if ((reverse_video? fg : bg) == 0)
+    if (reverse_video? (fg == 0 && !bold) : (bg == 0 && !blink)) {
       //Transparent
       colour_pair = 0;
+      reverse_video = 0;
+      blink = 0;
+    }
 #endif
   }
 #ifdef BG_TRANSLUSCENT_SOUP
   else if (character == L' ') {
-    if ((reverse_video? fg : bg) == 0)
+    if (reverse_video? (fg == 0 && !bold) : (bg == 0 && !blink)) {
+      //Transparent
       colour_pair = 0;
+      reverse_video = 0;
+      blink = 0;
+    }
   }
 #endif
 
