@@ -436,12 +436,13 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
  * @param id A $u symbol identifying this mode.
  */
 #define defmode(on_class, id, control, control_default) \
-  static const identity mode_id = id;                   \
+  static const identity mode_id = (identity)&id;        \
   static const bool* const mode_control = &control;     \
   advise_id_after(id, _GLUE(on_class,$hook))            \
   { control = control_default; }
 
 #define _MODEADV(class,hook,priority)                   \
+  static void _GLUE(modeadv,__LINE__)(void);            \
   ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) {    \
     add_hook_cond(&hook, priority, mode_control,        \
                   mode_id, class,                       \
@@ -459,7 +460,7 @@ void del_hook(struct hook_point*, unsigned priority, identity, object context);
 /** Like mode_adv, but runs at HOOK_BEFORE priority. */
 #define mode_adv_before(class, hook) _MODEADV(class, hook, HOOK_BEFORE)
 /** Like mode_adv, but runs at HOOK_AFTER priority. */
-#define mode_adv_after(class, hook) _MODEDAV(class, hook, HOOK_AFTER)
+#define mode_adv_after(class, hook) _MODEADV(class, hook, HOOK_AFTER)
 
 /**
  * Defines advice to run before a class's superconstructor.

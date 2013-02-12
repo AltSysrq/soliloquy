@@ -62,7 +62,7 @@ defun($h_RenderedLine) {
  */
 defun($h_RenderedLine_cvt) {
   mqstring meta = qcalloc(1 + $i_line_meta_width);
-  size_t max = qstrlen($q_RenderedLine_meta);
+  size_t max = $i_line_meta_width;
 
   for (unsigned i = 0; i < $i_line_meta_width; ++i)
     meta[i] = (i < max? ($q_RenderedLine_meta[i] ?: L' ') : L' ');
