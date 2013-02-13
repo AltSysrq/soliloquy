@@ -52,6 +52,14 @@
     Input/output string for $f_line_format_move(). When that function is
     called, it has already been initialised.
 
+  SYMBOL: $Q_line_format_back
+    Set when $f_line_format_move() is called if
+    $y_line_format_needs_back_buffer was true. It is a buffer of equal size to
+    $Q_line_format, but initially uninitialised. Operations which would be able
+    to execute more efficiently by copying from one buffer to another may want
+    this; if they do, they should first swap $Q_line_format and
+    $Q_line_format_back, then copy from the latter to the former.
+
   SYMBOL: $I_line_format_size
     The size of the final string to be produced by $f_line_format_move(). See
     documentation on $f_line_format_check() and $f_line_format_move() for
@@ -64,6 +72,10 @@
   SYMBOL: $y_line_format_change
     If set to true by a hook on $f_line_format_check(), the string in question
     will be replaced, and $f_line_format_move() will be called.
+
+  SYMBOL: $y_line_format_needs_back_buffer
+    If true, $Q_line_format_back is initialised before calling
+    $f_line_format_move().
  */
 
 advise_id_after($u_line_format_adapter, $h_LineEditor_get_echo_area_contents) {
@@ -75,10 +87,13 @@ advise_id_after($u_line_format_adapter, $h_LineEditor_get_echo_area_contents) {
   $I_line_format_size = qstrlen($q_Workspace_echo_area_contents);
   $I_line_format_point = ($i_LineEditor_point != -1? $i_LineEditor_point : 0);
   $y_line_format_change = false;
+  $y_line_format_needs_back_buffer = false;
   $f_line_format_check();
 
   if ($y_line_format_change) {
     $Q_line_format = qcalloc($I_line_format_size+1);
+    if ($y_line_format_needs_back_buffer)
+      $Q_line_format_back = qcalloc($I_line_format_size+1);
     qstrlcpy($Q_line_format, $q_line_format, $I_line_format_size+1);
     $f_line_format_move();
     $q_line_format = $Q_line_format;
@@ -93,10 +108,13 @@ advise_id_after($u_line_format_adapter, $h_BufferEditor_prettify) {
   $I_line_format_size = qstrlen($q_RenderedLine_body);
   $I_line_format_point = 0;
   $y_line_format_change = false;
+  $y_line_format_needs_back_buffer = false;
   $f_line_format_check();
 
   if ($y_line_format_change) {
     $Q_line_format = qcalloc($I_line_format_size+1);
+    if ($y_line_format_needs_back_buffer)
+      $Q_line_format_back = qcalloc($I_line_format_size+1);
     qstrlcpy($Q_line_format, $q_line_format, $I_line_format_size+1);
     $f_line_format_move();
     $q_RenderedLine_body = $Q_line_format;
