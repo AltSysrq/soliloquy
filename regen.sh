@@ -48,7 +48,7 @@ require() {
         . "src/suites/$1"
     # Else, is it a module?
     elif test -d "src/$1"; then
-        test -f "src/$1/modifno" && . "src/$1/modinfo"
+        test -f "src/$1/modinfo" && . "src/$1/modinfo"
         printf "%s " `ls "src/$1/"*.c | sed 's:src/::'` >>src/Makefile.am
     else
         printf "Module or suite not found: %s\n" "$1" >&2
