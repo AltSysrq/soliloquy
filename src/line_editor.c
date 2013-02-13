@@ -895,6 +895,9 @@ defun($h_LineEditor_transpose_and_advance) {
 /*
   SYMBOL: $lp_LineEditor_keybindings
     List of keybindings supported by generic LineEditors.
+
+  SYMBOL: $u_insert_special
+    LineEditor key state after pressing ^Q.
  */
 class_keymap($c_LineEditor, $lp_LineEditor_keybindings, $llp_Activity_keymap)
 ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
