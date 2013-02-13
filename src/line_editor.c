@@ -163,6 +163,25 @@ defun($h_LineEditor_self_insert) {
 }
 
 /*
+  SYMBOL: $f_LineEditor_insert_control
+    If $x_Terminal_input_value is a control character, it is inserted (as with
+    self_insert).
+ */
+defun($h_LineEditor_insert_control) {
+  if ($x_Terminal_input_value >= L' ' && $x_Terminal_input_value != 127) {
+    $y_key_dispatch_continue = true;
+    return;
+  }
+
+  let($y_LineEditor_edit_is_minor, true);
+  $m_push_undo();
+  wchar_t input = (wchar_t)$x_Terminal_input_value;
+  dynar_ins_z($az_LineEditor_buffer, $i_LineEditor_point++,
+              &input, 1);
+  $m_changed();
+}
+
+/*
   SYMBOL: $f_LineEditor_changed
     Called after modifications to $az_LineEditor_buffer have occurred, so that
     the echo area can be updated as needed, etc. This must be called within the
@@ -949,6 +968,10 @@ ATSTART(setup_line_editor_keybindings, STATIC_INITIALISATION_PRIORITY) {
             $m_permute_i);
   bind_char($lp_LineEditor_keybindings, $u_meta, L'T', $v_end_meta,
             $m_transpose_and_advance);
+  bind_char($lp_LineEditor_keybindings, $u_ground, CONTROL_Q, $u_insert_special,
+            NULL);
+  bind_kp($lp_LineEditor_keybindings, $u_insert_special, KEYBINDING_DEFAULT,
+          $u_ground, $m_insert_control);
   bind_char($lp_LineEditor_keybindings, $u_ground, L'\r', NULL,
             $m_accept);
 }
