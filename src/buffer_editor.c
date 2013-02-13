@@ -731,6 +731,11 @@ defun($h_BufferEditor_echo_line) {
 
   SYMBOL: $I_BufferEditor_line_wrap_meta_face
     Face to apply to metadata for wrapped fragments of lines.
+
+  SYMBOL: $f_BufferEditor_prettify
+    Called within the context of a RenderedLine, within
+    $f_BufferEditor_format(). Hooks should apply any appropriate modifications
+    to the RenderedLine.
  */
 defun($h_BufferEditor_format) {
   // Get the base RenderedLine
