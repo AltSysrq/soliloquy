@@ -2,3 +2,4 @@
 # Includes every module in the Soliloquy repository. This results in the
 # heaviest, but most featureful version.
 require linum-mode
+require control-character-display-mode

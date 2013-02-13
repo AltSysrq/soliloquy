@@ -3,3 +3,4 @@
 # "very important" for operation, such as line numbering and handling of
 # control characters within files.
 require linum-mode
+require control-character-display-mode
