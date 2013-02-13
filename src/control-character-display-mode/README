@@ -1,0 +1,32 @@
+control-character-display-mode --- Show control chars in human-readable format
+==============================================================================
+
+Description
+-----------
+Reformats line contents of BufferEditors and LineEditors to display control
+characters in human-readable format.
+
+Lines containing only a form-feed character are replaced by a horizontal line.
+
+Horizontal tabulator characters are treated differently according whether they
+are (consecutively) at the beginning of the line or elsewhere. Tabs at the
+beginning of the line are directly converted into a fixed number of
+spaces. Others cause spaces to be inserted until the column number is a
+multiple of the middle tab width. In both cases, the first inserted character
+is a non-space to indicate the presence of the tabulator.
+
+Other control characters are shown in the customary '^X' syntax.
+
+Configuration
+-------------
+All configuration described in ctrl_chr_dsp_mode.c.
+
+Weight -- Inactive
+------------------
+One to two dead hooks per line output event (including showing lines to the
+echo area). About 50 bytes of additional memory per Activity.
+
+Weight -- Active
+----------------
+In most cases, one extra read pass through a line to be output. Sometimes,
+incurrs an additional memory allocation and string copy.
