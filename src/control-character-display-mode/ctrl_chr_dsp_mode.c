@@ -142,7 +142,7 @@ mode_adv($u_character_substitution, $h_line_format_move) {
   // Swap the front and back buffers
   SWAP($Q_line_format, $Q_line_format_back);
 
-  bool is_init_tab = true;
+  bool is_init_tab = true, has_moved_point = false;
   unsigned dst_ix = 0;
   for (unsigned src_ix = 0; $Q_line_format_back[src_ix]; ++src_ix) {
     qchar qch = $Q_line_format_back[src_ix] & QC_CHAR;
@@ -179,6 +179,11 @@ mode_adv($u_character_substitution, $h_line_format_move) {
       for (unsigned i = 0; i < 2; ++i)
         $Q_line_format[dst_ix++] =
           apply_face($I_Activity_control_character_face, str[i] | attr);
+    }
+
+    if (src_ix+1 == $I_line_format_point && !has_moved_point) {
+      $I_line_format_point = dst_ix;
+      has_moved_point = true;
     }
   }
 
