@@ -96,7 +96,7 @@ advise_id_after($u_line_format_adapter, $h_LineEditor_get_echo_area_contents) {
       $Q_line_format_back = qcalloc($I_line_format_size+1);
     qstrlcpy($Q_line_format, $q_line_format, $I_line_format_size+1);
     $f_line_format_move();
-    $q_line_format = $Q_line_format;
+    $q_Workspace_echo_area_contents = $Q_line_format;
 
     if ($i_LineEditor_point != -1)
       $i_LineEditor_point = $I_line_format_point;
