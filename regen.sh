@@ -38,26 +38,25 @@ mkdir -p .modules
 . src/suites
 
 require() {
-    module=$1
     # Do nothing if already handled
-    if test -f ".modules/$module"; then
+    if test -f ".modules/$1"; then
         return
     fi
 
     # Is it a suite?
-    if test -f "src/suites/$module"; then
-        . "src/suites/$module"
+    if test -f "src/suites/$1"; then
+        . "src/suites/$1"
     # Else, is it a module?
-    elif test -d "src/$module"; then
-        test -f "src/$module/modifno" && . "src/$module/modinfo"
-        printf "%s " `ls "src/$module/"*.c | sed 's:src/::'` >>src/Makefile.am
+    elif test -d "src/$1"; then
+        test -f "src/$1/modifno" && . "src/$1/modinfo"
+        printf "%s " `ls "src/$1/"*.c | sed 's:src/::'` >>src/Makefile.am
     else
-        printf "Module or suite not found: %s\n" "$module" >&2
+        printf "Module or suite not found: %s\n" "$1" >&2
         exit 1
     fi
 
     # Remember that we already handled this module
-    touch ".modules/$module"
+    touch ".modules/$1"
 }
 
 # List source files in Soliloquy core
