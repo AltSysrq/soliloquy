@@ -1,0 +1,17 @@
+line-format-adapter --- Internal Programming Utility
+====================================================
+
+Description
+-----------
+Simplifies the development of modules which modify the textual contents of
+lines in LineEditors and the BufferEditor, such as replacing control characters
+with textual representations.
+
+Configuration
+-------------
+None.
+
+Weight (always active)
+----------------------
+Two hook invocations every time a BufferEditor line is to be prettified, or a
+LineEditor's contents to be displayed.
