@@ -68,7 +68,7 @@ AC_CHECK_FUNCS([getopt_long],
 
 AC_CHECK_FUNCS([use_default_colors])
 AC_CHECK_FUNCS([ppoll])
-AC_CHECK_FUNCS([wcsdup strlcpy wcslcpy strlcat wcslcat wmemcpy wmemmove])
+AC_CHECK_FUNCS([wcsdup strlcpy wcslcpy strlcat wcslcat wmemcpy wmemmove wmemset])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT

@@ -54,6 +54,15 @@
 #define _GLUE(x,y) __GLUE(x,y)
 
 /**
+ * Swaps the two given variables.
+ */
+#define SWAP(a,b) do {                          \
+    typeof(a) _tmp = a;                         \
+    a = b;                                      \
+    b = _tmp;                                   \
+  } while (0)
+
+/**
  * Returns the length of an automatic array.
  */
 #define lenof(x) (sizeof(x)/sizeof(x[0]))
@@ -148,6 +157,16 @@ static inline wchar_t* wmemmove(wchar_t* dst, const wchar_t* src,
 }
 #endif
 
+#ifndef HAVE_WMEMSET
+static inline wchar_t* wmemset(wchar_t* dst, const wchar_t* src,
+                               size_t n) {
+  wchar_t* dst_orig = dst;
+  while (n--)
+    *dst++ = src;
+  return dst_orig;
+}
+#endif
+
 static inline qchar* qmemcpy(qchar* dst, const qchar* src, size_t n) {
   memcpy(dst, src, sizeof(qchar)*n);
   return dst;
@@ -156,6 +175,13 @@ static inline qchar* qmemcpy(qchar* dst, const qchar* src, size_t n) {
 static inline qchar* qmemmove(qchar* dst, const qchar* src, size_t n) {
   memmove(dst, src, sizeof(qchar)*n);
   return dst;
+}
+
+static inline qchar* qmemset(qchar* dst,  qchar src, size_t n) {
+  qchar* dst_orig = dst;
+  while (n--)
+    *dst++ = src;
+  return dst_orig;
 }
 
 /**
