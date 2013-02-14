@@ -1,0 +1,38 @@
+symbol-chord-mode --- Press 2-key chords to insert symbols
+==========================================================
+
+Description
+-----------
+symbol-chord-mode allows you to insert common programming symbols using
+two-finger key chords on or near the home row. How useful this is depends on
+your hands, your keyboard, and your keyboard layout.
+
+The default symbol mapping can be found in the source file. Whenever you type
+two characters within $I_LineEditor_symbol_chord_duration_ms milliseconds of
+each other (default is 35 milliseconds), which essentially means you pressed
+them simultaneously,, the mapping is checked. If a match is found, that is, the
+previous character and the new one compose a chord (which is independent of the
+order the characters were received), the previous character you typed is
+deleted, and the input is altered to look like you typed the mapped character.
+
+Finding an appropriate delay can be difficult. If you are a fast typist, it may
+be especially hard to find a happy medium. Too low an interval can make it
+impossible to enter the chords, whereas to high an interval will make Soliloquy
+detect separate keystrokes as chords. The default delay of 35ms was found to
+work well for the author within urxvt.
+
+Configuration
+-------------
+Documented in symbol_chord.c.
+
+Weight -- Inactive
+------------------
+One dead hook per normal character insertion into a LineEditor. About 32 bytes
+of memory per LineEditor.
+
+Weight -- Active
+----------------
+One poll of a system clock per character insertion into a LineEditor. When
+multiple keystrokes occur within $I_LineEditor_symbol_chord_duration_ms,
+incurrs an additional loop whose runtime is proportional to the length of
+$w_LineEditor_symbol_chords.

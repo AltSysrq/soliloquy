@@ -131,13 +131,22 @@ advise_id_before($u_kb_xlate, $h_Terminal_getch) {
   if ((1<<31) & $x_Terminal_input_value) return;
 
   if (find_v($lv_Terminal_kb_xlate_modes, $v_Terminal_key_mode)) {
-    wstring layout = $w_Terminal_keyboard_layout;
-    wstring target = $$w_layout_qwerty_us;
-    while (*layout && $x_Terminal_input_value != *layout)
-      ++layout, ++target;
-
-    if (*layout)
-      // Found a match
-      $x_Terminal_input_value = *target;
+    $x_Terminal_input_value = qwertify($x_Terminal_input_value);
   }
+}
+
+wchar_t qwertify(wchar_t input) {
+  if ((1 << 31) & $x_Terminal_input_value) return input;
+
+  wstring layout = $w_Terminal_keyboard_layout;
+  wstring target = $$w_layout_qwerty_us;
+  while (*layout && input != *layout)
+    ++layout, ++target;
+
+  if (*layout)
+    // Found a match
+    return *target;
+
+  // No match
+  return input;
 }

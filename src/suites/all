@@ -3,3 +3,4 @@
 # heaviest, but most featureful version.
 require linum-mode
 require control-character-display-mode
+symbol-chord-mode

@@ -3,3 +3,4 @@
 # are generally the most useful and/or have little overhead.
 require linum-mode
 require control-character-display-mode
+symbol-chord-mode
