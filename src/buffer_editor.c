@@ -363,8 +363,25 @@ defun($h_BufferLineEditor_get_echo_area_meta) {
     Whether the BufferLineEditor will replace a line, or insert a new one.
  */
 defun($h_BufferLineEditor_accept) {
+  list_w replacements = NULL;
   mwstring line = wcalloc($az_LineEditor_buffer->len + 1);
   wmemcpy(line, $az_LineEditor_buffer->v, $az_LineEditor_buffer->len);
+  if (!wcschr(line, L'\n')) {
+    // Simple single-line insertion
+    replacements = cons_w(line, NULL);
+  } else {
+    //This is a multiple-line edit, since there are line feeds embedded in the
+    //line
+    mwstring state = NULL;
+    mwstring subline;
+    for (subline = wcstok(line, L"\n", &state);
+         subline;
+         subline = wcstok(NULL, L"\n", &state))
+      // It's OK to continue pointing to the modified string
+      lpush_w(replacements, subline);
+
+    replacements = lrev_w(replacements);
+  }
   unsigned line_number = $($o_BufferLineEditor_cursor, $I_FileBufferCursor_line_number);
 
   // We no longer care about window notifications (and we're about to trigger
@@ -375,12 +392,14 @@ defun($h_BufferLineEditor_accept) {
   }
   $M_edit(0, $o_BufferLineEditor_buffer,
           $I_FileBuffer_ndeletions = ($y_BufferLineEditor_replace? 1:0),
-          $lw_FileBuffer_replacements = cons_w(line, NULL),
+          $lw_FileBuffer_replacements = replacements,
           $I_FileBuffer_edit_line = line_number);
   // If echo is on, output the new line to the Transcript
   if (($v_LineEditor_echo_mode ?: $v_Workspace_echo_mode) == $u_echo_on) {
-    $M_echo_line(0, $o_BufferLineEditor_parent,
-                 $I_BufferEditor_index = line_number);
+    unsigned cnt = llen_w(replacements);
+    for (unsigned i = 0; i < cnt; ++i)
+      $M_echo_line(0, $o_BufferLineEditor_parent,
+                   $I_BufferEditor_index = line_number+i);
   }
   $m_destroy();
 }
