@@ -66,7 +66,7 @@ ATSINIT {
      "dl6d;7"
      "sj8sk9"
      "sl%s;^"
-     "aj@ak`"
+     "aj@ak$"
      "al=a;_";
 }
 
