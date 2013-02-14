@@ -519,9 +519,9 @@ defun($h_Pattern_matches) {
       // Starting from the end, locate the first non-whitespace character, then
       // move back by the number of characters in the anchor
       wstring input = $w_Pattern_input + wcslen($w_Pattern_input);
-      do {
+      while (iswspace(*input) && input != $w_Pattern_input) {
         --input;
-      } while (iswspace(*input) && input != $w_Pattern_input);
+      } 
 
       // Ensure there is enough space for the anchor to possibly match
       if (((unsigned)(input - $w_Pattern_input)) <
