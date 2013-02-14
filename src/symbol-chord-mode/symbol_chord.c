@@ -104,7 +104,7 @@ mode_adv_before($u_input_preprocessing, $h_LineEditor_self_insert) {
   unsigned now = ts.tv_sec*1000 + ((unsigned long)ts.tv_nsec/1000000);
 
   if ($z_LineEditor_symbol_chord_first &&
-      now - $I_LineEditor_symbol_chord_prev <
+      now - $I_LineEditor_symbol_chord_prev <=
         $I_LineEditor_symbol_chord_duration_ms) {
     // Qwertify both of them
     wchar_t a = qwertify($z_LineEditor_symbol_chord_first);
