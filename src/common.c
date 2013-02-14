@@ -43,7 +43,7 @@
 // (This comment necessary for the dynar_o template)
 static dynar_o evisceration_stack;
 
-const char* gcstrdup(const char* str) {
+char* gcstrdup(const char* str) {
   size_t len = strlen(str)+1;
   char* dst = gcalloc(len);
   memcpy(dst, str, len);

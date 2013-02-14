@@ -71,4 +71,11 @@
 void bind_cmdline_arg(char shortn, string longn, string argspec,
                       void (*handler)(string), string helpstring);
 
+/**
+ * Processes the given command-line arguments, as passed into main().
+ *
+ * This should only be called by main().
+ */
+void process_cmdline_args(char** argv, unsigned argc);
+
 #endif /* CMDLINE_H_ */

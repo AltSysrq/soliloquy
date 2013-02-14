@@ -215,7 +215,7 @@ static inline void* gcrealloc(void* ptr, size_t size) {
 /**
  * Like strdup(), but uses gcalloc().
  */
-const char* gcstrdup(const char*) __attribute__((malloc));
+char* gcstrdup(const char*) __attribute__((malloc));
 
 /// STANDARD TYPES
 typedef char* mstring;
