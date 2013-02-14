@@ -34,9 +34,6 @@ cp src/Makefile.am.head src/Makefile.am
 rm -Rf .modules
 mkdir -p .modules
 
-# Get list of suites
-. src/suites
-
 require() {
     # Do nothing if already handled
     if test -f ".modules/$1"; then
