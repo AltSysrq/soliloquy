@@ -16,7 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "ctrl_chr_dsp_mode.slc"
+#include "control_character_display.slc"
 #include "face.h"
 
 /*

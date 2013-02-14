@@ -19,7 +19,7 @@ Other control characters are shown in the customary '^X' syntax.
 
 Configuration
 -------------
-All configuration described in ctrl_chr_dsp_mode.c.
+All configuration described in control_character_display.c.
 
 Weight -- Inactive
 ------------------
