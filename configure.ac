@@ -25,7 +25,9 @@ LDFLAGS="$LDFLAGS -L/usr/local/lib"
 # Checks for libraries.
 AC_SEARCH_LIBS([clock_gettime], [c rt])
 AC_SEARCH_LIBS([keyname], [tinfow tinfo ncursesw curses cursesw ncurses pcurses])
-AC_SEARCH_LIBS([pcre_compile], [pcre], [])
+AC_SEARCH_LIBS([pcre_compile], [pcre], [],
+               [AC_MSG_ERROR(
+[The PCRE library could not be found. Make sure libpcre[-dev] is installed.])])
 AC_SEARCH_LIBS([GC_init], [gc], [],
                [AC_MSG_ERROR(
 [The gc library could not be found. Make sure libgc[-dev] is installed.])])
@@ -41,7 +43,6 @@ AC_CHECK_HEADERS([fcntl.h unistd.h glob.h pcre.h getopt.h locale.h],
 
 AC_CHECK_HEADERS([gc.h gc/gc.h])
 AC_CHECK_HEADERS([ncursesw/cursesw.h ncurses/cursesw.h ncursesw/curses.h cursesw.h curses.h])
-AC_CHECK_HEADERS([regex.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
@@ -67,7 +68,7 @@ AC_CHECK_FUNCS([getopt_long],
   [])
 
 AC_CHECK_FUNCS([use_default_colors])
-AC_CHECK_FUNCS([ppoll regcomp])
+AC_CHECK_FUNCS([ppoll])
 AC_CHECK_FUNCS([wcsdup strlcpy wcslcpy strlcat wcslcat wmemcpy wmemmove wmemset])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
