@@ -1093,6 +1093,48 @@ defun($h_BufferEditor_print_region) {
 }
 
 /*
+  SYMBOL: $f_BufferEditor_print_region_and_advance
+    Calls $f_BufferEditor_print_region(), then advances *both* point and mark
+    forward by the number of lines between the two. The greater of the two is
+    then moved forward an additional line.
+ */
+defun($h_BufferEditor_print_region_and_advance) {
+  $m_print_region();
+
+  unsigned max = 0;
+  $$($o_BufferEditor_buffer) {
+    $m_access();
+    max = $aw_FileBuffer_contents->len;
+  }
+
+  bool advance_mark = false;
+  int dist = $($o_BufferEditor_point, $I_FileBufferCursor_line_number) -
+    $($lo_BufferEditor_marks->car, $I_FileBufferCursor_line_number);
+  if (dist < 0) {
+    dist = -dist;
+    advance_mark = true;
+  }
+
+  $$($o_BufferEditor_point) {
+    $I_FileBufferCursor_line_number += dist;
+    if (!advance_mark)
+      ++$I_FileBufferCursor_line_number;
+    if ($I_FileBufferCursor_line_number > max)
+      $I_FileBufferCursor_line_number = max;
+  }
+
+  $$($lo_BufferEditor_marks->car) {
+    $I_FileBufferCursor_line_number += dist;
+    if (advance_mark)
+      ++$I_FileBufferCursor_line_number;
+    if ($I_FileBufferCursor_line_number > max)
+      $I_FileBufferCursor_line_number = max;
+  }
+
+  $m_update_echo_area();
+}
+
+/*
   SYMBOL: $f_BufferEditor_search $w_BufferEditor_search $i_BufferEditor_search
     Searches the buffer for $w_BufferEditor_search, beginning one line before
     or after point. If the beginning or end of the buffer is encountered, the
@@ -1233,6 +1275,8 @@ ATSINIT {
             $m_insert_and_edit);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'p', NULL,
             $m_print_region);
+  bind_char($lp_BufferEditor_keymap, $u_ground, L'P', NULL,
+            $m_print_region_and_advance);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'g', NULL,
             $m_search_forward_i);
   bind_char($lp_BufferEditor_keymap, $u_ground, L'G', NULL,
