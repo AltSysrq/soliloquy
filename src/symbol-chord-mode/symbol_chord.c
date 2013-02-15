@@ -54,7 +54,7 @@ ATSINIT {
   $y_LineEditor_symbol_chord_mode_default = true;
   $I_LineEditor_symbol_chord_duration_ms = 35;
   $w_LineEditor_symbol_chords =
-    L"df(jk)er{ui}cv[m,]"
+    L"df(jk)er{ui}cv[m,]nm]"
      "as+l;-"
      "sd<kl>"
      "af/j;*"
