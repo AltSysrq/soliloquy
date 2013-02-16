@@ -33,20 +33,19 @@ typedef struct regular_expression regular_expression;
  * rolled back; otherwise, it is set to a string describing why the pattern
  * could not be compiled, and NULL is returned.
  */
-regular_expression* rx_compile(wstring, wstring* error);
+regular_expression* rx_compile(wstring, string* error);
 
 /**
  * Matches the given regular expression to the given string. Returns the number
- * of groups which matched (0 means no match; >=1 is match). Up to max_pairs*2
- * integers will be written to *group_pairs, indicating
- * inclusive-begin/exclusive-end pairs for each capturing group (where group 0
- * is the whole string which matched the pattern).
+ * of groups which matched (0 means no match; >=1 is match). Up to max_groups
+ * integers will be written to *groups, indicating strings captured by the
+ * pattern (where group 0 is the whole string which matched the pattern).
  *
- * Be aware that group_pairs MUST be a valid pointer unless max_pairs is zero,
- * and that the return value may be greater than max_pairs. Values within
- * group_pairs beyond min(max_pairs, return_value) will not be altered.
+ * Be aware that groups MUST be a valid pointer unless max_groups is zero,
+ * and that the return value may be greater than max_groups. Values within
+ * groups beyond min(max_pairs, return_value) will not be altered.
  */
 unsigned rx_match(regular_expression*, wstring,
-                  unsigned* group_pairs, unsigned max_pairs);
+                  wstring* groups, unsigned max_groups);
 
 #endif /* REGEX_SUPPORT_H_ */
