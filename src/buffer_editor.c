@@ -1170,6 +1170,10 @@ defun($h_BufferEditor_search) {
   if (!contents->len)
     return;
 
+  // Prevent "starting" past the end
+  if (start_line == contents->len)
+    --start_line;
+
   // If starting on the virtual line at the end of the file, pretend that we
   // started one before that.
   if ($i_BufferEditor_search == contents->len)
