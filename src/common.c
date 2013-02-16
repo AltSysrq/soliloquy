@@ -617,28 +617,55 @@ void hook_abort(void) {
   siglongjmp(hook_abort_point, 1);
 }
 
+static sigjmp_buf hook_continue_point;
+void continue_hook_in_current_context(void) {
+  siglongjmp(hook_continue_point, 1);
+}
+
 void invoke_hook(struct hook_point* ppoint) {
   if (!ppoint) return;
 
-  sigjmp_buf old_point;
+  // In case of an aborted hook or a continue_hook_in_current_context(), we
+  // need to know how far to unwind the evisceration stack when finished.
+  unsigned evisceration_stack_depth = evisceration_stack->len;
+
+  sigjmp_buf old_abort_point, old_continue_point;
   // POSIX defines jmp_buf to be an array, so we don't explicitly reference the
   // jmp_buf in this call
-  memcpy(old_point, hook_abort_point, sizeof(hook_abort_point));
+  memcpy(old_abort_point, hook_abort_point, sizeof(hook_abort_point));
+  memcpy(old_continue_point, hook_continue_point, sizeof(hook_continue_point));
+
+  // Save this location; if it returns non-zero, the hook was aborted
   if (sigsetjmp(hook_abort_point, 1)) goto end;
 
   // Make a copy so that concurrent modifications do not interfere with this
   // invocation of the hook.
   struct hook_point point = *ppoint;
+
+  // Loop through priorities and hooks attached thereto
   for (unsigned priority = 0;
        priority < sizeof(point.entries)/sizeof(point.entries[0]);
-       ++priority)
+       ++priority) {
     for (struct hook_point_entry* curr = point.entries[priority];
-         curr; curr = curr->next)
-      if (!curr->when || *curr->when)
+         curr; curr = curr->next) {
+
+      // Execute the hook if it has no condition, or the condition is true, AND
+      // if sigsetjmp() returns 0 (ie, continue_hook_in_current_context() was
+      // not called).
+      if ((!curr->when || *curr->when) && !sigsetjmp(hook_continue_point, 1)) {
         within_context(curr->context, curr->fun());
+      }
+    }
+  }
 
   end:
-  memcpy(hook_abort_point, old_point, sizeof(hook_abort_point));
+  // Restore old hooks
+  memcpy(hook_abort_point, old_abort_point, sizeof(hook_abort_point));
+  memcpy(hook_continue_point, old_continue_point, sizeof(hook_continue_point));
+
+  // Restore evisceration stack if it is different from when we started
+  while (evisceration_stack->len != evisceration_stack_depth)
+    object_reembowel();
 }
 
 hook_constraint constraint_after_superconstructor(

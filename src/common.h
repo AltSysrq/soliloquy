@@ -715,14 +715,23 @@ void tx_pop_handler(void);
  * nor does it gracefully unwind the stack. ONLY USE THIS IF YOU KNOW WHAT YOU
  * ARE DOING.
  * In particular:
- * - The current context, if any, will NOT be exited (ie, you can't call this
- *   within a $$ or within_context block).
  * - let() bindings will NOT revert.
- * - The hook that invokes this MUST NOT have a bound object.
+ * - This could cross a transaction handler boundary.
  *
  * The effects of calling this in inappropriate circumstances are undefined.
  */
 void hook_abort(void) __attribute__((noreturn));
+
+/**
+ * Causes the remainder of the currently-executing hook point to execute within
+ * the current context. This does not return; the current context stack is
+ * captured and used for further hooks in the chain.
+ *
+ * Caveats similar to those of hook_abort() apply, mainly that let() bindings
+ * do not revert. However, since it only abandons your own function, the
+ * effects have far less potental to be surprising.
+ */
+void continue_hook_in_current_context(void) __attribute__((noreturn));
 
 /**
  * Invokes all hooks bound to the given hook point. The hook point is not
