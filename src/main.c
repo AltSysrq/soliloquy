@@ -64,6 +64,13 @@ int main(int argc, char** argv) {
     $w_FileBuffer_filename = L"*scratch*",
     $y_FileBuffer_memory_backed = true);
 
+  if ($ls_cmdline_args) {
+    each_s($ls_cmdline_args,
+           lambdav((string filename),
+                   $c_FileBuffer($w_FileBuffer_filename =
+                                   cstrtowstr(filename))));
+  }
+
   $$($$o_term) {
     object workspace = $c_TopLevel();
     $$(workspace) {
