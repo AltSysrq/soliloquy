@@ -60,19 +60,16 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  $c_FileBuffer(
+    $w_FileBuffer_filename = L"*scratch*",
+    $y_FileBuffer_memory_backed = true);
+
   $$($$o_term) {
-    object workspace =
-      $c_Workspace(
-        $o_Workspace_backing =
-          $c_Transcript());
+    object workspace = $c_TopLevel();
     $$(workspace) {
       $o_Terminal_current_view =
         $c_View($o_View_terminal = $$o_term,
                 $o_View_workspace = workspace);
-      $c_FileBuffer(
-        $w_FileBuffer_filename = L"*scratch*",
-        $y_FileBuffer_memory_backed = true);
-      $c_TopLevel();
     }
     $M_redraw(0,$o_Terminal_current_view);
   }

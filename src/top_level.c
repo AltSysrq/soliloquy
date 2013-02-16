@@ -22,7 +22,8 @@
 
 /*
   SYMBOL: $c_TopLevel
-    The "top-level" activity which manages BufferEditors and such.
+    Workspace subclass for managing file buffers and such, which is backed by a
+    Transcript.
 
   SYMBOL: $o_TopLevel_curr_buffer
     The FileBuffer to make the current buffer, or which currently is the
@@ -32,7 +33,7 @@
     Identifies hooks by class which perform additional (de)registration
     operations.
  */
-subclass($c_Activity, $c_TopLevel)
+subclass($c_Workspace, $c_TopLevel)
 defun($h_TopLevel) {
   // We need to modify the BufferEditor class to track the BufferEditors local
   // to this TopLevel
@@ -50,6 +51,10 @@ defun($h_TopLevel) {
   // Activate whatever buffer is first in the list
   $M_activate(0,0,
               $o_TopLevel_curr_buffer = $lo_buffers->car);
+}
+
+advise_before_superconstructor($h_TopLevel) {
+  $o_Workspace_backing = $c_Transcript();
 }
 
 /*
@@ -116,25 +121,6 @@ defun($h_TopLevel_activate) {
 }
 
 /*
-  SYMBOL: $f_TopLevel_get_echo_area_meta
-    Returns echo area metadata for the Top-Level. If there are no Activities
-    underneath this TopLevel, this is just the empty string. Otherwise, the
-    meta for those activities is enclosed in braces.
- */
-defun($h_TopLevel_get_echo_area_meta) {
-  static const qchar lbrace[2] = { L'{', 0 }, rbrace[2] = { L'}', 0 };
-
-  if (!$lo_echo_area_activities) return;
-
-  object next = $lo_echo_area_activities->car;
-  let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
-  $M_get_echo_area_meta(0, next);
-
-  $q_Workspace_echo_area_meta =
-    qstrap3(lbrace, $q_Workspace_echo_area_meta, rbrace);
-}
-
-/*
   SYMBOL: $f_TopLevel_visit_file $f_TopLevel_visit_file_i
     Opens a file whose name is obtained from the user (stored in
     $w_TopLevel_filename). If a buffer for that file already exists, it is
@@ -169,7 +155,7 @@ interactive($h_TopLevel_visit_file_i,
   SYMBOL: $lp_TopLevel_keymap
     Keybindings specific to the TopLevel Activity.
  */
-class_keymap($c_TopLevel, $lp_TopLevel_keymap, $llp_Activity_keymap)
+class_keymap($c_TopLevel, $lp_TopLevel_keymap, $llp_Workspace_keymap)
 ATSINIT {
   bind_char($lp_TopLevel_keymap, $u_extended, CONTROL_F, $u_ground,
             $m_visit_file_i);
