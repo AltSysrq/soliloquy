@@ -19,6 +19,8 @@
 #include "pattern.slc"
 #include <wctype.h>
 
+#include "regex_support.h"
+
 /*
   TITLE: Pattern Matching Utilities
   OVERVIEW: Provides functions to perform various types of pattern matching,
@@ -422,14 +424,23 @@ deftest(select_asciibetically_first) {
 
   SYMBOL: $lw_Pattern_terms
     Literal strings to match anywhere within the input strings for a pattern.
+
+  SYMBOL: $p_Pattern_regex
+    A regular_expression* which this pattern uses for matching. If non-NULL,
+    all other Pattern fields are irrelevant.
  */
 defun($h_Pattern) {
   wstring control_r = wcschr($w_Pattern_pattern, L'R' - L'@');
   if (control_r) {
-    // Regex --- TODO
-    $s_rollback_reason = "Regexen not yet supported";
-    $v_rollback_type = $u_Pattern;
-    tx_rollback();
+    // Copy without the ^R
+    mwstring copy = wstrdup($w_Pattern_pattern);
+    memmove(copy + (control_r - $w_Pattern_pattern),
+            copy + (control_r - $w_Pattern_pattern) + 1,
+            wcslen(control_r));
+    $w_Pattern_pattern = copy;
+
+    $p_Pattern_regex = rx_compile($w_Pattern_pattern, NULL);
+    return;
   }
 
   mwstring token, state;
@@ -487,8 +498,8 @@ defun($h_Pattern_matches) {
     ++$w_Pattern_input;
 
   if ($p_Pattern_regex) {
-    // Not yet supported
-    $y_Pattern_matches = false;
+    $y_Pattern_matches = !!rx_match($p_Pattern_regex, $w_Pattern_input,
+                                    NULL, 0);
   } else {
     if (!*$w_Pattern_input) {
       // Null input; can only match null pattern
