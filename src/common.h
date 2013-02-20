@@ -168,19 +168,28 @@ static inline wchar_t* wmemset(wchar_t* dst, const wchar_t* src,
 #endif
 
 static inline qchar* qmemcpy(qchar* dst, const qchar* src, size_t n) {
-  memcpy(dst, src, sizeof(qchar)*n);
+  if (sizeof(qchar) == sizeof(wchar_t))
+    wmemcpy((wchar_t*)dst, (const wchar_t*)src, n);
+  else
+    memcpy(dst, src, sizeof(qchar)*n);
   return dst;
 }
 
 static inline qchar* qmemmove(qchar* dst, const qchar* src, size_t n) {
-  memmove(dst, src, sizeof(qchar)*n);
+  if (sizeof(qchar) == sizeof(wchar_t))
+    wmemmove((wchar_t*)dst, (const wchar_t*)src, n);
+  else
+    memmove(dst, src, sizeof(qchar)*n);
   return dst;
 }
 
 static inline qchar* qmemset(qchar* dst,  qchar src, size_t n) {
   qchar* dst_orig = dst;
-  while (n--)
-    *dst++ = src;
+  if (sizeof(qchar) == sizeof(wchar_t))
+    wmemset((wchar_t*)dst, (wchar_t)src, n);
+  else
+    while (n--)
+      *dst++ = src;
   return dst_orig;
 }
 
