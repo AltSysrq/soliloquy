@@ -59,14 +59,14 @@ size_t qstrlen(qstring str) {
 mwstring wstrdup(wstring src) {
   size_t sz = wcslen(src) + 1;
   mwstring dst = gcalloc(sizeof(wchar_t)*sz);
-  memcpy(dst, src, sizeof(wchar_t)*sz);
+  wmemcpy(dst, src, sz);
   return dst;
 }
 
 mqstring qstrdup(qstring src) {
   size_t sz = qstrlen(src) + 1;
   mqstring dst = gcalloc(sizeof(qchar)*sz);
-  memcpy(dst, src, sizeof(qchar)*sz);
+  qmemcpy(dst, src, sz);
   return dst;
 }
 
@@ -84,8 +84,8 @@ size_t qstrlcpy(mqstring dst, qstring src, size_t maxsz) {
   size_t srclen = qstrlen(src);
   if (!maxsz) return srclen;
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
-  memcpy(dst, src, sizeof(qchar)*len);
-  memset(dst+len, 0, sizeof(qchar)*(maxsz-len));
+  qmemcpy(dst, src, len);
+  qmemset(dst+len, 0, maxsz-len);
   return srclen;
 }
 
@@ -98,8 +98,8 @@ size_t qstrlcat(mqstring dstbase, qstring src, size_t maxsz) {
   --dst;
 
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
-  memcpy(dst, src, len*sizeof(qchar));
-  memset(dst+len, 0, sizeof(qchar)*(maxsz-len));
+  qmemcpy(dst, src, len);
+  qmemset(dst+len, 0, maxsz-len);
 
   return len + (dst-dstbase);
 }
@@ -109,8 +109,8 @@ size_t wstrlcpy(mwstring dst, wstring src, size_t maxsz) {
   size_t srclen = wcslen(src);
   if (!maxsz) return srclen;
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
-  memcpy(dst, src, sizeof(wchar_t)*len);
-  memset(dst+len, 0, sizeof(wchar_t)*(maxsz-len));
+  wmemcpy(dst, src, len);
+  wmemset(dst+len, 0, maxsz-len);
   return srclen;
 #else
   return wcslcpy(dst, src, maxsz);
@@ -127,8 +127,8 @@ size_t wstrlcat(mwstring dstbase, wstring src, size_t maxsz) {
   --dst;
 
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
-  memcpy(dst, src, len*sizeof(wchar_t));
-  memset(dst+len, 0, sizeof(wchar_t)*(maxsz-len));
+  wmemcpy(dst, src, len);
+  wmemset(dst+len, 0, maxsz-len);
 
   return len + (dst-dstbase);
 #else
@@ -139,8 +139,8 @@ size_t wstrlcat(mwstring dstbase, wstring src, size_t maxsz) {
 mqstring qstrap(qstring a, qstring b) {
   size_t alen = qstrlen(a), blen = qstrlen(b);
   mqstring dst = gcalloc(sizeof(qchar)*(alen+blen+1));
-  memcpy(dst, a, sizeof(qchar)*alen);
-  memcpy(dst+alen, b, sizeof(qchar)*blen);
+  qmemcpy(dst, a, alen);
+  qmemcpy(dst+alen, b, blen);
   //Final qchar was initialised to zero by gcalloc().
   return dst;
 }
@@ -148,8 +148,8 @@ mqstring qstrap(qstring a, qstring b) {
 mwstring wstrap(wstring a, wstring b) {
   size_t alen = wcslen(a), blen = wcslen(b);
   mwstring dst = gcalloc(sizeof(wchar_t)*(alen+blen+1));
-  memcpy(dst, a, sizeof(wchar_t)*alen);
-  memcpy(dst+alen, b, sizeof(wchar_t)*blen);
+  wmemcpy(dst, a, alen);
+  wmemcpy(dst+alen, b, blen);
   return dst;
 }
 
@@ -170,7 +170,7 @@ mqstring qstrapv(const qstring* v, unsigned cnt) {
   mqstring dst = gcalloc(sizeof(qchar)*(len + 1));
   mqstring d = dst;
   for (unsigned i = 0; i < cnt; ++i) {
-    memcpy(d, v[i], vlen[i]*sizeof(qchar));
+    qmemcpy(d, v[i], vlen[i]);
     d += vlen[i];
   }
 
