@@ -745,6 +745,16 @@ void continue_hook_in_current_context(void) __attribute__((noreturn));
  */
 void invoke_hook(struct hook_point*);
 
+typedef struct list_o const* list_o;
+/**
+ * Repeadedly invokes the given function within the context of each object in
+ * the given list.
+ *
+ * (This is not part of the list template since it is only valid for object
+ *  lists.)
+ */
+void on_each_o(list_o, void (*)(void));
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Mostly internal details below. You need not concern yourself with these.///
 ///////////////////////////////////////////////////////////////////////////////

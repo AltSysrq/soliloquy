@@ -706,6 +706,11 @@ ATSTART(eviscerate_root_object, ROOT_OBJECT_EVISCERATION_PRIORITY) {
   object_eviscerate($o_root);
 }
 
+void on_each_o(list_o these, void (*f)(void)) {
+  for (; these; these = these->cdr)
+    within_context(these->car, f());
+}
+
 // So we get the list_o and list_p templates: $$lo_unused $$lp_unused
 
 typedef struct transaction {
