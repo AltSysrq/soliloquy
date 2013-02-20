@@ -83,6 +83,30 @@ STATIC_INIT_TO($ls_process_executor_shell,
  */
 subclass($c_Activity, $c_Executor)
 
+// The Executor constructor needs to augment these classes to
+// register/deregister them from the Executor kernel object list.
+member_of_domain($h_Consumer, $d_Executor)
+member_of_domain($h_Producer, $d_Executor)
+member_of_domain($h_Consumer_destroy, $d_Executor)
+member_of_domain($h_Producer_destroy, $d_Executor)
+
+defun($h_Executor) {
+  // Add hooks to register/deregister Consumers and Producers owned by this
+  // Executor
+  add_hook(&$h_Consumer, HOOK_AFTER,
+           $u_Executor, $u_registration,
+           $m_register_consumer, NULL);
+  add_hook(&$h_Producer, HOOK_AFTER,
+           $u_Executor, $u_registration,
+           $m_register_producer, NULL);
+  add_hook(&$h_Consumer_destroy, HOOK_AFTER,
+           $u_Executor, $u_registration,
+           $m_deregister_consumer, NULL);
+  add_hook(&$h_Producer_destroy, HOOK_AFTER,
+           $u_Executor, $u_registration,
+           $m_deregister_producer, NULL);
+}
+
 /*
   SYMBOL: $f_Executor_execute
     Spawns the child process run by this Executor. Calling this more than once
@@ -179,4 +203,129 @@ defun($h_Executor_execute) {
       waitpid(child, &ignored, 0);
     }
   }
+}
+
+/*
+  SYMBOL: $f_Executor_sigchld
+    Hook function/method for the global $f_sigchld() hook point. Causes the
+    Executor to check whether the child has died and, if it has, to collect
+    exit information and take appropriate action.
+
+  SYMBOL: $y_Executor_child_dead
+    Set to true when the child process of this Executor has died.
+
+  SYMBOL: $y_Executor_child_exited
+    Set to true if the child process of this Executor exited of its own
+    volition.
+
+  SYMBOL: $i_Executor_child_return_value
+    The 8-bit return value of the child process of this Executor. This value is
+    only meaningful if the process has died. If it was killed by a signal, this
+    is set to -1.
+
+  SYMBOL: $y_Executor_child_killed
+    Set to true of the child process of this Executor was killed by a signal.
+
+  SYMBOL: $I_Executor_child_signal
+    If the child process of this Executor was killed by a signal, set to the
+    value of that signal.
+
+  SYMBOL: $y_Executor_allow_hang
+    If true, $f_Executor_sigchld() will block until the child process
+    dies. This should only be used when it is known that the child will be dead
+    very soon (ie, being SIGKILLed).
+ */
+defun($h_Executor_sigchld) {
+  int status;
+  if (0 < waitpid($i_Executor_pid, &status,
+                  $y_Executor_allow_hang? 0 : WNOHANG)) {
+    // The child has died
+    $y_Executor_child_dead = true;
+    $y_Executor_child_exited = !!WIFEXITED(status);
+    if ($y_Executor_child_exited) {
+      $i_Executor_child_return_value = WEXITSTATUS(status);
+    } else {
+      $i_Executor_child_return_value = -1;
+    }
+
+    $y_Executor_child_killed = !!WIFSIGNALED(status);
+    if ($y_Executor_child_killed) {
+      $I_Executor_child_signal = WTERMSIG(status);
+    }
+
+    $m_child_died();
+  }
+}
+
+/*
+  SYMBOL: $f_Executor_child_died
+    To be called after the child process is dead. Cleans up all external
+    resources, such as kernel objects and file handles. The Executor is then
+    destroyed.
+ */
+defun($h_Executor_child_died) {
+  // Remove the hook we added when execution began
+  del_hook(&$h_sigchld, HOOK_MAIN, $u_Executor, $o_Executor);
+
+  // Destroy all kernel objects
+  on_each_o($lo_Executor_kernel_objects, $m_destroy);
+
+  // Close all file handles
+  int* pipes = $p_Executor_pipes;
+  for (unsigned i = 0; i < 6; ++i)
+    if (-1 != pipes[i])
+      close(pipes[i]);
+
+  if (!$y_Executor_is_being_destroyed)
+    $m_destroy();
+}
+
+/*
+  SYMBOL: $f_Executor_destroy
+    If the child process of this Executor has been started and is not yet dead,
+    it is killed and cleaned up. Then normal Activity destruction is
+    continued.
+
+  SYMBOL: $y_Executor_is_being_destroyed
+    Set to true when $f_Executor_sigchld() is called from within
+    $f_Executor_destroy(). This prevents calling $m_destroy() twice on the same
+    object.
+ */
+defun($h_Executor_destroy) {
+  if ($i_Executor_pid && !$y_Executor_child_dead) {
+    kill($i_Executor_pid, SIGKILL);
+    $y_Executor_allow_hang = true;
+    $y_Executor_is_being_destroyed = true;
+    $m_sigchld();
+  }
+
+  $f_Activity_destroy();
+}
+
+/*
+  SYMBOL: $lo_Executor_kernel_objects
+    A list of $m_destroy()able objects which are currently registered with the
+    kernel and owned by this Executor, which must be deregistered when the
+    Executor is destroyed or its child dies.
+
+  SYMBOL: $f_Executor_register_producer $f_Executor_register_consumer
+    Adds $o_Producer or $o_Consumer to $lo_Executor_kernel_objects.
+
+  SYMBOL: $f_Executor_deregister_producer $f_Executor_deregister_consumer
+    Removes $o_Producer or $o_Consumer from $lo_Executor_kernel_objects.
+ */
+defun($h_Executor_register_producer) {
+  lpush_o($lo_Executor_kernel_objects, $o_Producer);
+}
+
+defun($h_Executor_register_consumer) {
+  lpush_o($lo_Executor_kernel_objects, $o_Consumer);
+}
+
+defun($h_Executor_deregister_producer) {
+  lpush_o($lo_Executor_kernel_objects, $o_Producer);
+}
+
+defun($h_Executor_deregister_consumer) {
+  lpush_o($lo_Executor_kernel_objects, $o_Consumer);
 }
