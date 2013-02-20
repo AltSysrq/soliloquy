@@ -105,15 +105,20 @@ size_t qstrlcat(mqstring dstbase, qstring src, size_t maxsz) {
 }
 
 size_t wstrlcpy(mwstring dst, wstring src, size_t maxsz) {
+#ifndef HAVE_WCSLCPY
   size_t srclen = wcslen(src);
   if (!maxsz) return srclen;
   size_t len = (srclen > maxsz-1? maxsz-1 : srclen);
   memcpy(dst, src, sizeof(wchar_t)*len);
   memset(dst+len, 0, sizeof(wchar_t)*(maxsz-len));
   return srclen;
+#else
+  return wcslcpy(dst, src, maxsz);
+#endif
 }
 
 size_t wstrlcat(mwstring dstbase, wstring src, size_t maxsz) {
+#ifndef HAVE_WCSLCAT
   size_t srclen = wcslen(src);
   if (!maxsz) return srclen;
 
@@ -126,6 +131,9 @@ size_t wstrlcat(mwstring dstbase, wstring src, size_t maxsz) {
   memset(dst+len, 0, sizeof(wchar_t)*(maxsz-len));
 
   return len + (dst-dstbase);
+#else
+  return wcslcat(dstbase, src, maxsz);
+#endif
 }
 
 mqstring qstrap(qstring a, qstring b) {
