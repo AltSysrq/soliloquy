@@ -69,7 +69,11 @@ defun($h_TtyEmulator_addch) {
 
     if ($I_TtyEmulator_x==$aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
       // Hit end-of-line
-      $m_scroll();
+      if ($I_TtyEmulator_y == $aaz_TtyEmulator_screen->len)
+        $m_scroll();
+      else
+        ++$I_TtyEmulator_y;
+
       $I_TtyEmulator_x = 0;
     }
   } else {
