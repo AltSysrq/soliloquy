@@ -36,7 +36,8 @@
 
   SYMBOL: $ay_TtyEmulator_dirty
     Tracks which rows of $aaz_TtyEmulator_screen are dirty; that is, those that
-    have been modified since the last call to $m_update().
+    have been modified since the last call to $m_update(). Its length must be
+    the same as that of $aaz_TtyEmulator_screen.
 
   SYMBOL: $I_TtyEmulator_x $I_TtyEmulator_y
     The coordinates within $aaz_TtyEmulator_screen of the next character to be
