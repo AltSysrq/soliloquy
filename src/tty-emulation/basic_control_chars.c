@@ -81,3 +81,44 @@ advise_id($u_backspace_support, $h_TtyEmulator_control_character) {
       --$I_TtyEmulator_x;
   }
 }
+
+/*
+  SYMBOL: $u_horizontal_tabulator_support
+    Identifies the hook on $h_TtyEmulator_control_character which adds support
+    for the horizontal tabulator (\t) character. A horizontal tabulator
+    advances the X of the cursor to the next multiple of 8; if this puts it
+    beyond the end of the current line, normal line wrapping occurs, resulting
+    in an X coordinate of zero.
+ */
+advise_id($u_horizontal_tabulator_support, $h_TtyEmulator_control_character) {
+  if ($z_TtyEmulator_wch == L'\t') {
+    $I_TtyEmulator_x = 8*(1 + $I_TtyEmulator_x/8);
+    if ($I_TtyEmulator_x >= $aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
+      $I_TtyEmulator_x = 0;
+      if ($I_TtyEmulator_y == $aaz_TtyEmulator_screen->len)
+        $m_scroll();
+      else
+        ++$I_TtyEmulator_y;
+    }
+  }
+}
+
+/*
+  SYMBOL: $u_vertical_tabulator_support
+    Identifies the hook on $h_TtyEmulator_control_character which adds support
+    for the vertical tabulator (\v) character. A vertical tabulator advances
+    the Y coordinate of the cursor without touching the X coordinate. (If the X
+    coordinate is out of bounds for a newly-introduced line, it is reset to
+    zero.)
+ */
+advise_id($u_vertical_tabulator_support, $h_TtyEmulator_control_character) {
+  if ($z_TtyEmulator_wch == L'\v') {
+    if ($I_TtyEmulator_y != $aaz_TtyEmulator_screen->len)
+      ++$I_TtyEmulator_y;
+    else
+      $m_scroll();
+
+    if ($I_TtyEmulator_x >= $aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->len)
+      $I_TtyEmulator_x = 0;
+  }
+}
