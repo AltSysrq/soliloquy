@@ -103,7 +103,7 @@ defun($h_TtyEmulator_addch) {
 defun($h_TtyEmulator_scroll) {
   memmove($aax_TtyEmulator_screen->v,
           $aax_TtyEmulator_screen->v+1,
-          sizeof(dynar_ax*)*$aax_TtyEmulator_screen->len-1);
+          sizeof(dynar_ax)*$aax_TtyEmulator_screen->len-1);
   $aax_TtyEmulator_screen->v[$aax_TtyEmulator_screen->len-1] =
     dynar_new_x();
   dynar_expand_by_x(
