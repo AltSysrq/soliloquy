@@ -34,7 +34,7 @@
 advise_id($u_line_feed_support, $h_TtyEmulator_control_character) {
   if ($z_TtyEmulator_wch == L'\n') {
     $I_TtyEmulator_x = 0;
-    if ($I_TtyEmulator_y == $aaz_TtyEmulator_screen->len)
+    if ($I_TtyEmulator_y == $aax_TtyEmulator_screen->len)
       $m_scroll();
     else
       ++$I_TtyEmulator_y;
@@ -57,12 +57,12 @@ advise_id($u_carraige_return_support, $h_TtyEmulator_control_character) {
   SYMBOL: $u_form_feed_support
     Identifies the hook on $h_TtyEmulator_control_character which adds support
     for the form feed (\f) character. A form feed calls $m_scroll() a number of
-    times equal to the number of rows in $aaz_TtyEmulator_screen, then resets
+    times equal to the number of rows in $aax_TtyEmulator_screen, then resets
     the cursor X and Y to the origin.
  */
 advise_id($u_form_feed_support, $h_TtyEmulator_control_character) {
   if ($z_TtyEmulator_wch == L'\f') {
-    for (unsigned i = 0; i < $aaz_TtyEmulator_screen->len; ++i)
+    for (unsigned i = 0; i < $aax_TtyEmulator_screen->len; ++i)
       $m_scroll();
     $I_TtyEmulator_y = 0;
     $I_TtyEmulator_x = 0;
@@ -93,9 +93,9 @@ advise_id($u_backspace_support, $h_TtyEmulator_control_character) {
 advise_id($u_horizontal_tabulator_support, $h_TtyEmulator_control_character) {
   if ($z_TtyEmulator_wch == L'\t') {
     $I_TtyEmulator_x = 8*(1 + $I_TtyEmulator_x/8);
-    if ($I_TtyEmulator_x >= $aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
+    if ($I_TtyEmulator_x >= $aax_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
       $I_TtyEmulator_x = 0;
-      if ($I_TtyEmulator_y == $aaz_TtyEmulator_screen->len)
+      if ($I_TtyEmulator_y == $aax_TtyEmulator_screen->len)
         $m_scroll();
       else
         ++$I_TtyEmulator_y;
@@ -113,12 +113,12 @@ advise_id($u_horizontal_tabulator_support, $h_TtyEmulator_control_character) {
  */
 advise_id($u_vertical_tabulator_support, $h_TtyEmulator_control_character) {
   if ($z_TtyEmulator_wch == L'\v') {
-    if ($I_TtyEmulator_y != $aaz_TtyEmulator_screen->len)
+    if ($I_TtyEmulator_y != $aax_TtyEmulator_screen->len)
       ++$I_TtyEmulator_y;
     else
       $m_scroll();
 
-    if ($I_TtyEmulator_x >= $aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->len)
+    if ($I_TtyEmulator_x >= $aax_TtyEmulator_screen->v[$I_TtyEmulator_y]->len)
       $I_TtyEmulator_x = 0;
   }
 }

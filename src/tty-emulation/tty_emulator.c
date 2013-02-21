@@ -17,6 +17,7 @@
   along with Soliloquy.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "tty_emulator.slc"
+#include "../face.h"
 
 /*
   TITLE: Basic TTY Emulator
@@ -28,31 +29,31 @@
   SYMBOL: $c_TtyEmulator
     Encapsulates the data and operations for a primitive terminal emulator.
 
-  SYMBOL: $aaz_TtyEmulator_screen
+  SYMBOL: $aax_TtyEmulator_screen
     The current contents of the TtyEmulator. It is not necessarily a
     rectangular array. The outer array contains the rows, and must have a
     length of at least one. The initial value has one row whose size is
     $i_column_width.
 
   SYMBOL: $ay_TtyEmulator_dirty
-    Tracks which rows of $aaz_TtyEmulator_screen are dirty; that is, those that
+    Tracks which rows of $aax_TtyEmulator_screen are dirty; that is, those that
     have been modified since the last call to $m_update(). Its length must be
-    the same as that of $aaz_TtyEmulator_screen.
+    the same as that of $aax_TtyEmulator_screen.
 
   SYMBOL: $I_TtyEmulator_x $I_TtyEmulator_y
-    The coordinates within $aaz_TtyEmulator_screen of the next character to be
+    The coordinates within $aax_TtyEmulator_screen of the next character to be
     output.
 
   SYMBOL: $I_TtyEmulator_ninputs
     The number of TtyConsumers providing inputs to this TtyEmulator.
  */
 defun($h_TtyEmulator) {
-  $aaz_TtyEmulator_screen = dynar_new_az();
-  dynar_expand_by_az($aaz_TtyEmulator_screen, 1);
-  $aaz_TtyEmulator_screen->v[0] = dynar_new_z();
-  dynar_expand_by_z($aaz_TtyEmulator_screen->v[0], $i_column_width);
+  $aax_TtyEmulator_screen = dynar_new_ax();
+  dynar_expand_by_ax($aax_TtyEmulator_screen, 1);
+  $aax_TtyEmulator_screen->v[0] = dynar_new_x();
+  dynar_expand_by_x($aax_TtyEmulator_screen->v[0], $i_column_width);
   $ay_TtyEmulator_dirty = dynar_new_y();
-  dynar_expand_by_y($ay_TtyEmulator_dirty, $aaz_TtyEmulator_screen->len);
+  dynar_expand_by_y($ay_TtyEmulator_dirty, $aax_TtyEmulator_screen->len);
 }
 
 /*
@@ -67,18 +68,21 @@ defun($h_TtyEmulator) {
 
   SYMBOL: $z_TtyEmulator_wch
     The wchar_t to add in a call to $f_TtyEmulator_addch and
-    $f_TtyEmulator_control_character
+    $f_TtyEmulator_control_character.
+
+  SYMBOL: $I_TtyEmulator_current_face
+    The current face for new characters output to this TtyEmulator.
  */
 defun($h_TtyEmulator_addch) {
   if ($z_TtyEmulator_wch >= L' ' && $z_TtyEmulator_wch != 127) {
-    $aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->v[$I_TtyEmulator_x++] =
-      $z_TtyEmulator_wch;
+    $aax_TtyEmulator_screen->v[$I_TtyEmulator_y]->v[$I_TtyEmulator_x++] =
+      apply_face($I_TtyEmulator_current_face, $z_TtyEmulator_wch);
 
     $ay_TtyEmulator_dirty->v[$I_TtyEmulator_y] = true;
 
-    if ($I_TtyEmulator_x==$aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
+    if ($I_TtyEmulator_x==$aax_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
       // Hit end-of-line
-      if ($I_TtyEmulator_y == $aaz_TtyEmulator_screen->len)
+      if ($I_TtyEmulator_y == $aax_TtyEmulator_screen->len)
         $m_scroll();
       else
         ++$I_TtyEmulator_y;
@@ -97,13 +101,13 @@ defun($h_TtyEmulator_addch) {
     whose length is $i_column_width.
  */ 
 defun($h_TtyEmulator_scroll) {
-  memmove($aaz_TtyEmulator_screen->v,
-          $aaz_TtyEmulator_screen->v+1,
-          sizeof(dynar_az*)*$aaz_TtyEmulator_screen->len-1);
-  $aaz_TtyEmulator_screen->v[$aaz_TtyEmulator_screen->len-1] =
-    dynar_new_z();
-  dynar_expand_by_z(
-    $aaz_TtyEmulator_screen->v[$aaz_TtyEmulator_screen->len-1],
+  memmove($aax_TtyEmulator_screen->v,
+          $aax_TtyEmulator_screen->v+1,
+          sizeof(dynar_ax*)*$aax_TtyEmulator_screen->len-1);
+  $aax_TtyEmulator_screen->v[$aax_TtyEmulator_screen->len-1] =
+    dynar_new_x();
+  dynar_expand_by_x(
+    $aax_TtyEmulator_screen->v[$aax_TtyEmulator_screen->len-1],
     $i_column_width);
 }
 
