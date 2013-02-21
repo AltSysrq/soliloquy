@@ -31,6 +31,10 @@
 
   SYMBOL: $u_fundamental_construction
     Identifies the hook which performs a class's fundamental construction.
+
+  SYMBOL: $u_main
+    Identifies the "primary" implementation of a function on a hook point. This
+    is typically used by defun(), though sometimes may be added by other hooks.
  */
 
 #include "common.slc"
