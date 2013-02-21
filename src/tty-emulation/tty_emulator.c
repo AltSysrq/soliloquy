@@ -34,6 +34,10 @@
     length of at least one. The initial value has one row whose size is
     $i_column_width.
 
+  SYMBOL: $ay_TtyEmulator_dirty
+    Tracks which rows of $aaz_TtyEmulator_screen are dirty; that is, those that
+    have been modified since the last call to $m_update().
+
   SYMBOL: $I_TtyEmulator_x $I_TtyEmulator_y
     The coordinates within $aaz_TtyEmulator_screen of the next character to be
     output.
@@ -46,6 +50,8 @@ defun($h_TtyEmulator) {
   dynar_expand_by_az($aaz_TtyEmulator_screen, 1);
   $aaz_TtyEmulator_screen->v[0] = dynar_new_z();
   dynar_expand_by_z($aaz_TtyEmulator_screen->v[0], $i_column_width);
+  $ay_TtyEmulator_dirty = dynar_new_y();
+  dynar_expand_by_y($ay_TtyEmulator_dirty, $aaz_TtyEmulator_screen->len);
 }
 
 /*
@@ -66,6 +72,8 @@ defun($h_TtyEmulator_addch) {
   if ($z_TtyEmulator_wch >= L' ' && $z_TtyEmulator_wch != 127) {
     $aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->v[$I_TtyEmulator_x++] =
       $z_TtyEmulator_wch;
+
+    $ay_TtyEmulator_dirty->v[$I_TtyEmulator_y] = true;
 
     if ($I_TtyEmulator_x==$aaz_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
       // Hit end-of-line
@@ -96,6 +104,16 @@ defun($h_TtyEmulator_scroll) {
   dynar_expand_by_z(
     $aaz_TtyEmulator_screen->v[$aaz_TtyEmulator_screen->len-1],
     $i_column_width);
+}
+
+/*
+  SYMBOL: $f_TtyEmulator_update
+    Called by the TtyConsumer after current input has been exhausted. This
+    method should actually update whatever display the TtyEmulator maps to. The
+    default cleans the dirty bits in the AFTER priority.
+ */
+advise_id_after($u_main, $h_TtyEmulator_update) {
+  memset($ay_TtyEmulator_dirty->v, 0, $ay_TtyEmulator_dirty->len*sizeof(bool));
 }
 
 /*

@@ -59,6 +59,8 @@ defun($h_TtyConsumer) {
 defun($h_TtyConsumer_read) {
   char byte;
   ssize_t nread;
+  bool added_chars = false;
+
   while (0 < (nread = read($i_Consumer_fd, &byte, 1))) {
     // Write into the wch buffer and advance
     $S_TtyConsumer_wchbuf[$I_TtyConsumer_wchbuf++] = byte;
@@ -93,9 +95,14 @@ defun($h_TtyConsumer_read) {
 
       // Hand off to the emulator
       $M_addch(0, $o_TtyConsumer_emulator, $z_TtyEmulator_wch = wch);
+
+      added_chars = true;
     }
   }
 
+  if (added_chars)
+    $M_update(0, $o_TtyConsumer_emulator);
+  
   if (!nread)
     // EOF
     $m_destroy();
