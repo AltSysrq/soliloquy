@@ -109,6 +109,10 @@ defun($h_TtyEmulator_scroll) {
   dynar_expand_by_x(
     $aax_TtyEmulator_screen->v[$aax_TtyEmulator_screen->len-1],
     $i_column_width);
+
+  // This makes all lines dirty
+  for (unsigned i = 0; i < $ay_TtyEmulator_dirty->len; ++i)
+    $ay_TtyEmulator_dirty->v[i] = true;
 }
 
 /*
