@@ -34,7 +34,7 @@
 advise_id($u_line_feed_support, $h_TtyEmulator_control_character) {
   if ($z_TtyEmulator_wch == L'\n') {
     $I_TtyEmulator_x = 0;
-    if ($I_TtyEmulator_y == $aax_TtyEmulator_screen->len)
+    if ($I_TtyEmulator_y+1 == $aax_TtyEmulator_screen->len)
       $m_scroll();
     else
       ++$I_TtyEmulator_y;
@@ -95,7 +95,7 @@ advise_id($u_horizontal_tabulator_support, $h_TtyEmulator_control_character) {
     $I_TtyEmulator_x = 8*(1 + $I_TtyEmulator_x/8);
     if ($I_TtyEmulator_x >= $aax_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
       $I_TtyEmulator_x = 0;
-      if ($I_TtyEmulator_y == $aax_TtyEmulator_screen->len)
+      if ($I_TtyEmulator_y+1 == $aax_TtyEmulator_screen->len)
         $m_scroll();
       else
         ++$I_TtyEmulator_y;

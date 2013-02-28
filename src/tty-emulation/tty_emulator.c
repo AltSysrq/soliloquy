@@ -82,7 +82,7 @@ defun($h_TtyEmulator_addch) {
 
     if ($I_TtyEmulator_x==$aax_TtyEmulator_screen->v[$I_TtyEmulator_y]->len) {
       // Hit end-of-line
-      if ($I_TtyEmulator_y == $aax_TtyEmulator_screen->len)
+      if ($I_TtyEmulator_y+1 == $aax_TtyEmulator_screen->len)
         $m_scroll();
       else
         ++$I_TtyEmulator_y;

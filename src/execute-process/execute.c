@@ -25,6 +25,8 @@
 #include <signal.h>
 #include <errno.h>
 
+#include "../face.h"
+
 /*
   TITLE: External Process Execution
   OVERVIEW: Provides an Activity representing an asynchronous execution of an
@@ -125,6 +127,10 @@ defun($h_Executor) {
     Called within the child process of the Executor immediately after executing
     the fork() system call. This cannot be used as an abstract method; do not
     try to override it.
+
+  SYMBOL: $i_Executor_target_fd
+    Within a call to m_fixup_child_std*_pipe, stores the FD that the call is
+    supposed to finish setting up (ie, STDIN_FILENO, etc).
  */
 defun($h_Executor_execute) {
   auto void cleanup_pipes(void);
@@ -160,13 +166,16 @@ defun($h_Executor_execute) {
 
     $M_fixup_parent_stdin_pipe (0, 0, $p_Executor_pipe = pipes+0);
     $M_fixup_parent_stdout_pipe(0, 0, $p_Executor_pipe = pipes+2);
-    $M_fixup_parent_stdout_pipe(0, 0, $p_Executor_pipe = pipes+4);
+    $M_fixup_parent_stderr_pipe(0, 0, $p_Executor_pipe = pipes+4);
     tx_pop_handler();
   } else {
     // Child process
     $f_Executor_fork();
+    $i_Executor_target_fd = STDIN_FILENO;
     $M_fixup_child_stdin_pipe (0, 0, $p_Executor_pipe = pipes+0);
+    $i_Executor_target_fd = STDOUT_FILENO;
     $M_fixup_child_stdout_pipe(0, 0, $p_Executor_pipe = pipes+2);
+    $i_Executor_target_fd = STDERR_FILENO;
     $M_fixup_child_stderr_pipe(0, 0, $p_Executor_pipe = pipes+4);
 
     string cmdline = wstrtocstr($w_Executor_cmdline);
@@ -328,4 +337,48 @@ defun($h_Executor_deregister_producer) {
 
 defun($h_Executor_deregister_consumer) {
   lpush_o($lo_Executor_kernel_objects, $o_Consumer);
+}
+
+/*
+  SYMBOL: $f_Executor_get_echo_area_contents
+    Sets $q_Workspace_echo_area_contents to the empty string.
+ */
+defun($h_Executor_get_echo_area_contents) {
+  $q_Workspace_echo_area_contents = qempty;
+}
+
+/*
+  SYMBOL: $I_Executor_meta_size
+    The maximum width in characters of the echo area meta for this executor.
+ */
+STATIC_INIT_TO($I_Executor_meta_size, 16);
+/*
+  SYMBOL: $f_Executor_get_echo_area_meta
+    Sets $q_Workspace_echo_area_contents to the echo area meta for this
+    executor; this is the possibly truncated command-line, prefixed with
+    $w_Executor_prefix and surrounded by braces. The face $I_Executor_meta_face
+    is applied to this string.
+
+  SYMBOL: $w_Executor_prefix
+    Prefix to show before the command-line in the echo area meta.
+
+  SYMBOL: $I_Executor_meta_face
+    Face to apply to the echo area meta for this Executor.
+ */
+defun($h_Executor_get_echo_area_meta) {
+  if ($lo_echo_area_activities) {
+    object that = $lo_echo_area_activities->car;
+    let($lo_echo_area_activities, $lo_echo_area_activities->cdr);
+    $M_get_echo_area_meta(0, that);
+  }
+  wchar_t meta[$I_Executor_meta_size+1];
+  meta[0] = L'{';
+  meta[1] = 0;
+  wstrlcat(meta, $w_Executor_prefix, $I_Executor_meta_size-1);
+  wstrlcat(meta, $w_Executor_cmdline, $I_Executor_meta_size-1);
+  wstrlcat(meta, L"}", $I_Executor_meta_size+1);
+
+  $q_Workspace_echo_area_meta = qstrap(
+    apply_face_str($I_Executor_meta_face, wstrtoqstr(meta)),
+    $q_Workspace_echo_area_meta);
 }
