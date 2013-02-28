@@ -41,6 +41,7 @@ subclass($c_Producer, $c_SfleProducer)
     The input queue provided by the user so far.
  */
 defun($h_StdinFromLineEditor) {
+  $az_LineEditor_buffer = dynar_new_z();
   $as_StdinFromLineEditor_buffer = dynar_new_s();
 }
 
@@ -120,6 +121,7 @@ defun($h_StdinFromLineEditor_pump_input) {
   if ($o_StdinFromLineEditor_producer) {
     $M_destroy(0, $o_StdinFromLineEditor_producer);
     $M_update_echo_area(0, $o_Activity_workspace);
+    $o_StdinFromLineEditor_producer = NULL;
   }
 
   while ($as_StdinFromLineEditor_buffer->len) {
@@ -149,6 +151,7 @@ defun($h_StdinFromLineEditor_pump_input) {
  */
 defun($h_StdinFromLineEditor_accept) {
   // Push this line of input through
+  $m_get_text();
   dynar_push_s($as_StdinFromLineEditor_buffer,
                wstrtocstr($w_LineEditor_text));
   dynar_push_s($as_StdinFromLineEditor_buffer, "\n");
