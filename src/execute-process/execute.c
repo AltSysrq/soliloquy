@@ -246,8 +246,8 @@ defun($h_Executor_execute) {
  */
 defun($h_Executor_sigchld) {
   int status;
-  if (0 < waitpid($i_Executor_pid, &status,
-                  $y_Executor_allow_hang? 0 : WNOHANG)) {
+  if ($i_Executor_pid == waitpid($i_Executor_pid, &status,
+                                 $y_Executor_allow_hang? 0 : WNOHANG)) {
     // The child has died
     $y_Executor_child_dead = true;
     $y_Executor_child_exited = !!WIFEXITED(status);

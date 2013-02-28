@@ -24,22 +24,23 @@
   TITLE: Integration of process execution into the user interface.
  */
 
+subclass($c_StdinFromLineEditor, $c_ExecuteAsyncProcess)
+subclass($c_OutputToTranscript, $c_ExecuteAsyncProcess)
+
+defun($h_ExecuteAsyncProcess_destroy) {
+  $f_StdinFromLineEditor_destroy();
+  $f_OutputToTranscript_destroy();
+}
+
 interactive($h_execute_async_process_i,
             $h_execute_async_process,
             i_(w, $w_Executor_cmdline, L"exec")) {
-  $$(object_new(NULL)) {
-    implant($d_Executor);
-    implant($d_StdinFromLineEditor);
-    implant($d_OutputToTranscript);
-    $y_OutputToTranscript_stdout = true;
-    $y_OutputToTranscript_stderr = true;
-    $w_Executor_prefix = L"!";
-
-    $f_Executor();
-    $f_StdinFromLineEditor();
-    $f_OutputToTranscript();
-    $m_execute();
-  }
+  object that = $c_ExecuteAsyncProcess(
+    $y_OutputToTranscript_stdout = true,
+    $y_OutputToTranscript_stderr = true,
+    $w_Executor_prefix = L"!",
+    $o_Activity_workspace = $o_Workspace);
+  $M_execute(0, that);
 }
 
 class_keymap($c_BufferEditor, $lp_process_execution, $llp_Activity_keymap)

@@ -51,6 +51,14 @@ defun($h_OutputToTranscript) {
 }
 
 /*
+  SYMBOL: $f_OutputToTranscript_destroy
+    Calls $f_Executor_destroy.
+ */
+defun($h_OutputToTranscript_destroy) {
+  $f_Executor_destroy();
+}
+
+/*
   SYMBOL: $f_OutputToTranscript_create_pipe
     Potential implementation of m_create_std{out,err}_pipe.
  */

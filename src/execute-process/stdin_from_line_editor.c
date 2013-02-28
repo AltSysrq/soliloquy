@@ -45,6 +45,15 @@ defun($h_StdinFromLineEditor) {
 }
 
 /*
+  SYMBOL: $f_StdinFromLineEditor_destroy
+    Forwards the call to its superclasses.
+ */
+defun($h_StdinFromLineEditor_destroy) {
+  $f_LineEditor_destroy();
+  $f_Executor_destroy();
+}
+
+/*
   SYMBOL: $f_StdinFromLineEditor_create_stdin_pipe
     Creates the pipe and performs initial setup.
  */
