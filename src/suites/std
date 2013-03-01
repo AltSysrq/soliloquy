@@ -4,3 +4,4 @@
 require linum-mode
 require control-character-display-mode
 require symbol-chord-mode
+require execute-process
