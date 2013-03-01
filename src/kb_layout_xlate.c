@@ -47,6 +47,9 @@ ATSTART(initalise_keyboard_layouts, STATIC_INITIALISATION_PRIORITY-1) {
   // DE Neo2
   $$w_layout_neo2         = L"xvlcwkhgfquiaeosnrtdüöäpzbm,.j"
                              "XVLCWKHGFQUIAEOSNRTDÜÖÄPZBM–•J";
+  // DE Credstin
+  $$w_layout_credstin     = L"plovyzhfamcred,;stinüköu.xgwqb"
+                             "PLOVYZHFAMCREDä:STINÜKÖUÄXGWQB";
   // DE QWERTZ
   $$w_layout_qwertz_de    = L"qwertzuiopasdfghjklöyxcvbnm,.-"
                              "QWERTZUIOPASDFGHJKLÖXYCVBNM;:_";
