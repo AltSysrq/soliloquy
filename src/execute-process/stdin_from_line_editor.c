@@ -43,6 +43,7 @@ subclass($c_Producer, $c_SfleProducer)
 defun($h_StdinFromLineEditor) {
   $az_LineEditor_buffer = dynar_new_z();
   $as_StdinFromLineEditor_buffer = dynar_new_s();
+  $i_LineEditor_point = 0;
 }
 
 /*
