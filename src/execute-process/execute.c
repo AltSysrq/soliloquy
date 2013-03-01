@@ -367,6 +367,10 @@ STATIC_INIT_TO($I_Executor_meta_size, 16);
 
   SYMBOL: $I_Executor_meta_face
     Face to apply to the echo area meta for this Executor.
+
+  SYMBOL: $f_Executor_set_meta_face
+    Called to update the value of $I_Executor_meta_face. This is a hook, not a
+    method. Do not override it. Before it ts run, the face is set to zero.
  */
 defun($h_Executor_get_echo_area_meta) {
   if ($lo_echo_area_activities) {
@@ -381,6 +385,8 @@ defun($h_Executor_get_echo_area_meta) {
   wstrlcat(meta, $w_Executor_cmdline, $I_Executor_meta_size-1);
   wstrlcat(meta, L"}", $I_Executor_meta_size+1);
 
+  $I_Executor_meta_face = 0;
+  $f_Executor_set_meta_face();
   $q_Workspace_echo_area_meta = qstrap(
     apply_face_str($I_Executor_meta_face, wstrtoqstr(meta)),
     $q_Workspace_echo_area_meta);

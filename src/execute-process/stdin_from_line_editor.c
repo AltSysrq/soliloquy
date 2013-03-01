@@ -47,6 +47,11 @@ defun($h_StdinFromLineEditor) {
   $az_LineEditor_buffer = dynar_new_z();
   $as_StdinFromLineEditor_buffer = dynar_new_s();
   $i_LineEditor_point = 0;
+
+  add_hook(&$h_Executor_set_meta_face, HOOK_MAIN,
+           $u_StdinFromLineEditor, NULL,
+           $f_StdinFromLineEditor_set_meta_face,
+           NULL);
 }
 
 /*
@@ -56,6 +61,24 @@ defun($h_StdinFromLineEditor) {
 defun($h_StdinFromLineEditor_destroy) {
   $f_LineEditor_destroy();
   $f_Executor_destroy();
+}
+
+/*
+  SYMBOL: $I_StdinFromLineEditor_ready_face
+    Face to apply to echo area meta when the child is waiting for input.
+ */
+STATIC_INIT_TO($I_StdinFromLineEditor_ready_face,
+               mkface("!fM+B"))
+/*
+  SYMBOL: $f_StdinFromLineEditor_set_meta_face
+    Hooked onto $f_Executor_set_meta_face to set the meta face if waiting for
+    input.
+ */
+defun($h_StdinFromLineEditor_set_meta_face) {
+  if (!$o_StdinFromLineEditor_producer && -1 != $i_Producer_fd) {
+    // Waiting for input
+    $I_Executor_meta_face = $I_StdinFromLineEditor_ready_face;
+  }
 }
 
 /*
@@ -157,6 +180,8 @@ defun($h_StdinFromLineEditor_pump_input) {
 
     $i_Producer_fd = -1;
   }
+
+  $M_update_echo_area(0, $o_Activity_workspace);
 }
 
 /*
