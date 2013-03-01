@@ -129,8 +129,8 @@ defun($h_Executor) {
     try to override it.
 
   SYMBOL: $i_Executor_target_fd
-    Within a call to m_fixup_child_std*_pipe, stores the FD that the call is
-    supposed to finish setting up (ie, STDIN_FILENO, etc).
+    Within a call to m_fixup_{child,parent}_std*_pipe, stores the FD that the
+    call is supposed to finish setting up (ie, STDIN_FILENO, etc).
  */
 defun($h_Executor_execute) {
   auto void cleanup_pipes(void);
@@ -164,8 +164,11 @@ defun($h_Executor_execute) {
     tx_write_through($i_Executor_pid);
     tx_write_through($p_Executor_pipes);
 
+    $i_Executor_target_fd = STDIN_FILENO;
     $M_fixup_parent_stdin_pipe (0, 0, $p_Executor_pipe = pipes+0);
+    $i_Executor_target_fd = STDOUT_FILENO;
     $M_fixup_parent_stdout_pipe(0, 0, $p_Executor_pipe = pipes+2);
+    $i_Executor_target_fd = STDERR_FILENO;
     $M_fixup_parent_stderr_pipe(0, 0, $p_Executor_pipe = pipes+4);
     tx_pop_handler();
   } else {

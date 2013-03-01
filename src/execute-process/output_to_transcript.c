@@ -20,6 +20,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "../face.h"
+
 /*
   TITLE: Process Output to Transcript
   OVERVIEW: Provides facilities to direct process output (stdout &/| stderr) to
@@ -70,6 +72,19 @@ defun($h_OutputToTranscript_create_pipe) {
 }
 
 /*
+  SYMBOL: $I_OutputToTranscript_stdout_face $I_OutputToTranscript_stderr_face
+    The initial terminal faces for the respective output streams of a process,
+    as well as the face for the Transcript meta.
+
+  SYMBOL: $I_OutputToTranscript_meta_face
+    The face to apply to the Transcript meta of the process output streams, *in
+    addition* to the face for that particular stream.
+ */
+STATIC_INIT_TO($I_OutputToTranscript_stdout_face, 0)
+STATIC_INIT_TO($I_OutputToTranscript_stderr_face, mkface("!fC"))
+STATIC_INIT_TO($I_OutputToTranscript_meta_face, mkface("!fb"))
+
+/*
   SYMBOL: $f_OutputToTranscript_fixup_parent_pipe
     Potential implementation of m_fixup_parent_std{out,err}_pipe.
  */
@@ -80,10 +95,21 @@ defun($h_OutputToTranscript_fixup_parent_pipe) {
   pipes[1] = -1;
 
   // Create emulator on our end
+  wchar_t meta[$i_line_meta_width];
+  wstrlcpy(meta, $w_Executor_cmdline, $i_line_meta_width);
   $c_TtyConsumer(
     $o_TtyConsumer_emulator =
     $c_TranscriptTty($i_Consumer_fd = pipes[0],
                      $o_TranscriptTty_transcript = $o_Transcript,
+                     $I_TtyEmulator_current_face =
+                       ($i_Executor_target_fd == STDOUT_FILENO?
+                        $I_OutputToTranscript_stdout_face :
+                        $I_OutputToTranscript_stderr_face),
+                     $q_RenderedLine_meta =
+                       apply_face_str(
+                         $I_OutputToTranscript_meta_face,
+                         apply_face_str($I_TtyEmulator_current_face,
+                                        wstrtoqstr(meta))),
                      $I_TtyEmulator_ninputs = 1));
 }
 

@@ -32,6 +32,7 @@
     and are updated as the line completes.
  */
 subclass($c_TtyEmulator, $c_TranscriptTty)
+member_of_domain($q_RenderedLine_meta, $d_TranscriptTty)
 
 /*
   SYMBOL: $i_TranscriptTty_curr_line
