@@ -74,6 +74,7 @@ defun($h_TtyConsumer_read) {
     // shifts.
     if (ret == (size_t)-2 && $I_TtyConsumer_wchbuf < MB_LEN_MAX) {
       // Incomplete sequence
+      $I_TtyConsumer_wchbuf = 0;
       continue;
     } else if (ret == (size_t)-1 || ret == (size_t)-2) {
       // Sequence too long or invalid sequence; reset
