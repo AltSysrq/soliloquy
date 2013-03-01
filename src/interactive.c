@@ -130,20 +130,22 @@ defun($h_invoke_interactive) {
   // Get the next argument
   object factory = $ao_Interactive_arguments->v[$i_Interactive_ix++];
   object activity = object_new(factory);
-  $$(workspace) {
-    $$(activity) {
-      implant($d_Activity);
-      $o_Activity_workspace = workspace;
-      //$o_Activity here still refers to whatever activity is present, since
-      //the new activity object is still bare.
-      $o_Activity_parent = $o_Activity;
-      invoke_hook($H_IArg_activate);
-
-      // Set continuation up
-      add_hook_obj(&$h_Activity_destroy, HOOK_AFTER,
-                   $u_Interactive_continuation, $u_continuation,
-                   $f_invoke_interactive, $o_Interactive,
-                   NULL);
+  object this = $o_Interactive;
+  $$($o_root) {
+    $$(workspace) {
+      $$(activity) {
+        implant($d_Activity);
+        $o_Activity_workspace = workspace;
+        //$o_Activity here still refers to whatever activity is present, since
+        //the new activity object is still bare.
+        $o_Activity_parent = $o_Activity;
+        invoke_hook($H_IArg_activate);
+        // Set continuation up
+        add_hook_obj(&$h_Activity_destroy, HOOK_AFTER,
+                     $u_Interactive_continuation, $u_continuation,
+                     $f_invoke_interactive, this,
+                     NULL);
+      }
     }
   }
 }
@@ -224,9 +226,10 @@ defun($h_WCharIActive_char) {
   }
 
   //OK
+  wchar_t* dst = $p_IArg_destination;
+  wchar_t val = $x_Terminal_input_value;
   $$($o_IArg_context) {
-    wchar_t* dst = $p_IArg_destination;
-    *dst = $x_Terminal_input_value;
+    *dst = val;
   }
   $m_destroy();
 }
@@ -289,9 +292,10 @@ defun($h_WStringIActive_accept) {
     }
   }
 
+  wstring* dst = $p_IArg_destination;
+  wstring val = $w_WStringIArg_text;
   $$($o_IArg_context) {
-    wstring* dst = $p_IArg_destination;
-    *dst = $w_WStringIArg_text;
+    *dst = val;
   }
   $m_destroy();
 }

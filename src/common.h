@@ -409,6 +409,12 @@ void add_hook_obj_cond(struct hook_point*, unsigned priority, const bool* when,
  */
 void del_hook(struct hook_point*, unsigned priority, identity, object context);
 
+/**
+ * Deletes all hooks of the given identity at the given priority, regardless of
+ * their context.
+ */
+void del_hooks_of_id(struct hook_point*, unsigned priority, identity);
+
 #define _ADVISE(hook,priority)                       \
   static void _GLUE(advice,__LINE__)(void);          \
   ATSTART(ANONYMOUS, ADVICE_INSTALLATION_PRIORITY) { \

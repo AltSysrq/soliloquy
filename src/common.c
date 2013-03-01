@@ -616,6 +616,17 @@ void del_hook(struct hook_point* point,
   del_hook_impl(point, priority, id, context);
 }
 
+void del_hooks_of_id(struct hook_point* point, unsigned priority, identity id) {
+  clone_hook_chain(&point->entries[priority]);
+
+  struct hook_point_entry** base = &point->entries[priority];
+  while (*base)
+    if ((*base)->id == id)
+      *base = (*base)->next;
+    else
+      base = &(*base)->next;
+}
+
 static sigjmp_buf hook_abort_point;
 void hook_abort(void) {
   siglongjmp(hook_abort_point, 1);
