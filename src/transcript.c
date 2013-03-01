@@ -182,7 +182,7 @@ defun($h_Transcript_add_ref_line) {
   $i_Transcript_line_ref =
     $i_Transcript_line_ref_offset +
       $ai_Transcript_line_refs->len;
-  dynar_push_i($ai_Transcript_line_refs, $i_Transcript_line_ref);
+  dynar_push_i($ai_Transcript_line_refs, $ao_Backing_lines->len);
   $M_append(0,0,
             $lo_Transcript_output =
               cons_o($o_Transcript_ref_line, NULL));
