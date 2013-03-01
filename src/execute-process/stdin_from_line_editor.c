@@ -21,6 +21,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "../key_dispatch.h"
+
 /*
   TITLE: Process stdin from line editor
   OVERVIEW: Allows to provide input to a process via a LineEditor.
@@ -106,7 +108,7 @@ defun($h_StdinFromLineEditor_fixup_child_stdin_pipe) {
     become ready. If NULL, the pipe is currently ready.
  */
 defun($h_StdinFromLineEditor_begin_waiting) {
-  if (!$o_StdinFromLineEditor_producer) {
+  if (!$o_StdinFromLineEditor_producer && -1 != $i_Producer_fd) {
     $o_StdinFromLineEditor_producer = $c_SfleProducer();
     $M_update_echo_area(0, $o_Activity_workspace);
   }
@@ -143,6 +145,17 @@ defun($h_StdinFromLineEditor_pump_input) {
     if (!*$as_StdinFromLineEditor_buffer->v[0])
       dynar_erase_s($as_StdinFromLineEditor_buffer, 0, 1);
   }
+
+  // Current input exhausted; if EOF has been entered, close the stream
+  if ($y_StdinFromLineEditor_eof) {
+    close($i_Producer_fd);
+    int* pipes = $p_Executor_pipes;
+    for (unsigned i = 0; i < 6; ++i)
+      if (pipes[i] == $i_Producer_fd)
+        pipes[i] = -1;
+
+    $i_Producer_fd = -1;
+  }
 }
 
 /*
@@ -152,12 +165,14 @@ defun($h_StdinFromLineEditor_pump_input) {
  */
 defun($h_StdinFromLineEditor_accept) {
   // Push this line of input through
-  $m_get_text();
-  dynar_push_s($as_StdinFromLineEditor_buffer,
-               wstrtocstr($w_LineEditor_text));
-  dynar_push_s($as_StdinFromLineEditor_buffer, "\n");
-  if (!$o_StdinFromLineEditor_producer)
-    $m_pump_input();
+  if (!$y_StdinFromLineEditor_eof) {
+    $m_get_text();
+    dynar_push_s($as_StdinFromLineEditor_buffer,
+                 wstrtocstr($w_LineEditor_text));
+    dynar_push_s($as_StdinFromLineEditor_buffer, "\n");
+    if (!$o_StdinFromLineEditor_producer)
+      $m_pump_input();
+  }
 
   // Reset the line editor
   $m_push_undo();
@@ -165,6 +180,24 @@ defun($h_StdinFromLineEditor_accept) {
   $i_LineEditor_point = 0;
 
   $M_update_echo_area(0, $o_Activity_workspace);
+}
+
+/*
+  SYMBOL: $f_StdinFromLineEditor_eof
+    Flags the input state as closed, and calls $m_accept() or $m_pump_input()
+    to actually terminate the stream.
+
+  SYMBOL: $y_StdinFromLineEditor_eof
+    If true, the user has indicated EOF for this StdinFromLineEditor.
+ */
+defun($h_StdinFromLineEditor_eof) {
+  if ($y_StdinFromLineEditor_eof) return;
+
+  $y_StdinFromLineEditor_eof = true;
+  if ($az_LineEditor_buffer->len)
+    $m_accept();
+  else
+    $m_pump_input();
 }
 
 /*
@@ -186,4 +219,15 @@ defun($h_SfleProducer) {
  */
 defun($h_SfleProducer_write) {
   $M_pump_input(0, $o_SfleProducer_slfe);
+}
+
+/*
+  SYMBOL: $lp_StdinFromLineEditor_keymap
+    Keybindings specific to the StdinFromLineEditor class.
+ */
+class_keymap($c_StdinFromLineEditor, $lp_StdinFromLineEditor_keymap,
+             $llp_Activity_keymap)
+ATSINIT {
+  bind_char($lp_StdinFromLineEditor_keymap, $u_ground, CONTROL_D, NULL,
+            $m_eof);
 }
