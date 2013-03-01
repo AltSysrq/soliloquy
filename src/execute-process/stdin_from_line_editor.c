@@ -22,6 +22,7 @@
 #include <errno.h>
 
 #include "../key_dispatch.h"
+#include "../face.h"
 
 /*
   TITLE: Process stdin from line editor
@@ -159,6 +160,12 @@ defun($h_StdinFromLineEditor_pump_input) {
 }
 
 /*
+  SYMBOL: $I_StdinFromLineEditor_echo_meta_face
+    Face to apply to meta of echoed lines.
+ */
+STATIC_INIT_TO($I_StdinFromLineEditor_echo_meta_face, mkface("!fM"))
+
+/*
   SYMBOL: $f_StdinFromLineEditor_accept
     Queues the entered line, then calls $m_pump_input(). The LineEditor is then
     reset.
@@ -172,6 +179,36 @@ defun($h_StdinFromLineEditor_accept) {
     dynar_push_s($as_StdinFromLineEditor_buffer, "\n");
     if (!$o_StdinFromLineEditor_producer)
       $m_pump_input();
+
+    // Echo to transcript if echo is on
+    if ($u_echo_on == ($v_LineEditor_echo_mode ?: $v_Workspace_echo_mode) &&
+        $o_Transcript) {
+      qstring contents =
+        $M_get_echo_area_contents($q_Workspace_echo_area_contents,0);
+      qchar line[$i_column_width+1];
+      qchar meta[$i_line_meta_width];
+      qstrlcpy(meta, wstrtoqstr($w_Executor_cmdline), $i_line_meta_width);
+      apply_face_str($I_StdinFromLineEditor_echo_meta_face, meta);
+
+      do {
+        qstrlcpy(line, contents, $i_column_width+1);
+        $M_append(0, $o_Transcript,
+                  $lo_Transcript_output =
+                    cons_o(
+                      $c_RenderedLine(
+                        $q_RenderedLine_meta = qstrdup(meta),
+                        $q_RenderedLine_body = qstrdup(line)),
+                      NULL));
+
+        if (qstrlen(contents) > $i_column_width)
+          contents += $i_column_width;
+        else
+          contents = qempty;
+
+        qmemset(meta, apply_face($I_StdinFromLineEditor_echo_meta_face, L'\\'),
+                $i_line_meta_width);
+      } while (*contents);
+    }
   }
 
   // Reset the line editor
