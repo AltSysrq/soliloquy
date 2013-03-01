@@ -83,7 +83,8 @@ defun($h_OutputToTranscript_fixup_parent_pipe) {
   $c_TtyConsumer(
     $o_TtyConsumer_emulator =
     $c_TranscriptTty($i_Consumer_fd = pipes[0],
-                     $o_TranscriptTty_transcript = $o_Transcript));
+                     $o_TranscriptTty_transcript = $o_Transcript,
+                     $I_TtyEmulator_ninputs = 1));
 }
 
 /*
